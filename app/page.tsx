@@ -98,12 +98,16 @@ export default function HomePage() {
           <div className="flex items-center gap-3 text-sm text-zinc-500 dark:text-zinc-400">
             <button onClick={() => router.push('/dashboard')} className="hover:text-zinc-900 dark:hover:text-zinc-100">历史记录</button>
             <span>|</span>
+            <button onClick={() => router.push('/interview')} className="hover:text-zinc-900 dark:hover:text-zinc-100">面试训练</button>
+            <span>|</span>
             <button onClick={handleSignOut} className="hover:text-zinc-900 dark:hover:text-zinc-100">退出</button>
           </div>
         ) : (
-          <button onClick={() => openModal('login')} className="text-sm text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100">
-            登录 / 历史记录
-          </button>
+          <div className="flex items-center gap-3 text-sm text-zinc-500 dark:text-zinc-400">
+            <button onClick={() => openModal('login')} className="hover:text-zinc-900 dark:hover:text-zinc-100">登录</button>
+            <span>|</span>
+            <button onClick={() => openModal('login')} className="hover:text-zinc-900 dark:hover:text-zinc-100">面试训练</button>
+          </div>
         )}
       </header>
 

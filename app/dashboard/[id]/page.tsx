@@ -53,6 +53,14 @@ export default async function CaseDetailPage({ params }: Props) {
           {caseData.result_json.map((s, i) => (
             <SuggestionCard key={i} suggestion={s} />
           ))}
+          <div className="pt-4 border-t border-zinc-200 dark:border-zinc-800 mt-2">
+            <Link
+              href={`/interview?case_id=${caseData.id}`}
+              className="block w-full text-center border border-zinc-900 dark:border-zinc-100 text-zinc-900 dark:text-zinc-100 px-6 py-2.5 rounded-lg text-sm hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+            >
+              基于此 JD 开始面试训练
+            </Link>
+          </div>
         </div>
       )}
     </main>
