@@ -1,6 +1,6 @@
 // app/interview/page.tsx
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import type { User } from '@supabase/supabase-js'
@@ -41,6 +41,14 @@ const WEAKEST_LABEL: Record<keyof InterviewScores, string> = {
 const TOTAL_QUESTIONS = 5
 
 export default function InterviewPage() {
+  return (
+    <Suspense>
+      <InterviewPageInner />
+    </Suspense>
+  )
+}
+
+function InterviewPageInner() {
   const searchParams = useSearchParams()
   const caseId = searchParams.get('case_id')
 
@@ -87,17 +95,7 @@ export default function InterviewPage() {
     }
 
     setSessionId(data.session_id)
-    // Fetch all questions to track progress; questions[0] is already returned
-    // We re-fetch the session questions from client — or store locally.
-    // Since start only returns question[0], we fetch the session to get all questions.
-    const supabase = createClient()
-    const { data: sessionRow } = await supabase
-      .from('interview_sessions')
-      .select('questions')
-      .eq('id', data.session_id)
-      .single()
-
-    const qs: string[] = sessionRow?.questions ?? [data.question]
+    const qs: string[] = data.questions ?? [data.question]
     setQuestions(qs)
     setCurrentIndex(0)
     setUserAnswer('')

@@ -29,20 +29,26 @@ export async function POST(request: Request) {
     baseURL: process.env.ANTHROPIC_BASE_URL,
   })
 
-  const message = await client.messages.create({
-    model: 'claude-sonnet-4-6',
-    max_tokens: 1024,
-    system: INTERVIEW_QUESTION_SYSTEM,
-    messages: [{ role: 'user', content: buildInterviewQuestionPrompt(jd_text) }],
-  })
-
-  const raw = message.content[0].type === 'text' ? message.content[0].text : ''
   let questions: string[] = []
   try {
-    questions = JSON.parse(raw)
-    if (!Array.isArray(questions) || questions.length === 0) throw new Error('invalid')
-  } catch {
-    return new Response(JSON.stringify({ error: '题目生成失败，请重试' }), { status: 500 })
+    const message = await client.messages.create({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 1024,
+      system: INTERVIEW_QUESTION_SYSTEM,
+      messages: [{ role: 'user', content: buildInterviewQuestionPrompt(jd_text) }],
+    })
+
+    const raw = message.content[0]?.type === 'text' ? message.content[0].text : ''
+    try {
+      questions = JSON.parse(raw)
+      if (!Array.isArray(questions) || questions.length === 0) throw new Error('invalid')
+    } catch {
+      return new Response(JSON.stringify({ error: '题目生成失败，请重试' }), { status: 500 })
+    }
+  } catch (err: unknown) {
+    // If already returned above, this won't be reached. This catches network/API errors.
+    const msg = err instanceof Error ? err.message : 'unknown'
+    return new Response(JSON.stringify({ error: '题目生成失败，请重试', detail: msg }), { status: 500 })
   }
 
   const supabase = createServiceClient(
@@ -69,7 +75,7 @@ export async function POST(request: Request) {
   }
 
   return new Response(
-    JSON.stringify({ session_id: session.id, question: questions[0], question_index: 0 }),
+    JSON.stringify({ session_id: session.id, questions, question: questions[0], question_index: 0 }),
     { headers: { 'Content-Type': 'application/json' } }
   )
 }
