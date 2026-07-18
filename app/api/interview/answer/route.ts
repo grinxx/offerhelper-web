@@ -54,7 +54,7 @@ export async function POST(request: Request) {
       try {
         const response = await client.messages.create({
           model: 'claude-sonnet-4-6',
-          max_tokens: 1024,
+          max_tokens: 2048,
           system: INTERVIEW_EVAL_SYSTEM,
           messages: [{
             role: 'user',
@@ -74,7 +74,7 @@ export async function POST(request: Request) {
           throw new Error('invalid response')
         }
 
-        await supabase.from('interview_turns').insert({
+        const { error: insertError } = await supabase.from('interview_turns').insert({
           session_id,
           question_index,
           question,
@@ -83,6 +83,7 @@ export async function POST(request: Request) {
           feedback: result.feedback,
           reference_answer: result.reference_answer,
         })
+        if (insertError) throw insertError
 
         controller.enqueue(encoder.encode(JSON.stringify(result) + '\n'))
       } catch {
