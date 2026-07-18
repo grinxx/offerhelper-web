@@ -1,10 +1,13 @@
 'use client'
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import type { User } from '@supabase/supabase-js'
+import { createClient } from '@/lib/supabase/client'
 import ResumeUploader from '@/components/ResumeUploader'
 import JdInput from '@/components/JdInput'
 import AnalyzeButton from '@/components/AnalyzeButton'
 import ResultStream from '@/components/ResultStream'
+import AuthModal from '@/components/AuthModal'
 import type { Suggestion } from '@/types'
 
 export default function HomePage() {
@@ -14,6 +17,32 @@ export default function HomePage() {
   const [suggestions, setSuggestions] = useState<Suggestion[]>([])
   const [loading, setLoading] = useState(false)
   const [caseId, setCaseId] = useState<string | null>(null)
+  const [user, setUser] = useState<User | null>(null)
+  const [modalOpen, setModalOpen] = useState(false)
+  const [modalTab, setModalTab] = useState<'login' | 'signup'>('login')
+
+  useEffect(() => {
+    const supabase = createClient()
+    supabase.auth.getUser().then(({ data: { user } }) => setUser(user))
+  }, [])
+
+  const handleAuthSuccess = useCallback(async (userId: string) => {
+    setModalOpen(false)
+    if (caseId) {
+      await fetch('/api/claim-case', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ case_id: caseId }),
+      })
+    }
+    router.push('/dashboard')
+  }, [caseId, router])
+
+  const handleSignOut = useCallback(async () => {
+    const supabase = createClient()
+    await supabase.auth.signOut()
+    setUser(null)
+  }, [])
 
   const handleAnalyze = useCallback(async () => {
     if (!resumeText || !jdText) return
@@ -56,13 +85,26 @@ export default function HomePage() {
     }
   }, [resumeText, jdText])
 
+  function openModal(tab: 'login' | 'signup') {
+    setModalTab(tab)
+    setModalOpen(true)
+  }
+
   return (
     <main className="max-w-2xl mx-auto px-4 py-10">
       <header className="flex items-center justify-between mb-8">
         <h1 className="text-xl font-semibold">OfferHelper</h1>
-        <a href="/dashboard" className="text-sm text-gray-500 hover:text-black">
-          登录 / 历史记录
-        </a>
+        {user ? (
+          <div className="flex items-center gap-3 text-sm text-gray-500">
+            <button onClick={() => router.push('/dashboard')} className="hover:text-black">历史记录</button>
+            <span>|</span>
+            <button onClick={handleSignOut} className="hover:text-black">退出</button>
+          </div>
+        ) : (
+          <button onClick={() => openModal('login')} className="text-sm text-gray-500 hover:text-black">
+            登录 / 历史记录
+          </button>
+        )}
       </header>
 
       <div className="mb-6">
@@ -85,14 +127,30 @@ export default function HomePage() {
       {caseId && !loading && suggestions.length > 0 && (
         <div className="mt-8 border-t pt-6 text-center">
           <p className="text-sm text-gray-500 mb-3">保存结果，下次继续优化</p>
-          <button
-            onClick={() => router.push('/dashboard')}
-            className="border border-black text-black px-6 py-2 rounded-lg text-sm hover:bg-gray-50"
-          >
-            注册保存
-          </button>
+          {user ? (
+            <button
+              onClick={() => router.push('/dashboard')}
+              className="border border-black text-black px-6 py-2 rounded-lg text-sm hover:bg-gray-50"
+            >
+              查看历史记录
+            </button>
+          ) : (
+            <button
+              onClick={() => openModal('signup')}
+              className="border border-black text-black px-6 py-2 rounded-lg text-sm hover:bg-gray-50"
+            >
+              注册保存
+            </button>
+          )}
         </div>
       )}
+
+      <AuthModal
+        isOpen={modalOpen}
+        defaultTab={modalTab}
+        onClose={() => setModalOpen(false)}
+        onAuthSuccess={handleAuthSuccess}
+      />
     </main>
   )
 }
