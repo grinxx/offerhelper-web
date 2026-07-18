@@ -60,6 +60,9 @@ export default function HomePage() {
     <main className="max-w-2xl mx-auto px-4 py-10">
       <header className="flex items-center justify-between mb-8">
         <h1 className="text-xl font-semibold">OfferHelper</h1>
+        <a href="/dashboard" className="text-sm text-gray-500 hover:text-black">
+          登录 / 历史记录
+        </a>
       </header>
 
       <div className="mb-6">
