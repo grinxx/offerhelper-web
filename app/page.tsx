@@ -95,13 +95,13 @@ export default function HomePage() {
       <header className="flex items-center justify-between mb-8">
         <h1 className="text-xl font-semibold">OfferHelper</h1>
         {user ? (
-          <div className="flex items-center gap-3 text-sm text-gray-500">
-            <button onClick={() => router.push('/dashboard')} className="hover:text-black">历史记录</button>
+          <div className="flex items-center gap-3 text-sm text-zinc-500 dark:text-zinc-400">
+            <button onClick={() => router.push('/dashboard')} className="hover:text-zinc-900 dark:hover:text-zinc-100">历史记录</button>
             <span>|</span>
-            <button onClick={handleSignOut} className="hover:text-black">退出</button>
+            <button onClick={handleSignOut} className="hover:text-zinc-900 dark:hover:text-zinc-100">退出</button>
           </div>
         ) : (
-          <button onClick={() => openModal('login')} className="text-sm text-gray-500 hover:text-black">
+          <button onClick={() => openModal('login')} className="text-sm text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100">
             登录 / 历史记录
           </button>
         )}
@@ -109,7 +109,7 @@ export default function HomePage() {
 
       <div className="mb-6">
         <h2 className="text-2xl font-bold mb-1">把真实经历变成可投递的简历</h2>
-        <p className="text-gray-500 text-sm">不编造，不包装，只优化表达</p>
+        <p className="text-zinc-500 dark:text-zinc-400 text-sm">不编造，不包装，只优化表达</p>
       </div>
 
       <div className="space-y-4 mb-6">
@@ -125,19 +125,19 @@ export default function HomePage() {
       <ResultStream suggestions={suggestions} loading={loading} />
 
       {caseId && !loading && suggestions.length > 0 && (
-        <div className="mt-8 border-t pt-6 text-center">
-          <p className="text-sm text-gray-500 mb-3">保存结果，下次继续优化</p>
+        <div className="mt-8 border-t border-zinc-200 dark:border-zinc-800 pt-6 text-center">
+          <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-3">保存结果，下次继续优化</p>
           {user ? (
             <button
               onClick={() => router.push('/dashboard')}
-              className="border border-black text-black px-6 py-2 rounded-lg text-sm hover:bg-gray-50"
+              className="border border-zinc-900 dark:border-zinc-100 text-zinc-900 dark:text-zinc-100 px-6 py-2 rounded-lg text-sm hover:bg-zinc-50 dark:hover:bg-zinc-800"
             >
               查看历史记录
             </button>
           ) : (
             <button
               onClick={() => openModal('signup')}
-              className="border border-black text-black px-6 py-2 rounded-lg text-sm hover:bg-gray-50"
+              className="border border-zinc-900 dark:border-zinc-100 text-zinc-900 dark:text-zinc-100 px-6 py-2 rounded-lg text-sm hover:bg-zinc-50 dark:hover:bg-zinc-800"
             >
               注册保存
             </button>

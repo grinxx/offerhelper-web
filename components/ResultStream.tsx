@@ -12,7 +12,7 @@ export default function ResultStream({ suggestions, loading }: Props) {
 
   return (
     <div className="space-y-3">
-      <p className="text-sm text-gray-500">
+      <p className="text-sm text-zinc-500 dark:text-zinc-400">
         {loading ? '分析中，建议将逐条显示...' : `共 ${suggestions.length} 条建议`}
       </p>
       {suggestions.map((s, i) => (
@@ -20,7 +20,7 @@ export default function ResultStream({ suggestions, loading }: Props) {
       ))}
       {loading && (
         <div className="h-8 flex items-center">
-          <span className="animate-pulse text-gray-400 text-sm">●●●</span>
+          <span className="animate-pulse text-zinc-400 text-sm">●●●</span>
         </div>
       )}
     </div>
