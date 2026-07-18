@@ -110,35 +110,46 @@ export default function InterviewPage() {
     setStage('evaluating')
     setCurrentEval(null)
 
-    const res = await fetch('/api/interview/answer', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        session_id: sessionId,
-        question_index: currentIndex,
-        question: questions[currentIndex],
-        user_answer: userAnswer,
-      }),
-    })
+    try {
+      const res = await fetch('/api/interview/answer', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          session_id: sessionId,
+          question_index: currentIndex,
+          question: questions[currentIndex],
+          user_answer: userAnswer,
+        }),
+      })
 
-    const reader = res.body!.getReader()
-    const decoder = new TextDecoder()
-    let buffer = ''
-
-    while (true) {
-      const { done, value } = await reader.read()
-      if (done) break
-      buffer += decoder.decode(value, { stream: true })
-      const lines = buffer.split('\n')
-      buffer = lines.pop() ?? ''
-      for (const line of lines) {
-        if (!line.trim()) continue
-        try {
-          const obj = JSON.parse(line)
-          if (obj.scores) setCurrentEval(obj as CurrentEval)
-          if (obj.error) setError(obj.error)
-        } catch {}
+      if (!res.body) {
+        setError('评估失败，请重试')
+        setStage('questioning')
+        return
       }
+
+      const reader = res.body.getReader()
+      const decoder = new TextDecoder()
+      let buffer = ''
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        buffer += decoder.decode(value, { stream: true })
+        const lines = buffer.split('\n')
+        buffer = lines.pop() ?? ''
+        for (const line of lines) {
+          if (!line.trim()) continue
+          try {
+            const obj = JSON.parse(line)
+            if (obj.scores) setCurrentEval(obj as CurrentEval)
+            if (obj.error) setError(obj.error)
+          } catch {}
+        }
+      }
+    } catch {
+      setError('评估失败，请重试')
+      setStage('questioning')
     }
   }
 
@@ -148,6 +159,10 @@ export default function InterviewPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ session_id: sessionId }),
     })
+    if (!res.ok) {
+      setError('获取总结失败，请重试')
+      return
+    }
     const data = await res.json()
     setSummary(data)
     setStage('summary')
@@ -338,7 +353,7 @@ export default function InterviewPage() {
                 </div>
               ))}
             </div>
-            <p className="text-sm text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 px-3 py-2 rounded text-xs">
+            <p className="text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 px-3 py-2 rounded text-xs">
               你在「{WEAKEST_LABEL[summary.weakest_dimension]}」维度平均 {summary.avg_scores[summary.weakest_dimension]} 分，建议重点加强
             </p>
           </div>
