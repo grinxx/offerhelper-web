@@ -2,10 +2,9 @@ export async function parseResume(file: File): Promise<string> {
   const buffer = Buffer.from(await file.arrayBuffer())
 
   if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
-    const { PDFParse } = await import('pdf-parse')
-    const parser = new PDFParse({ data: new Uint8Array(buffer) })
-    const result = await parser.getText()
-    return result.text.trim()
+    const { extractText } = await import('unpdf')
+    const { text } = await extractText(new Uint8Array(buffer), { mergePages: true })
+    return text.trim()
   }
 
   if (

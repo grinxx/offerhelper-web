@@ -1,12 +1,21 @@
 import Anthropic from '@anthropic-ai/sdk'
-import { createClient } from '@/lib/supabase/server'
+import { createClient as createServiceClient } from '@supabase/supabase-js'
 import { SYSTEM_PROMPT, buildUserPrompt } from '@/lib/prompts'
 import type { Suggestion } from '@/types'
 
 export const runtime = 'nodejs'
 
 export async function POST(request: Request) {
-  const { resume_text, jd_text } = await request.json()
+  console.log('=== analyze route called ===')
+  let body: { resume_text?: string; jd_text?: string } = {}
+  try {
+    body = await request.json()
+  } catch (e) {
+    console.error('JSON parse error:', e)
+    return new Response(JSON.stringify({ error: 'invalid json' }), { status: 400 })
+  }
+  const { resume_text, jd_text } = body
+  console.log('resume_text length:', resume_text?.length, 'jd_text length:', jd_text?.length)
 
   if (!resume_text || !jd_text) {
     return new Response(JSON.stringify({ error: '简历和 JD 均为必填项' }), {
@@ -15,7 +24,10 @@ export async function POST(request: Request) {
     })
   }
 
-  const supabase = await createClient()
+  const supabase = createServiceClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
 
   // 创建 pending case
   const { data: caseRow, error: insertError } = await supabase
@@ -25,7 +37,8 @@ export async function POST(request: Request) {
     .single()
 
   if (insertError || !caseRow) {
-    return new Response(JSON.stringify({ error: '创建案例失败' }), {
+    console.error('Supabase insert error:', insertError?.message, insertError?.code, insertError?.details, insertError?.hint)
+    return new Response(JSON.stringify({ error: '创建案例失败', detail: insertError?.message }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },
     })
