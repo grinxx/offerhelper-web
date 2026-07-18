@@ -14,3 +14,31 @@ export interface Case {
   status: 'pending' | 'done' | 'error'
   created_at: string
 }
+
+export interface InterviewScores {
+  structure: number
+  evidence: number
+  relevance: number
+}
+
+export interface InterviewTurn {
+  id: string
+  session_id: string
+  question_index: number
+  question: string
+  user_answer: string
+  scores: InterviewScores
+  feedback: string
+  reference_answer: string
+  created_at: string
+}
+
+export interface InterviewSession {
+  id: string
+  user_id: string
+  case_id: string | null
+  jd_text: string
+  questions: string[]
+  status: 'active' | 'done'
+  created_at: string
+}
