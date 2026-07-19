@@ -33,10 +33,19 @@ const TYPE_CONFIG: Record<RecordType, { label: string; className: string }> = {
   },
 }
 
+const TYPE_LABELS: Record<RecordType, string> = {
+  analysis: '简历分析',
+  interview: '面试训练',
+  strengths: '优势挖掘',
+  match: '岗位匹配',
+}
+
+const VALID_TYPES = new Set<string>(['analysis', 'interview', 'strengths', 'match'])
+
 const PAGE_SIZE = 20
 
 interface Props {
-  searchParams: Promise<{ page?: string }>
+  searchParams: Promise<{ page?: string; type?: string }>
 }
 
 export default async function DashboardPage({ searchParams }: Props) {
@@ -44,64 +53,67 @@ export default async function DashboardPage({ searchParams }: Props) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/')
 
-  const { page: pageStr } = await searchParams
+  const { page: pageStr, type: typeParam } = await searchParams
   const page = Math.max(1, parseInt(pageStr ?? '1', 10) || 1)
+  const activeType = (typeParam && VALID_TYPES.has(typeParam)) ? typeParam as RecordType : null
   const fetchLimit = page * PAGE_SIZE + 1
 
+  const shouldFetch = (t: RecordType) => !activeType || activeType === t
+
   const [casesRes, interviewRes, strengthsRes, matchRes] = await Promise.all([
-    supabase
+    shouldFetch('analysis') ? supabase
       .from('cases')
       .select('id, jd_text, created_at')
       .eq('user_id', user.id)
       .eq('status', 'done')
       .order('created_at', { ascending: false })
-      .limit(fetchLimit),
-    supabase
+      .limit(fetchLimit) : { data: [] },
+    shouldFetch('interview') ? supabase
       .from('interview_sessions')
       .select('id, jd_text, created_at')
       .eq('user_id', user.id)
       .eq('status', 'done')
       .order('created_at', { ascending: false })
-      .limit(fetchLimit),
-    supabase
+      .limit(fetchLimit) : { data: [] },
+    shouldFetch('strengths') ? supabase
       .from('strength_sessions')
       .select('id, summary, created_at')
       .eq('user_id', user.id)
       .eq('status', 'done')
       .order('created_at', { ascending: false })
-      .limit(fetchLimit),
-    supabase
+      .limit(fetchLimit) : { data: [] },
+    shouldFetch('match') ? supabase
       .from('match_sessions')
       .select('id, jd_list, created_at')
       .eq('user_id', user.id)
       .eq('status', 'done')
       .order('created_at', { ascending: false })
-      .limit(fetchLimit),
+      .limit(fetchLimit) : { data: [] },
   ])
 
   const allRecords: TimelineRecord[] = [
-    ...(casesRes.data ?? []).map(r => ({
+    ...(casesRes.data ?? []).map((r: { id: string; jd_text?: string; created_at: string }) => ({
       id: r.id,
       type: 'analysis' as RecordType,
       summary: r.jd_text?.slice(0, 60) ?? '简历分析',
       created_at: r.created_at,
       href: `/dashboard/${r.id}`,
     })),
-    ...(interviewRes.data ?? []).map(r => ({
+    ...(interviewRes.data ?? []).map((r: { id: string; jd_text?: string; created_at: string }) => ({
       id: r.id,
       type: 'interview' as RecordType,
       summary: r.jd_text ? r.jd_text.slice(0, 60) : '面试训练',
       created_at: r.created_at,
       href: `/dashboard/interview/${r.id}`,
     })),
-    ...(strengthsRes.data ?? []).map(r => ({
+    ...(strengthsRes.data ?? []).map((r: { id: string; summary?: string; created_at: string }) => ({
       id: r.id,
       type: 'strengths' as RecordType,
       summary: r.summary ? (r.summary as string).slice(0, 60) : '优势挖掘',
       created_at: r.created_at,
       href: `/dashboard/strengths/${r.id}`,
     })),
-    ...(matchRes.data ?? []).map(r => ({
+    ...(matchRes.data ?? []).map((r: { id: string; jd_list?: unknown; created_at: string }) => ({
       id: r.id,
       type: 'match' as RecordType,
       summary: (() => {
@@ -117,14 +129,25 @@ export default async function DashboardPage({ searchParams }: Props) {
   const records = allRecords.slice(start, start + PAGE_SIZE)
   const hasMore = allRecords.length > start + PAGE_SIZE
 
+  const pageTitle = activeType ? TYPE_LABELS[activeType] + '记录' : '我的记录'
+  const baseUrl = activeType ? `/dashboard?type=${activeType}` : '/dashboard'
+
   return (
     <main className="max-w-2xl mx-auto px-4 py-10">
       <header className="flex items-center justify-between mb-8">
         <Link href="/" className="text-xl font-semibold">OfferHelper</Link>
-        <span className="text-sm text-zinc-500 dark:text-zinc-400">{user.email}</span>
+        <div className="flex items-center gap-3 text-sm text-zinc-500 dark:text-zinc-400">
+          {activeType && (
+            <>
+              <Link href="/dashboard" className="hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors">全部记录</Link>
+              <span>|</span>
+            </>
+          )}
+          <span className="text-zinc-400 dark:text-zinc-500">{user.email}</span>
+        </div>
       </header>
 
-      <h2 className="text-xl font-bold mb-4">我的记录</h2>
+      <h2 className="text-xl font-bold mb-4">{pageTitle}</h2>
 
       {records.length === 0 && page === 1 ? (
         <p className="text-zinc-500 dark:text-zinc-400 text-sm">
@@ -143,9 +166,11 @@ export default async function DashboardPage({ searchParams }: Props) {
                   >
                     <div className="flex items-center justify-between gap-3">
                       <div className="flex items-center gap-2 min-w-0">
-                        <span className={`text-xs font-medium px-2 py-0.5 rounded shrink-0 ${config.className}`}>
-                          {config.label}
-                        </span>
+                        {!activeType && (
+                          <span className={`text-xs font-medium px-2 py-0.5 rounded shrink-0 ${config.className}`}>
+                            {config.label}
+                          </span>
+                        )}
                         <p className="text-sm text-zinc-700 dark:text-zinc-300 line-clamp-1 min-w-0">{r.summary}</p>
                       </div>
                       <div className="flex items-center gap-3 shrink-0">
@@ -163,12 +188,12 @@ export default async function DashboardPage({ searchParams }: Props) {
 
           <div className="flex items-center justify-between mt-6 text-sm text-zinc-500 dark:text-zinc-400">
             {page > 1 ? (
-              <Link href={`/dashboard?page=${page - 1}`} className="hover:text-zinc-900 dark:hover:text-zinc-100">
+              <Link href={`${baseUrl}&page=${page - 1}`} className="hover:text-zinc-900 dark:hover:text-zinc-100">
                 ← 上一页
               </Link>
             ) : <span />}
             {hasMore && (
-              <Link href={`/dashboard?page=${page + 1}`} className="hover:text-zinc-900 dark:hover:text-zinc-100">
+              <Link href={`${baseUrl}&page=${page + 1}`} className="hover:text-zinc-900 dark:hover:text-zinc-100">
                 下一页 →
               </Link>
             )}

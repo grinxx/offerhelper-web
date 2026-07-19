@@ -225,7 +225,7 @@ function InterviewPageInner() {
         <div className="flex items-center gap-3 text-sm text-zinc-500 dark:text-zinc-400">
           <Link href="/" className="hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors">首页</Link>
           <span>|</span>
-          <Link href="/dashboard" className="hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors">我的记录</Link>
+          <Link href="/dashboard?type=interview" className="hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors">我的记录</Link>
         </div>
       </header>
 
