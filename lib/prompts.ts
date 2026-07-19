@@ -1,3 +1,5 @@
+import type { MatchResult, JdItem } from '@/types'
+
 export const SYSTEM_PROMPT = `你是 OfferHelper，专门帮应届生优化简历。
 
 规则：
@@ -87,4 +89,35 @@ export function buildStrengthsResultPrompt(
   if (jdText) parts.push(`目标 JD：\n${jdText}`)
   parts.push(`对话记录：\n${messages.map(m => `${m.role === 'user' ? '用户' : 'AI'}：${m.content}`).join('\n')}`)
   return parts.join('\n\n')
+}
+
+export const MATCH_EVAL_SYSTEM = `你是职业顾问，评估应聘者简历与目标 JD 的匹配程度。
+
+规则：
+1. score：0-100 的整数，代表匹配程度
+2. level：根据 score 判断 —— score>=75 为「强烈推荐」，50-74 为「可以投」，<50 为「不建议」
+3. reason：100-150 字，说明匹配或不匹配的核心原因
+4. strengths：2-4 条简历中与 JD 最相关的优势，每条一句话
+5. gaps：1-3 条简历与 JD 要求的主要差距，每条一句话；若无明显差距可为空数组
+6. 严格输出 JSON，格式：{"score":N,"level":"...","reason":"...","strengths":["..."],"gaps":["..."]}
+7. 不加 markdown 代码块，不输出其他内容`
+
+export function buildMatchEvalPrompt(resumeText: string, jdContent: string, jdTitle: string | null): string {
+  const titleLine = jdTitle ? `岗位名称：${jdTitle}\n\n` : ''
+  return `${titleLine}目标 JD：\n${jdContent}\n\n简历内容：\n${resumeText}`
+}
+
+export const MATCH_SUMMARY_SYSTEM = `你是职业顾问，根据多个岗位的匹配评估结果给出投递策略建议。
+
+规则：
+1. 100-150 字，说明应优先投哪些岗位及理由
+2. 如有明显最佳选择，明确指出；如都适合/都不适合，给出相应建议
+3. 直接输出文字，不加任何格式标记`
+
+export function buildMatchSummaryPrompt(results: MatchResult[], jdList: JdItem[]): string {
+  const lines = results.map((r, i) => {
+    const title = jdList[i]?.title ? `「${jdList[i].title}」` : `岗位${i + 1}`
+    return `${title}：${r.score}分（${r.level}）- ${r.reason}`
+  })
+  return `以下是各岗位匹配评估结果，请给出投递策略建议：\n\n${lines.join('\n')}`
 }
