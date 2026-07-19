@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import type { JdItem } from '@/types'
+import DeleteRecordButton from './DeleteRecordButton'
 
 type RecordType = 'analysis' | 'interview' | 'strengths' | 'match'
 
@@ -45,8 +46,6 @@ export default async function DashboardPage({ searchParams }: Props) {
 
   const { page: pageStr } = await searchParams
   const page = Math.max(1, parseInt(pageStr ?? '1', 10) || 1)
-  // Fetch enough data to cover current page + 1 to know if there's a next page
-  // Each table fetches (page * PAGE_SIZE) records, then we sort+slice
   const fetchLimit = page * PAGE_SIZE + 1
 
   const [casesRes, interviewRes, strengthsRes, matchRes] = await Promise.all([
@@ -137,7 +136,7 @@ export default async function DashboardPage({ searchParams }: Props) {
             {records.map(r => {
               const config = TYPE_CONFIG[r.type]
               return (
-                <li key={`${r.type}-${r.id}`}>
+                <li key={`${r.type}-${r.id}`} className="relative">
                   <Link
                     href={r.href}
                     className="block border border-zinc-200 dark:border-zinc-800 rounded-lg p-4 hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors"
@@ -149,9 +148,12 @@ export default async function DashboardPage({ searchParams }: Props) {
                         </span>
                         <p className="text-sm text-zinc-700 dark:text-zinc-300 line-clamp-1 min-w-0">{r.summary}</p>
                       </div>
-                      <p className="text-xs text-zinc-400 dark:text-zinc-500 shrink-0">
-                        {new Date(r.created_at).toLocaleString('zh-CN')}
-                      </p>
+                      <div className="flex items-center gap-3 shrink-0">
+                        <p className="text-xs text-zinc-400 dark:text-zinc-500">
+                          {new Date(r.created_at).toLocaleString('zh-CN')}
+                        </p>
+                        <DeleteRecordButton id={r.id} type={r.type} />
+                      </div>
                     </div>
                   </Link>
                 </li>
