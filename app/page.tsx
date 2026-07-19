@@ -102,6 +102,8 @@ export default function HomePage() {
             <span>|</span>
             <button onClick={() => router.push('/strengths')} className="hover:text-zinc-900 dark:hover:text-zinc-100">优势挖掘</button>
             <span>|</span>
+            <button onClick={() => router.push('/match')} className="hover:text-zinc-900 dark:hover:text-zinc-100">岗位匹配</button>
+            <span>|</span>
             <button onClick={handleSignOut} className="hover:text-zinc-900 dark:hover:text-zinc-100">退出</button>
           </div>
         ) : (
@@ -111,6 +113,8 @@ export default function HomePage() {
             <button onClick={() => openModal('login')} className="hover:text-zinc-900 dark:hover:text-zinc-100">面试训练</button>
             <span>|</span>
             <button onClick={() => router.push('/strengths')} className="hover:text-zinc-900 dark:hover:text-zinc-100">优势挖掘</button>
+            <span>|</span>
+            <button onClick={() => router.push('/match')} className="hover:text-zinc-900 dark:hover:text-zinc-100">岗位匹配</button>
           </div>
         )}
       </header>
