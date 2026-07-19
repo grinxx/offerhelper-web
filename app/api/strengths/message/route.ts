@@ -23,11 +23,6 @@ export async function POST(request: Request) {
   const sessionSupabase = await createClient()
   const { data: { user } } = await sessionSupabase.auth.getUser()
 
-  const supabase = createServiceClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  )
-
   const client = new Anthropic({
     apiKey: process.env.ANTHROPIC_API_KEY,
     baseURL: process.env.ANTHROPIC_BASE_URL,
@@ -66,8 +61,13 @@ export async function POST(request: Request) {
 
         // Persist to DB if logged in
         if (user) {
+          const supabase = createServiceClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.SUPABASE_SERVICE_ROLE_KEY!
+          )
           const updatedMessages = [
             ...messages,
+            { role: 'user', content: buildStrengthsChatPrompt(messages, jd_text, turn_index) },
             { role: 'assistant', content: aiText },
           ]
           if (!currentSessionId) {
@@ -82,6 +82,7 @@ export async function POST(request: Request) {
               .from('strength_sessions')
               .update({ messages: updatedMessages })
               .eq('id', currentSessionId)
+              .eq('user_id', user.id)
           }
         }
 
@@ -91,6 +92,7 @@ export async function POST(request: Request) {
         ))
       } catch {
         controller.enqueue(encoder.encode(JSON.stringify({ error: '生成问题失败，请重试' }) + '\n'))
+        controller.enqueue(encoder.encode(JSON.stringify({ session_id: currentSessionId, turn_index, is_final: false }) + '\n'))
       } finally {
         controller.close()
       }
