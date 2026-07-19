@@ -43,15 +43,18 @@ export async function POST(request: Request) {
       const results: MatchResult[] = []
 
       try {
+        const supabase = user
+          ? createServiceClient(
+              process.env.NEXT_PUBLIC_SUPABASE_URL!,
+              process.env.SUPABASE_SERVICE_ROLE_KEY!
+            )
+          : null
+
         // Create session for logged-in users
-        if (user && !currentSessionId) {
-          const supabase = createServiceClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.SUPABASE_SERVICE_ROLE_KEY!
-          )
+        if (supabase && !currentSessionId) {
           const { data: newSession } = await supabase
             .from('match_sessions')
-            .insert({ user_id: user.id, resume_text, jd_list })
+            .insert({ user_id: user!.id, resume_text, jd_list })
             .select('id')
             .single()
           if (newSession) currentSessionId = newSession.id
@@ -110,16 +113,12 @@ export async function POST(request: Request) {
         }
 
         // Persist results for logged-in users
-        if (user && currentSessionId) {
-          const supabase = createServiceClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.SUPABASE_SERVICE_ROLE_KEY!
-          )
+        if (supabase && currentSessionId) {
           const { error: updateError } = await supabase
             .from('match_sessions')
             .update({ results, summary, status: 'done' })
             .eq('id', currentSessionId)
-            .eq('user_id', user.id)
+            .eq('user_id', user!.id)
           if (updateError) {
             console.error('Failed to persist match session:', updateError.message)
           }

@@ -80,12 +80,35 @@ function MatchPageInner() {
             } else if (obj.type === 'done') {
               if (obj.session_id) setSessionId(obj.session_id)
               setStage('done')
-            } else if (obj.type === 'error' && obj.jd_index === -1) {
-              setError(obj.message)
+            } else if (obj.type === 'error') {
+              if (obj.jd_index === -1) {
+                setError(obj.message)
+              } else {
+                // Per-JD failure: advance index so skeleton unsticks
+                setCurrentJdIndex(obj.jd_index + 1)
+                // Add a placeholder result to show in the list
+                setResults(prev => [...prev, {
+                  jd_index: obj.jd_index,
+                  score: 0,
+                  level: '不建议' as const,
+                  reason: `该岗位评估失败：${obj.message || '请重试'}`,
+                  strengths: [],
+                  gaps: [],
+                }])
+              }
             }
           } catch {}
         }
       }
+
+      // If stage is still 'analyzing', the server didn't send a done event
+      setStage(prev => {
+        if (prev === 'analyzing') {
+          setError('分析未完成，请重试')
+          return 'idle'
+        }
+        return prev
+      })
     } catch {
       setError('请求失败，请重试')
       setStage('idle')
