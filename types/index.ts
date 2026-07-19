@@ -67,3 +67,28 @@ export interface StrengthSession {
   status: 'active' | 'done'
   created_at: string
 }
+
+export interface JdItem {
+  title?: string
+  content: string
+}
+
+export interface MatchResult {
+  jd_index: number
+  score: number
+  level: '强烈推荐' | '可以投' | '不建议'
+  reason: string
+  strengths: string[]
+  gaps: string[]
+}
+
+export interface MatchSession {
+  id: string
+  user_id: string | null
+  resume_text: string
+  jd_list: JdItem[]
+  results: MatchResult[]
+  summary: string
+  status: 'active' | 'done'
+  created_at: string
+}
