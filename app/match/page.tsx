@@ -148,9 +148,11 @@ function MatchPageInner() {
     <main className="max-w-2xl mx-auto px-4 py-10">
       <header className="flex items-center justify-between mb-8">
         <Link href="/" className="text-xl font-semibold">OfferHelper</Link>
-        <Link href="/dashboard" className="text-sm text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors">
-          历史记录
-        </Link>
+        <div className="flex items-center gap-3 text-sm text-zinc-500 dark:text-zinc-400">
+          <Link href="/" className="hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors">首页</Link>
+          <span>|</span>
+          <Link href="/dashboard" className="hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors">历史记录</Link>
+        </div>
       </header>
 
       <h2 className="text-2xl font-bold mb-6">岗位匹配</h2>
