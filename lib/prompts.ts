@@ -41,3 +41,50 @@ export const INTERVIEW_EVAL_SYSTEM = `你是面试评估专家。对应聘者的
 export function buildInterviewEvalPrompt(question: string, userAnswer: string, jdText: string): string {
   return `面试题：${question}\n\n应聘者回答：${userAnswer}\n\n目标 JD：\n${jdText}`;
 }
+
+export const STRENGTHS_CHAT_SYSTEM = `你是职业顾问，帮助用户挖掘真实的职业优势。通过动态追问引导用户讲述具体经历。
+
+规则：
+1. 每次只问一个问题，问题开放且具体（避免「你有什么优点」这类泛问题）
+2. turn_index === 0（第一问）：用开场白问法，引导用户讲述一件有成就感或有挑战的工作/学习经历，不要追问，直接开场
+3. turn_index > 0（追问）：根据用户上一条回答，聚焦最有价值的方向追问（如细节、数据、挑战、结果）
+4. 问题简短，不超过 50 字
+5. 不评价、不总结，只追问
+6. 如果提供了 JD，追问方向优先贴合岗位要求`
+
+export function buildStrengthsChatPrompt(
+  messages: { role: string; content: string }[],
+  jdText: string | null,
+  turnIndex: number
+): string {
+  const parts: string[] = [`当前是第 ${turnIndex + 1} 问（turn_index=${turnIndex}）。`]
+  if (jdText) parts.push(`目标 JD：\n${jdText}`)
+  if (messages.length === 0) {
+    parts.push('这是对话开始，请直接提第一个开场问题。')
+  } else {
+    parts.push('对话历史已在 messages 中，请根据用户最新回答提下一个问题。')
+  }
+  return parts.join('\n\n')
+}
+
+export const STRENGTHS_RESULT_SYSTEM = `你是职业顾问，根据用户讲述的经历提炼结构化优势列表。
+
+规则：
+1. 每条优势必须有真实经历支撑，不编造
+2. label：2-6 字的能力标签（如「数据驱动决策」「跨部门协作」）
+3. evidence：一句话，直接引用用户描述中的具体事实、数据或结果
+4. 提炼 3-6 条优势
+5. summary：100-150 字综合点评，说明这些优势组合起来的竞争力
+6. 如果提供了 JD，label 和 evidence 优先体现与岗位的匹配
+7. 输出严格 JSON，格式：{"strengths":[{"label":"...","evidence":"..."}],"summary":"..."}
+8. 不加 markdown 代码块`
+
+export function buildStrengthsResultPrompt(
+  messages: { role: string; content: string }[],
+  jdText: string | null
+): string {
+  const parts: string[] = ['以下是完整对话记录，请根据用户讲述的经历提炼优势列表。']
+  if (jdText) parts.push(`目标 JD：\n${jdText}`)
+  parts.push(`对话记录：\n${messages.map(m => `${m.role === 'user' ? '用户' : 'AI'}：${m.content}`).join('\n')}`)
+  return parts.join('\n\n')
+}
