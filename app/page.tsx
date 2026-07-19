@@ -92,28 +92,28 @@ export default function HomePage() {
 
   return (
     <main className="max-w-2xl mx-auto px-4 py-10">
-      <header className="flex items-center justify-between mb-8">
-        <h1 className="text-xl font-semibold">OfferHelper</h1>
+      <header className="flex items-start justify-between mb-8 gap-4">
+        <h1 className="text-xl font-semibold shrink-0">OfferHelper</h1>
         {user ? (
-          <div className="flex items-center gap-3 text-sm text-zinc-500 dark:text-zinc-400">
+          <div className="flex flex-wrap items-center justify-end gap-x-3 gap-y-1 text-xs sm:text-sm text-zinc-500 dark:text-zinc-400">
             <button onClick={() => router.push('/dashboard')} className="hover:text-zinc-900 dark:hover:text-zinc-100">历史记录</button>
-            <span>|</span>
+            <span className="hidden sm:inline">|</span>
             <button onClick={() => router.push('/interview')} className="hover:text-zinc-900 dark:hover:text-zinc-100">面试训练</button>
-            <span>|</span>
+            <span className="hidden sm:inline">|</span>
             <button onClick={() => router.push('/strengths')} className="hover:text-zinc-900 dark:hover:text-zinc-100">优势挖掘</button>
-            <span>|</span>
+            <span className="hidden sm:inline">|</span>
             <button onClick={() => router.push('/match')} className="hover:text-zinc-900 dark:hover:text-zinc-100">岗位匹配</button>
-            <span>|</span>
+            <span className="hidden sm:inline">|</span>
             <button onClick={handleSignOut} className="hover:text-zinc-900 dark:hover:text-zinc-100">退出</button>
           </div>
         ) : (
-          <div className="flex items-center gap-3 text-sm text-zinc-500 dark:text-zinc-400">
+          <div className="flex flex-wrap items-center justify-end gap-x-3 gap-y-1 text-xs sm:text-sm text-zinc-500 dark:text-zinc-400">
             <button onClick={() => openModal('login')} className="hover:text-zinc-900 dark:hover:text-zinc-100">登录</button>
-            <span>|</span>
+            <span className="hidden sm:inline">|</span>
             <button onClick={() => openModal('login')} className="hover:text-zinc-900 dark:hover:text-zinc-100">面试训练</button>
-            <span>|</span>
+            <span className="hidden sm:inline">|</span>
             <button onClick={() => router.push('/strengths')} className="hover:text-zinc-900 dark:hover:text-zinc-100">优势挖掘</button>
-            <span>|</span>
+            <span className="hidden sm:inline">|</span>
             <button onClick={() => router.push('/match')} className="hover:text-zinc-900 dark:hover:text-zinc-100">岗位匹配</button>
           </div>
         )}
