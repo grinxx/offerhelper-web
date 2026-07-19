@@ -96,7 +96,7 @@ export default function HomePage() {
         <h1 className="text-xl font-semibold shrink-0">OfferHelper</h1>
         {user ? (
           <div className="flex flex-wrap items-center justify-end gap-x-3 gap-y-1 text-xs sm:text-sm text-zinc-500 dark:text-zinc-400">
-            <button onClick={() => router.push('/dashboard')} className="hover:text-zinc-900 dark:hover:text-zinc-100">历史记录</button>
+            <button onClick={() => router.push('/dashboard')} className="hover:text-zinc-900 dark:hover:text-zinc-100">我的记录</button>
             <span className="hidden sm:inline">|</span>
             <button onClick={() => router.push('/interview')} className="hover:text-zinc-900 dark:hover:text-zinc-100">面试训练</button>
             <span className="hidden sm:inline">|</span>

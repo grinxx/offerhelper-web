@@ -124,7 +124,7 @@ export default async function DashboardPage({ searchParams }: Props) {
         <span className="text-sm text-zinc-500 dark:text-zinc-400">{user.email}</span>
       </header>
 
-      <h2 className="text-xl font-bold mb-4">历史记录</h2>
+      <h2 className="text-xl font-bold mb-4">我的记录</h2>
 
       {records.length === 0 && page === 1 ? (
         <p className="text-zinc-500 dark:text-zinc-400 text-sm">
