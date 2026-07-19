@@ -50,10 +50,14 @@ export async function POST(request: Request) {
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
-    await supabase
+    const { error: updateError } = await supabase
       .from('strength_sessions')
       .update({ result, messages, status: 'done' })
       .eq('id', session_id)
+      .eq('user_id', user.id)
+    if (updateError) {
+      console.error('Failed to persist strength session:', updateError.message)
+    }
   }
 
   return new Response(JSON.stringify(result), {
