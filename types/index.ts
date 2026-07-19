@@ -42,3 +42,28 @@ export interface InterviewSession {
   status: 'active' | 'done'
   created_at: string
 }
+
+export interface StrengthItem {
+  label: string
+  evidence: string
+}
+
+export interface StrengthsResult {
+  strengths: StrengthItem[]
+  summary: string
+}
+
+export interface ChatMessage {
+  role: 'user' | 'assistant'
+  content: string
+}
+
+export interface StrengthSession {
+  id: string
+  user_id: string | null
+  jd_text: string | null
+  messages: ChatMessage[]
+  result: StrengthsResult | null
+  status: 'active' | 'done'
+  created_at: string
+}
