@@ -1,6 +1,7 @@
 // app/match/page.tsx
 'use client'
 import { useState, useEffect, Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import type { User } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/client'
@@ -13,6 +14,9 @@ import type { JdItem, MatchResult } from '@/types'
 type Stage = 'idle' | 'analyzing' | 'done'
 
 function MatchPageInner() {
+  const searchParams = useSearchParams()
+  const caseId = searchParams.get('case_id')
+
   const [user, setUser] = useState<User | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
   const [resumeText, setResumeText] = useState('')
@@ -28,6 +32,22 @@ function MatchPageInner() {
     const supabase = createClient()
     supabase.auth.getUser().then(({ data: { user } }) => setUser(user))
   }, [])
+
+  useEffect(() => {
+    if (!caseId) return
+    const supabase = createClient()
+    supabase.from('cases').select('resume_text, jd_text').eq('id', caseId).single()
+      .then(({ data }) => {
+        if (data?.resume_text) setResumeText(data.resume_text)
+        if (data?.jd_text) {
+          setJdList(prev => {
+            const next = [...prev]
+            if (next[0] && !next[0].content) next[0] = { ...next[0], content: data.jd_text }
+            return next
+          })
+        }
+      })
+  }, [caseId])
 
   const validJds = jdList.filter(j => j.content.trim())
   const canStart = resumeText.trim() && validJds.length > 0
@@ -84,9 +104,7 @@ function MatchPageInner() {
               if (obj.jd_index === -1) {
                 setError(obj.message)
               } else {
-                // Per-JD failure: advance index so skeleton unsticks
                 setCurrentJdIndex(obj.jd_index + 1)
-                // Add a placeholder result to show in the list
                 setResults(prev => [...prev, {
                   jd_index: obj.jd_index,
                   score: 0,
@@ -101,7 +119,6 @@ function MatchPageInner() {
         }
       }
 
-      // If stage is still 'analyzing', the server didn't send a done event
       setStage(prev => {
         if (prev === 'analyzing') {
           setError('分析未完成，请重试')
@@ -144,6 +161,9 @@ function MatchPageInner() {
           <div>
             <h3 className="text-sm font-medium mb-2">简历</h3>
             <ResumeUploader onTextReady={setResumeText} />
+            {resumeText && caseId && (
+              <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-1">已预填简历内容</p>
+            )}
           </div>
           <div>
             <h3 className="text-sm font-medium mb-2">目标岗位 JD（最多 5 个）</h3>

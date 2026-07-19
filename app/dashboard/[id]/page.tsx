@@ -66,6 +66,12 @@ export default async function CaseDetailPage({ params }: Props) {
             >
               优势挖掘
             </Link>
+            <Link
+              href={`/match?case_id=${caseData.id}`}
+              className="block w-full text-center border border-zinc-300 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300 px-6 py-2.5 rounded-lg text-sm hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+            >
+              岗位匹配
+            </Link>
           </div>
         </div>
       )}
