@@ -27,6 +27,7 @@ function MatchPageInner() {
   const [sessionId, setSessionId] = useState<string | null>(null)
   const [currentJdIndex, setCurrentJdIndex] = useState(0)
   const [error, setError] = useState('')
+  const [failedJdIndexes, setFailedJdIndexes] = useState<Set<number>>(new Set())
 
   useEffect(() => {
     const supabase = createClient()
@@ -58,6 +59,7 @@ function MatchPageInner() {
     setSummary('')
     setCurrentJdIndex(0)
     setError('')
+    setFailedJdIndexes(new Set())
 
     try {
       const res = await fetch('/api/match/analyze', {
@@ -113,6 +115,7 @@ function MatchPageInner() {
                   strengths: [],
                   gaps: [],
                 }])
+                setFailedJdIndexes(prev => new Set(prev).add(obj.jd_index))
               }
             }
           } catch {}
@@ -138,6 +141,7 @@ function MatchPageInner() {
     setSummary('')
     setCurrentJdIndex(0)
     setError('')
+    setFailedJdIndexes(new Set())
   }
 
   return (
@@ -196,6 +200,7 @@ function MatchPageInner() {
               key={r.jd_index}
               result={r}
               title={validJds[r.jd_index]?.title || undefined}
+              failed={failedJdIndexes.has(r.jd_index)}
             />
           ))}
           {currentJdIndex < validJds.length && (
@@ -215,6 +220,7 @@ function MatchPageInner() {
               key={r.jd_index}
               result={r}
               title={validJds[r.jd_index]?.title || undefined}
+              failed={failedJdIndexes.has(r.jd_index)}
             />
           ))}
           {summary && (

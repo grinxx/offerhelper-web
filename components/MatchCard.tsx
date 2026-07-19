@@ -4,6 +4,7 @@ interface Props {
   result: MatchResult
   title?: string
   loading?: boolean
+  failed?: boolean
 }
 
 const LEVEL_STYLES: Record<MatchResult['level'], string> = {
@@ -12,7 +13,7 @@ const LEVEL_STYLES: Record<MatchResult['level'], string> = {
   '不建议': 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400',
 }
 
-export default function MatchCard({ result, title, loading }: Props) {
+export default function MatchCard({ result, title, loading, failed }: Props) {
   if (loading) {
     return (
       <div className="border border-zinc-200 dark:border-zinc-800 rounded-lg p-5 space-y-3 animate-pulse">
@@ -30,7 +31,7 @@ export default function MatchCard({ result, title, loading }: Props) {
   }
 
   return (
-    <div className="border border-zinc-200 dark:border-zinc-800 rounded-lg p-5 space-y-3">
+    <div className={`border rounded-lg p-5 space-y-3 ${failed ? 'border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-950/20' : 'border-zinc-200 dark:border-zinc-800'}`}>
       <div className="flex items-center gap-3 flex-wrap">
         {title && (
           <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">{title}</span>

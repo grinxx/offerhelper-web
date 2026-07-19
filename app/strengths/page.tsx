@@ -110,7 +110,8 @@ function StrengthsPageInner() {
       }
     } catch {
       setError('请求失败，请重试')
-      setStage('idle')
+      setStreamingText('')
+      // 保留对话历史，不重置到 idle
     }
   }
 
