@@ -20,6 +20,12 @@ export async function POST(request: Request) {
 
   const { session_id, messages = [], jd_text = null, turn_index = 0 } = body
 
+  // Clamp turn_index to valid range
+  const safeTurnIndex = Math.max(0, Math.min(2, turn_index ?? 0))
+
+  // Bound messages to prevent unbounded token usage (3 turns × 2 messages each = max 6)
+  const safeMessages = messages.slice(-6)
+
   const sessionSupabase = await createClient()
   const { data: { user } } = await sessionSupabase.auth.getUser()
 
@@ -40,13 +46,13 @@ export async function POST(request: Request) {
           max_tokens: 512,
           system: STRENGTHS_CHAT_SYSTEM,
           messages: [
-            ...messages.map(m => ({
+            ...safeMessages.map(m => ({
               role: m.role as 'user' | 'assistant',
               content: m.content,
             })),
             {
               role: 'user',
-              content: buildStrengthsChatPrompt(messages, jd_text, turn_index),
+              content: buildStrengthsChatPrompt(safeMessages, jd_text, safeTurnIndex),
             },
           ],
           stream: true,
@@ -66,8 +72,7 @@ export async function POST(request: Request) {
             process.env.SUPABASE_SERVICE_ROLE_KEY!
           )
           const updatedMessages = [
-            ...messages,
-            { role: 'user', content: buildStrengthsChatPrompt(messages, jd_text, turn_index) },
+            ...safeMessages,
             { role: 'assistant', content: aiText },
           ]
           if (!currentSessionId) {
@@ -86,13 +91,13 @@ export async function POST(request: Request) {
           }
         }
 
-        const isFinal = turn_index === 2
+        const isFinal = safeTurnIndex === 2
         controller.enqueue(encoder.encode(
-          JSON.stringify({ session_id: currentSessionId, turn_index, is_final: isFinal }) + '\n'
+          JSON.stringify({ session_id: currentSessionId, turn_index: safeTurnIndex, is_final: isFinal }) + '\n'
         ))
       } catch {
         controller.enqueue(encoder.encode(JSON.stringify({ error: '生成问题失败，请重试' }) + '\n'))
-        controller.enqueue(encoder.encode(JSON.stringify({ session_id: currentSessionId, turn_index, is_final: false }) + '\n'))
+        controller.enqueue(encoder.encode(JSON.stringify({ session_id: currentSessionId, turn_index: safeTurnIndex, is_final: false }) + '\n'))
       } finally {
         controller.close()
       }
