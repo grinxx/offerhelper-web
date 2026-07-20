@@ -38,7 +38,8 @@ export async function POST(request: Request) {
     })
 
     const raw = message.content[0]?.type === 'text' ? message.content[0].text : ''
-    result = JSON.parse(raw)
+    const cleaned = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim()
+    result = JSON.parse(cleaned)
     if (!Array.isArray(result.strengths) || !result.summary) throw new Error('invalid')
   } catch {
     return new Response(JSON.stringify({ error: '优势提炼失败，请重试' }), { status: 500 })

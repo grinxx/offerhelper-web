@@ -250,6 +250,12 @@ function StrengthsPageInner() {
                 placeholder="请详细描述你的经历..."
                 value={userInput}
                 onChange={e => setUserInput(e.target.value)}
+                onKeyDown={e => {
+                  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && userInput.trim()) {
+                    e.preventDefault()
+                    handleSend()
+                  }
+                }}
               />
               <button
                 onClick={handleSend}
