@@ -64,17 +64,17 @@ export default function ResumeUploader({ onTextReady }: Props) {
 
   // 已有解析结果（上传或使用缓存）
   if (parsedText) {
-    const lines = parsedText.split('\n').map(l => l.trim())
-    const paragraphs: string[] = []
-    let block: string[] = []
-    for (const line of lines) {
-      if (!line) {
-        if (block.length) { paragraphs.push(block.join('\n')); block = [] }
-      } else {
-        block.push(line)
-      }
-    }
-    if (block.length) paragraphs.push(block.join('\n'))
+    const SECTION_RE = /^(教育背景|工作经历|项目经历|项目实习经历|专业技能|实习经历|奖学金|荣誉|社会活动|学生工作|社会活动和学生工作|自我评价|个人简介|个人信息|技能|证书|获奖)/
+    const DATE_RE = /^[\d❖◆●•⚫※★▪▸►]\s*\d{4}/
+
+    const rawLines = parsedText.split('\n').map(l => l.trim()).filter(Boolean)
+
+    type Block = { type: 'section' | 'item' | 'line'; text: string }
+    const blocks: Block[] = rawLines.map(line => {
+      if (SECTION_RE.test(line)) return { type: 'section', text: line }
+      if (DATE_RE.test(line)) return { type: 'item', text: line }
+      return { type: 'line', text: line }
+    })
 
     return (
       <div className="border border-zinc-200 dark:border-zinc-800 rounded-lg p-4">
@@ -100,10 +100,28 @@ export default function ResumeUploader({ onTextReady }: Props) {
         </div>
 
         {expanded && (
-          <div className="mt-3 border-t border-zinc-100 dark:border-zinc-800 pt-3 space-y-3 max-h-64 overflow-y-auto">
-            {paragraphs.map((p, i) => (
-              <p key={i} className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed whitespace-pre-wrap">{p}</p>
-            ))}
+          <div className="mt-3 border-t border-zinc-100 dark:border-zinc-800 pt-3 max-h-72 overflow-y-auto space-y-1">
+            {blocks.map((b, i) => {
+              if (b.type === 'section') {
+                return (
+                  <p key={i} className={`${i > 0 ? 'mt-3' : ''} text-xs font-semibold text-zinc-800 dark:text-zinc-200 border-b border-zinc-200 dark:border-zinc-700 pb-0.5`}>
+                    {b.text}
+                  </p>
+                )
+              }
+              if (b.type === 'item') {
+                return (
+                  <p key={i} className="mt-1.5 text-xs text-zinc-700 dark:text-zinc-300 font-medium">
+                    {b.text}
+                  </p>
+                )
+              }
+              return (
+                <p key={i} className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed pl-2">
+                  {b.text}
+                </p>
+              )
+            })}
           </div>
         )}
       </div>
