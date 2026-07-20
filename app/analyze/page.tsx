@@ -9,6 +9,7 @@ import JdInput from '@/components/JdInput'
 import AnalyzeButton from '@/components/AnalyzeButton'
 import ResultStream from '@/components/ResultStream'
 import AuthModal from '@/components/AuthModal'
+import NextStepBar from '@/components/NextStepBar'
 import type { Suggestion } from '@/types'
 
 export default function AnalyzePage() {
@@ -150,6 +151,21 @@ export default function AnalyzePage() {
             </button>
           )}
         </div>
+      )}
+
+      {caseId && !loading && suggestions.length > 0 && (
+        <NextStepBar steps={[
+          {
+            label: '岗位匹配',
+            desc: '用这份简历同时对比多个 JD，找最值得投的岗位',
+            href: `/match?case_id=${caseId}`,
+          },
+          {
+            label: '面试训练',
+            desc: '基于同一个 JD 做行为面试模拟练习',
+            href: `/interview?case_id=${caseId}`,
+          },
+        ]} />
       )}
 
       <AuthModal

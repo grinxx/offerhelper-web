@@ -8,6 +8,7 @@ import { createClient } from '@/lib/supabase/client'
 import ChatBubble from '@/components/ChatBubble'
 import StrengthsResultComponent from '@/components/StrengthsResult'
 import AuthModal from '@/components/AuthModal'
+import NextStepBar from '@/components/NextStepBar'
 import type { ChatMessage, StrengthItem } from '@/types'
 
 type Stage = 'idle' | 'chatting' | 'generating_result' | 'done'
@@ -294,6 +295,18 @@ function StrengthsPageInner() {
               返回首页
             </Link>
           </div>
+          <NextStepBar steps={[
+            {
+              label: '简历优化',
+              desc: '把挖掘出的优势和证据写进简历，增强说服力',
+              href: '/analyze',
+            },
+            {
+              label: '岗位匹配',
+              desc: '用整理好的优势去匹配合适岗位，找最值得投的方向',
+              href: caseId ? `/match?case_id=${caseId}` : '/match',
+            },
+          ]} />
         </div>
       )}
 

@@ -8,6 +8,7 @@ import { createClient } from '@/lib/supabase/client'
 import InterviewProgress from '@/components/InterviewProgress'
 import ScoreCard from '@/components/ScoreCard'
 import AuthModal from '@/components/AuthModal'
+import NextStepBar from '@/components/NextStepBar'
 import type { InterviewScores } from '@/types'
 
 type Stage = 'idle' | 'loading_questions' | 'questioning' | 'evaluating' | 'summary'
@@ -392,6 +393,18 @@ function InterviewPageInner() {
               返回首页
             </Link>
           </div>
+          <NextStepBar steps={[
+            {
+              label: '优势挖掘',
+              desc: '通过 3 轮追问，发现面试回答中体现的真实优势',
+              href: caseId ? `/strengths?case_id=${caseId}` : '/strengths',
+            },
+            {
+              label: '简历优化',
+              desc: '把面试中讲清楚的经历和优势写进简历',
+              href: caseId ? `/analyze` : '/analyze',
+            },
+          ]} />
         </div>
       )}
     </main>

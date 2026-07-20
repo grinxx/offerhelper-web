@@ -9,6 +9,7 @@ import ResumeUploader from '@/components/ResumeUploader'
 import JdListInput from '@/components/JdListInput'
 import MatchCard from '@/components/MatchCard'
 import AuthModal from '@/components/AuthModal'
+import NextStepBar from '@/components/NextStepBar'
 import type { JdItem, MatchResult } from '@/types'
 
 type Stage = 'idle' | 'analyzing' | 'done'
@@ -237,6 +238,20 @@ function MatchPageInner() {
           >
             重新匹配
           </button>
+          <NextStepBar steps={[
+            {
+              label: '简历优化',
+              desc: '针对评分最高的岗位，定制一份更有针对性的简历',
+              href: sessionId ? `/analyze` : '/analyze',
+            },
+            {
+              label: '面试训练',
+              desc: '选一个最匹配的岗位，开始行为面试模拟练习',
+              href: validJds[0]?.content
+                ? `/interview?case_id=${sessionId ?? ''}`
+                : '/interview',
+            },
+          ]} />
         </div>
       )}
 
