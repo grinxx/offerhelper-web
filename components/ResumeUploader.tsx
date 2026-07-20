@@ -64,7 +64,18 @@ export default function ResumeUploader({ onTextReady }: Props) {
 
   // 已有解析结果（上传或使用缓存）
   if (parsedText) {
-    const paragraphs = parsedText.split(/\n{2,}/).map(p => p.trim()).filter(Boolean)
+    const lines = parsedText.split('\n').map(l => l.trim())
+    const paragraphs: string[] = []
+    let block: string[] = []
+    for (const line of lines) {
+      if (!line) {
+        if (block.length) { paragraphs.push(block.join('\n')); block = [] }
+      } else {
+        block.push(line)
+      }
+    }
+    if (block.length) paragraphs.push(block.join('\n'))
+
     return (
       <div className="border border-zinc-200 dark:border-zinc-800 rounded-lg p-4">
         <div className="flex items-center justify-between">
@@ -89,7 +100,7 @@ export default function ResumeUploader({ onTextReady }: Props) {
         </div>
 
         {expanded && (
-          <div className="mt-3 border-t border-zinc-100 dark:border-zinc-800 pt-3 space-y-2 max-h-64 overflow-y-auto">
+          <div className="mt-3 border-t border-zinc-100 dark:border-zinc-800 pt-3 space-y-3 max-h-64 overflow-y-auto">
             {paragraphs.map((p, i) => (
               <p key={i} className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed whitespace-pre-wrap">{p}</p>
             ))}
