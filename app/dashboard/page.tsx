@@ -40,6 +40,20 @@ const TYPE_LABELS: Record<RecordType, string> = {
   match: '岗位匹配',
 }
 
+const TYPE_HREF: Record<RecordType, string> = {
+  analysis: '/analyze',
+  interview: '/interview',
+  strengths: '/strengths',
+  match: '/match',
+}
+
+const TYPE_ACTION: Record<RecordType, string> = {
+  analysis: '开始第一次简历分析',
+  interview: '开始第一次面试训练',
+  strengths: '开始第一次优势挖掘',
+  match: '开始第一次岗位匹配',
+}
+
 const VALID_TYPES = new Set<string>(['analysis', 'interview', 'strengths', 'match'])
 
 const PAGE_SIZE = 20
@@ -152,7 +166,9 @@ export default async function DashboardPage({ searchParams }: Props) {
 
       {records.length === 0 && page === 1 ? (
         <p className="text-zinc-500 dark:text-zinc-400 text-sm">
-          暂无记录，<Link href="/analyze" className="underline">开始第一次分析</Link>
+          暂无记录，<Link href={activeType ? TYPE_HREF[activeType] : '/'} className="underline">
+            {activeType ? TYPE_ACTION[activeType] : '去选择一个功能开始'}
+          </Link>
         </p>
       ) : (
         <>
