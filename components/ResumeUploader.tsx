@@ -45,10 +45,6 @@ export default function ResumeUploader({ onTextReady }: Props) {
     setUsingCached(false)
     setParsedText('')
     setFileName('')
-    setCachedName(null)
-    setCachedText(null)
-    localStorage.removeItem(STORAGE_KEY)
-    localStorage.removeItem(STORAGE_NAME_KEY)
     onTextReady('')
   }
 
