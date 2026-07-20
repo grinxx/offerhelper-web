@@ -110,6 +110,8 @@ export default function HomePage() {
           <div className="flex flex-wrap items-center justify-end gap-x-3 gap-y-1 text-xs sm:text-sm text-zinc-500 dark:text-zinc-400">
             <button onClick={() => openModal('login')} className="hover:text-zinc-900 dark:hover:text-zinc-100">登录</button>
             <span className="hidden sm:inline">|</span>
+            <button onClick={() => openModal('signup')} className="hover:text-zinc-900 dark:hover:text-zinc-100">注册</button>
+            <span className="hidden sm:inline">|</span>
             <button onClick={() => openModal('login')} className="hover:text-zinc-900 dark:hover:text-zinc-100">面试训练</button>
             <span className="hidden sm:inline">|</span>
             <button onClick={() => router.push('/strengths')} className="hover:text-zinc-900 dark:hover:text-zinc-100">优势挖掘</button>
@@ -144,7 +146,7 @@ export default function HomePage() {
               onClick={() => router.push('/dashboard')}
               className="border border-zinc-900 dark:border-zinc-100 text-zinc-900 dark:text-zinc-100 px-6 py-2 rounded-lg text-sm hover:bg-zinc-50 dark:hover:bg-zinc-800"
             >
-              查看历史记录
+              查看我的记录
             </button>
           ) : (
             <button

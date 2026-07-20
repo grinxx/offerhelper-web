@@ -131,6 +131,7 @@ export default async function DashboardPage({ searchParams }: Props) {
 
   const pageTitle = activeType ? TYPE_LABELS[activeType] + '记录' : '我的记录'
   const baseUrl = activeType ? `/dashboard?type=${activeType}` : '/dashboard'
+  const backParam = activeType ? `?back=/dashboard%3Ftype%3D${activeType}` : '?back=/dashboard'
 
   return (
     <main className="max-w-2xl mx-auto px-4 py-10">
@@ -161,7 +162,7 @@ export default async function DashboardPage({ searchParams }: Props) {
               return (
                 <li key={`${r.type}-${r.id}`} className="relative">
                   <Link
-                    href={r.href}
+                    href={`${r.href}${backParam}`}
                     className="block border border-zinc-200 dark:border-zinc-800 rounded-lg p-4 hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors"
                   >
                     <div className="flex items-center justify-between gap-3">

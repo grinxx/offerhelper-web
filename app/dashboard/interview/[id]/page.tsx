@@ -6,6 +6,7 @@ import type { InterviewScores } from '@/types'
 
 interface Props {
   params: Promise<{ id: string }>
+  searchParams: Promise<{ back?: string }>
 }
 
 interface TurnRow {
@@ -17,8 +18,10 @@ interface TurnRow {
   reference_answer: string
 }
 
-export default async function InterviewDetailPage({ params }: Props) {
+export default async function InterviewDetailPage({ params, searchParams }: Props) {
   const { id } = await params
+  const { back } = await searchParams
+  const backUrl = back ?? '/dashboard'
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/')
@@ -44,7 +47,7 @@ export default async function InterviewDetailPage({ params }: Props) {
     <main className="max-w-2xl mx-auto px-4 py-10">
       <header className="flex items-center justify-between mb-8">
         <Link href="/" className="text-xl font-semibold">OfferHelper</Link>
-        <Link href="/dashboard" className="text-sm text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors">
+        <Link href={backUrl} className="text-sm text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors">
           ← 返回记录
         </Link>
       </header>
