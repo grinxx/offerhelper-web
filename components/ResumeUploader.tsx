@@ -11,21 +11,25 @@ export default function ResumeUploader({ onTextReady }: Props) {
   const [mode, setMode] = useState<'upload' | 'paste'>('upload')
   const [fileName, setFileName] = useState('')
   const [pasteText, setPasteText] = useState('')
+  const [cachedResume, setCachedResume] = useState<string | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     const cached = localStorage.getItem(STORAGE_KEY)
-    if (cached) {
-      setPasteText(cached)
-      setMode('paste')
-      onTextReady(cached)
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (cached) setCachedResume(cached)
   }, [])
 
   function saveAndNotify(text: string) {
     if (text.trim()) localStorage.setItem(STORAGE_KEY, text)
     onTextReady(text)
+  }
+
+  function handleUseCached() {
+    if (!cachedResume) return
+    setPasteText(cachedResume)
+    setMode('paste')
+    onTextReady(cachedResume)
+    setCachedResume(null)
   }
 
   async function handleFile(file: File) {
@@ -35,10 +39,31 @@ export default function ResumeUploader({ onTextReady }: Props) {
     const res = await fetch('/api/parse-resume', { method: 'POST', body: formData })
     const { text } = await res.json()
     saveAndNotify(text)
+    setCachedResume(null)
   }
 
   return (
     <div className="border border-zinc-200 dark:border-zinc-800 rounded-lg p-4">
+      {cachedResume && (
+        <div className="flex items-center justify-between mb-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded px-3 py-2 text-xs text-zinc-500 dark:text-zinc-400">
+          <span>检测到上次使用的简历</span>
+          <div className="flex gap-3">
+            <button
+              onClick={handleUseCached}
+              className="text-zinc-900 dark:text-zinc-100 font-medium hover:underline"
+            >
+              使用
+            </button>
+            <button
+              onClick={() => setCachedResume(null)}
+              className="hover:underline"
+            >
+              忽略
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="flex gap-2 mb-3">
         <button
           className={`px-3 py-1 rounded text-sm transition-colors ${mode === 'upload' ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900' : 'border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300'}`}
@@ -67,17 +92,12 @@ export default function ResumeUploader({ onTextReady }: Props) {
           />
         </div>
       ) : (
-        <div className="relative">
-          <textarea
-            className="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 rounded p-3 text-sm h-40 resize-none placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-400 dark:focus:ring-zinc-600"
-            placeholder="将简历文本粘贴到这里..."
-            value={pasteText}
-            onChange={e => { setPasteText(e.target.value); saveAndNotify(e.target.value) }}
-          />
-          {pasteText && (
-            <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-1">已缓存，切换页面后自动预填</p>
-          )}
-        </div>
+        <textarea
+          className="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 rounded p-3 text-sm h-40 resize-none placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-400 dark:focus:ring-zinc-600"
+          placeholder="将简历文本粘贴到这里..."
+          value={pasteText}
+          onChange={e => { setPasteText(e.target.value); saveAndNotify(e.target.value) }}
+        />
       )}
     </div>
   )

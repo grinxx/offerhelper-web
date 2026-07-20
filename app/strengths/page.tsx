@@ -247,11 +247,11 @@ function StrengthsPageInner() {
             <div className="space-y-2">
               <textarea
                 className="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 rounded p-3 text-sm h-28 resize-none placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-400 dark:focus:ring-zinc-600"
-                placeholder="请详细描述你的经历..."
+                placeholder="请详细描述你的经历...（Enter 发送，Shift+Enter 换行）"
                 value={userInput}
                 onChange={e => setUserInput(e.target.value)}
                 onKeyDown={e => {
-                  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && userInput.trim()) {
+                  if (e.key === 'Enter' && !e.shiftKey && userInput.trim()) {
                     e.preventDefault()
                     handleSend()
                   }
