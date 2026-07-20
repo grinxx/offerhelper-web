@@ -14,6 +14,12 @@ import type { JdItem, MatchResult } from '@/types'
 
 type Stage = 'idle' | 'analyzing' | 'done'
 
+interface Recommendation {
+  name: string
+  reason: string
+  keywords: string[]
+}
+
 function MatchPageInner() {
   const searchParams = useSearchParams()
   const caseId = searchParams.get('case_id')
@@ -21,6 +27,8 @@ function MatchPageInner() {
   const [user, setUser] = useState<User | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
   const [resumeText, setResumeText] = useState('')
+  const [recommendations, setRecommendations] = useState<Recommendation[]>([])
+  const [recommending, setRecommending] = useState(false)
   const [jdList, setJdList] = useState<JdItem[]>([{ title: '', content: '' }, { title: '', content: '' }])
   const [stage, setStage] = useState<Stage>('idle')
   const [results, setResults] = useState<MatchResult[]>([])
@@ -143,6 +151,38 @@ function MatchPageInner() {
     setCurrentJdIndex(0)
     setError('')
     setFailedJdIndexes(new Set())
+    setRecommendations([])
+  }
+
+  async function handleRecommend() {
+    if (!resumeText.trim()) return
+    setRecommending(true)
+    setRecommendations([])
+    try {
+      const res = await fetch('/api/match/recommend', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ resume_text: resumeText }),
+      })
+      const data = await res.json()
+      if (data.recommendations) setRecommendations(data.recommendations)
+    } finally {
+      setRecommending(false)
+    }
+  }
+
+  function applyRecommendation(rec: Recommendation) {
+    setJdList(prev => {
+      const next = [...prev]
+      const emptyIdx = next.findIndex(j => !j.title && !j.content)
+      const targetIdx = emptyIdx !== -1 ? emptyIdx : next.length < 5 ? next.length : 0
+      if (targetIdx === next.length) {
+        return [...next, { title: rec.name, content: '' }]
+      }
+      const updated = [...next]
+      updated[targetIdx] = { ...updated[targetIdx], title: rec.name }
+      return updated
+    })
   }
 
   return (
@@ -174,6 +214,36 @@ function MatchPageInner() {
           </div>
           <div>
             <h3 className="text-sm font-medium mb-2">目标岗位 JD（最多 5 个）</h3>
+            {resumeText && recommendations.length === 0 && (
+              <button
+                onClick={handleRecommend}
+                disabled={recommending}
+                className="mb-3 text-xs text-zinc-500 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700 rounded px-3 py-1.5 hover:bg-zinc-50 dark:hover:bg-zinc-900 disabled:opacity-40 transition-colors"
+              >
+                {recommending ? '正在分析简历...' : '✦ 根据简历推荐岗位方向'}
+              </button>
+            )}
+            {recommendations.length > 0 && (
+              <div className="mb-3 space-y-2">
+                <p className="text-xs text-zinc-400 dark:text-zinc-500">根据你的简历推荐以下方向，点击填入：</p>
+                {recommendations.map((rec) => (
+                  <button
+                    key={rec.name}
+                    onClick={() => applyRecommendation(rec)}
+                    className="w-full text-left border border-zinc-200 dark:border-zinc-700 rounded-lg px-3 py-2.5 hover:bg-zinc-50 dark:hover:bg-zinc-900 hover:border-zinc-400 dark:hover:border-zinc-500 transition-all group"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <span className="text-sm font-medium text-zinc-800 dark:text-zinc-200">{rec.name}</span>
+                        <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-0.5 leading-relaxed">{rec.reason}</p>
+                        <p className="text-xs text-zinc-300 dark:text-zinc-600 mt-0.5">搜索：{rec.keywords.join(' · ')}</p>
+                      </div>
+                      <span className="text-xs text-zinc-400 dark:text-zinc-500 shrink-0 group-hover:text-zinc-700 dark:group-hover:text-zinc-300 mt-0.5">填入 →</span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
             <JdListInput value={jdList} onChange={setJdList} />
           </div>
           {!user && (
