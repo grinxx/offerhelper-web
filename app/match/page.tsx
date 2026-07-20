@@ -29,6 +29,11 @@ function MatchPageInner() {
   const [resumeText, setResumeText] = useState('')
   const [recommendations, setRecommendations] = useState<Recommendation[]>([])
   const [recommending, setRecommending] = useState(false)
+
+  function handleResumeReady(text: string) {
+    setResumeText(text)
+    setRecommendations([])
+  }
   const [jdList, setJdList] = useState<JdItem[]>([{ title: '', content: '' }, { title: '', content: '' }])
   const [stage, setStage] = useState<Stage>('idle')
   const [results, setResults] = useState<MatchResult[]>([])
@@ -207,7 +212,7 @@ function MatchPageInner() {
         <div className="space-y-6">
           <div>
             <h3 className="text-sm font-medium mb-2">简历</h3>
-            <ResumeUploader onTextReady={setResumeText} />
+            <ResumeUploader onTextReady={handleResumeReady} />
             {resumeText && caseId && (
               <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-1">已预填简历内容</p>
             )}
