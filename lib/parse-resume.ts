@@ -1,56 +1,55 @@
-const SECTION_HEADERS = [
-  '教育背景', '教育经历', '学历背景',
-  '工作经历', '工作经验', '实习经历', '项目实习经历', '实习经验',
-  '项目经历', '项目经验', '项目',
-  '专业技能', '技能', '技术技能', '核心技能',
-  '奖学金', '荣誉奖项', '获奖情况', '奖项',
-  '社会活动', '学生工作', '社会活动和学生工作', '课外活动',
-  '自我评价', '个人简介', '个人总结', '关于我',
-  '证书', '资格证书', '语言能力',
-  '科研经历', '论文发表',
-]
+import Anthropic from '@anthropic-ai/sdk'
 
-// 把 PDF 解析出的单行文本按章节标题和日期条目切分为多行
-function normalizeResumeText(raw: string): string {
-  // 如果已经有换行符，只做轻量清理
-  if (/\n/.test(raw)) {
-    return raw.replace(/\n{3,}/g, '\n\n').trim()
-  }
+async function formatResumeWithAI(rawText: string): Promise<string> {
+  const client = new Anthropic({
+    apiKey: process.env.ANTHROPIC_API_KEY,
+    baseURL: process.env.ANTHROPIC_BASE_URL,
+  })
 
-  // 构建章节标题正则：在标题前插入换行
-  const headerPattern = new RegExp(
-    `(${SECTION_HEADERS.map(h => h.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})`,
-    'g'
-  )
+  const message = await client.messages.create({
+    model: 'claude-haiku-4-5-20251001',
+    max_tokens: 2048,
+    messages: [{
+      role: 'user',
+      content: `将以下简历原始文本整理成结构清晰的 Markdown 格式。
 
-  // 在章节标题前插入双换行
-  let text = raw.replace(headerPattern, '\n\n$1')
+要求：
+- 用 ## 标记主要章节（如教育背景、工作经历、专业技能等）
+- 用 **加粗** 标记公司名、学校名、职位名
+- 用 - 列表展示技能、职责、成就
+- 保留所有原始内容，不增删，不改写
+- 只输出 Markdown，不加任何说明
 
-  // 在日期条目前插入换行（❖/◆/●/⚫ 开头，或 年份.月 格式独立出现）
-  text = text.replace(/\s+(❖|◆|●|⚫|※|★)\s*/g, '\n$1 ')
-  text = text.replace(/\s+(\d{4}[.\-/年]\d{1,2})/g, '\n$1')
+简历原文：
+${rawText}`,
+    }],
+  })
 
-  // 清理多余空行
-  return text.replace(/\n{3,}/g, '\n\n').trim()
+  const result = message.content[0]?.type === 'text' ? message.content[0].text : rawText
+  return result.trim()
 }
 
-export async function parseResume(file: File): Promise<string> {
+export async function parseResume(file: File, formatWithAI = false): Promise<string> {
   const buffer = Buffer.from(await file.arrayBuffer())
+  let text = ''
 
   if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
     const { extractText } = await import('unpdf')
-    const { text } = await extractText(new Uint8Array(buffer), { mergePages: true })
-    return normalizeResumeText(text.trim())
-  }
-
-  if (
+    const { text: extracted } = await extractText(new Uint8Array(buffer), { mergePages: true })
+    text = extracted.trim()
+  } else if (
     file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
     file.name.endsWith('.docx')
   ) {
     const mammoth = await import('mammoth')
     const result = await mammoth.extractRawText({ buffer })
-    return normalizeResumeText(result.value.trim())
+    text = result.value.trim()
+  } else {
+    text = buffer.toString('utf-8').trim()
   }
 
-  return buffer.toString('utf-8').trim()
+  if (formatWithAI && text) {
+    return formatResumeWithAI(text)
+  }
+  return text
 }

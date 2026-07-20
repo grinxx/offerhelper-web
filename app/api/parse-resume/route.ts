@@ -11,7 +11,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const text = await parseResume(file)
+    const text = await parseResume(file, true)
     return Response.json({ text })
   } catch {
     return Response.json({ error: '文件解析失败，请尝试粘贴文本' }, { status: 422 })

@@ -1,5 +1,6 @@
 'use client'
 import { useState, useRef, useEffect } from 'react'
+import ReactMarkdown from 'react-markdown'
 
 const STORAGE_KEY = 'offerhelper_resume_text'
 const STORAGE_NAME_KEY = 'offerhelper_resume_name'
@@ -11,12 +12,12 @@ interface Props {
 export default function ResumeUploader({ onTextReady }: Props) {
   const [fileName, setFileName] = useState('')
   const [parsedText, setParsedText] = useState('')
+  const [parsing, setParsing] = useState(false)
   const [expanded, setExpanded] = useState(false)
   const [pasteMode, setPasteMode] = useState(false)
   const [pasteText, setPasteText] = useState('')
   const [cachedName, setCachedName] = useState<string | null>(null)
   const [cachedText, setCachedText] = useState<string | null>(null)
-  const [usingCached, setUsingCached] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -37,12 +38,10 @@ export default function ResumeUploader({ onTextReady }: Props) {
     if (!cachedText || !cachedName) return
     setParsedText(cachedText)
     setFileName(cachedName)
-    setUsingCached(true)
     onTextReady(cachedText)
   }
 
   function handleSwitch() {
-    setUsingCached(false)
     setParsedText('')
     setFileName('')
     onTextReady('')
@@ -51,28 +50,35 @@ export default function ResumeUploader({ onTextReady }: Props) {
   async function handleFile(file: File) {
     const name = file.name
     setFileName(name)
-    setUsingCached(false)
+    setParsing(true)
+    setParsedText('')
     setCachedName(null)
-    const formData = new FormData()
-    formData.append('file', file)
-    const res = await fetch('/api/parse-resume', { method: 'POST', body: formData })
-    const { text } = await res.json()
-    setParsedText(text)
-    saveCache(text, name)
-    onTextReady(text)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      const res = await fetch('/api/parse-resume', { method: 'POST', body: formData })
+      const { text } = await res.json()
+      setParsedText(text)
+      saveCache(text, name)
+      onTextReady(text)
+    } finally {
+      setParsing(false)
+    }
   }
 
-  // 已有解析结果（上传或使用缓存）
-  if (parsedText) {
-    const blocks = parsedText
-      .split('\n')
-      .map(l => l.trim())
-      .filter(Boolean)
-      .map(line => {
-        const isSection = /^(教育背景|教育经历|工作经历|实习经历|项目实习经历|项目经历|专业技能|技能|奖学金|荣誉|社会活动|学生工作|社会活动和学生工作|自我评价|个人简介|证书|科研经历)/.test(line)
-        return { line, isSection }
-      })
+  // 解析中
+  if (parsing) {
+    return (
+      <div className="border border-zinc-200 dark:border-zinc-800 rounded-lg p-4">
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-zinc-500 dark:text-zinc-400 animate-pulse">正在解析简历...</span>
+        </div>
+      </div>
+    )
+  }
 
+  // 已有解析结果
+  if (parsedText) {
     return (
       <div className="border border-zinc-200 dark:border-zinc-800 rounded-lg p-4">
         <div className="flex items-center justify-between">
@@ -97,16 +103,14 @@ export default function ResumeUploader({ onTextReady }: Props) {
         </div>
 
         {expanded && (
-          <div className="mt-3 border-t border-zinc-100 dark:border-zinc-800 pt-3 max-h-72 overflow-y-auto space-y-1">
-            {blocks.map((b, i) => b.isSection ? (
-              <p key={i} className={`${i > 0 ? 'mt-3' : ''} text-xs font-semibold text-zinc-800 dark:text-zinc-200 border-b border-zinc-200 dark:border-zinc-700 pb-0.5`}>
-                {b.line}
-              </p>
-            ) : (
-              <p key={i} className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed pl-1">
-                {b.line}
-              </p>
-            ))}
+          <div className="mt-3 border-t border-zinc-100 dark:border-zinc-800 pt-3 max-h-96 overflow-y-auto
+            [&_h1]:text-sm [&_h1]:font-semibold [&_h1]:text-zinc-800 [&_h1]:dark:text-zinc-200 [&_h1]:mt-3 [&_h1]:mb-1 [&_h1]:border-b [&_h1]:border-zinc-200 [&_h1]:dark:border-zinc-700 [&_h1]:pb-0.5
+            [&_h2]:text-sm [&_h2]:font-semibold [&_h2]:text-zinc-800 [&_h2]:dark:text-zinc-200 [&_h2]:mt-3 [&_h2]:mb-1 [&_h2]:border-b [&_h2]:border-zinc-200 [&_h2]:dark:border-zinc-700 [&_h2]:pb-0.5
+            [&_h3]:text-xs [&_h3]:font-medium [&_h3]:text-zinc-700 [&_h3]:dark:text-zinc-300 [&_h3]:mt-2 [&_h3]:mb-0.5
+            [&_p]:text-xs [&_p]:text-zinc-500 [&_p]:dark:text-zinc-400 [&_p]:leading-relaxed [&_p]:my-0.5
+            [&_ul]:my-1 [&_ul]:pl-4 [&_li]:text-xs [&_li]:text-zinc-500 [&_li]:dark:text-zinc-400 [&_li]:leading-relaxed
+            [&_strong]:text-zinc-700 [&_strong]:dark:text-zinc-300 [&_strong]:font-medium">
+            <ReactMarkdown>{parsedText}</ReactMarkdown>
           </div>
         )}
       </div>
@@ -143,10 +147,10 @@ export default function ResumeUploader({ onTextReady }: Props) {
     )
   }
 
-  // 默认：上传区 + 缓存提示
+  // 默认上传区
   return (
     <div className="border border-zinc-200 dark:border-zinc-800 rounded-lg p-4">
-      {cachedName && !usingCached && (
+      {cachedName && (
         <div className="flex items-center justify-between mb-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded px-3 py-2">
           <span className="text-xs text-zinc-500 dark:text-zinc-400 truncate mr-2">
             上次使用：<span className="text-zinc-700 dark:text-zinc-300 font-medium">{cachedName}</span>
