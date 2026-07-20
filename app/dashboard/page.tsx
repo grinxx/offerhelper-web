@@ -152,7 +152,7 @@ export default async function DashboardPage({ searchParams }: Props) {
 
       {records.length === 0 && page === 1 ? (
         <p className="text-zinc-500 dark:text-zinc-400 text-sm">
-          暂无记录，<Link href="/" className="underline">开始第一次分析</Link>
+          暂无记录，<Link href="/analyze" className="underline">开始第一次分析</Link>
         </p>
       ) : (
         <>

@@ -1,168 +1,136 @@
 'use client'
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import type { User } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/client'
-import ResumeUploader from '@/components/ResumeUploader'
-import JdInput from '@/components/JdInput'
-import AnalyzeButton from '@/components/AnalyzeButton'
-import ResultStream from '@/components/ResultStream'
 import AuthModal from '@/components/AuthModal'
-import type { Suggestion } from '@/types'
+
+const FEATURES = [
+  {
+    title: '简历优化',
+    desc: '针对目标 JD 逐条优化简历表达',
+    detail: '每条建议都有真实经历支撑，缺证据的内容单独标注',
+    href: '/analyze',
+    requireLogin: false,
+  },
+  {
+    title: '岗位匹配',
+    desc: '同时对比多个 JD，找最值得投的岗位',
+    detail: '评分 + 优劣势分析 + 投递建议，最多 5 个岗位',
+    href: '/match',
+    requireLogin: false,
+  },
+  {
+    title: '面试训练',
+    desc: '模拟真实面试，5 题行为面试练习',
+    detail: '结构、证据、岗位关联三维实时评分，附参考答案',
+    href: '/interview',
+    requireLogin: true,
+  },
+  {
+    title: '优势挖掘',
+    desc: '3 轮追问，整理有证据的职业优势',
+    detail: '从真实经历中提炼能力标签，可结合目标 JD 定向分析',
+    href: '/strengths',
+    requireLogin: false,
+  },
+]
 
 export default function HomePage() {
   const router = useRouter()
-  const [resumeText, setResumeText] = useState('')
-  const [jdText, setJdText] = useState('')
-  const [suggestions, setSuggestions] = useState<Suggestion[]>([])
-  const [loading, setLoading] = useState(false)
-  const [caseId, setCaseId] = useState<string | null>(null)
   const [user, setUser] = useState<User | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
-  const [modalTab, setModalTab] = useState<'login' | 'signup'>('login')
+  const [pendingHref, setPendingHref] = useState<string | null>(null)
 
   useEffect(() => {
     const supabase = createClient()
     supabase.auth.getUser().then(({ data: { user } }) => setUser(user))
   }, [])
 
-  const handleAuthSuccess = useCallback(async (userId: string) => {
-    setModalOpen(false)
-    if (caseId) {
-      await fetch('/api/claim-case', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ case_id: caseId }),
-      })
-    }
-    router.push('/dashboard')
-  }, [caseId, router])
-
-  const handleSignOut = useCallback(async () => {
+  const handleSignOut = async () => {
     const supabase = createClient()
     await supabase.auth.signOut()
     setUser(null)
-  }, [])
+  }
 
-  const handleAnalyze = useCallback(async () => {
-    if (!resumeText || !jdText) return
-    setLoading(true)
-    setSuggestions([])
-    setCaseId(null)
-
-    try {
-      const res = await fetch('/api/analyze', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ resume_text: resumeText, jd_text: jdText }),
-      })
-
-      const reader = res.body!.getReader()
-      const decoder = new TextDecoder()
-      let buffer = ''
-
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-        buffer += decoder.decode(value, { stream: true })
-        const lines = buffer.split('\n')
-        buffer = lines.pop() ?? ''
-
-        for (const line of lines) {
-          if (!line.trim()) continue
-          try {
-            const obj = JSON.parse(line)
-            if (obj.case_id) {
-              setCaseId(obj.case_id)
-            } else if (obj.original) {
-              setSuggestions(prev => [...prev, obj as Suggestion])
-            }
-          } catch {}
-        }
-      }
-    } finally {
-      setLoading(false)
+  const handleFeatureClick = (href: string, requireLogin: boolean) => {
+    if (requireLogin && !user) {
+      setPendingHref(href)
+      setModalOpen(true)
+      return
     }
-  }, [resumeText, jdText])
+    router.push(href)
+  }
 
-  function openModal(tab: 'login' | 'signup') {
-    setModalTab(tab)
-    setModalOpen(true)
+  const handleAuthSuccess = () => {
+    setModalOpen(false)
+    const supabase = createClient()
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setUser(user)
+      if (pendingHref) {
+        router.push(pendingHref)
+        setPendingHref(null)
+      }
+    })
   }
 
   return (
     <main className="max-w-2xl mx-auto px-4 py-10">
-      <header className="flex items-start justify-between mb-8 gap-4">
+      <header className="flex items-start justify-between mb-10 gap-4">
         <h1 className="text-xl font-semibold shrink-0">OfferHelper</h1>
         {user ? (
           <div className="flex flex-wrap items-center justify-end gap-x-3 gap-y-1 text-xs sm:text-sm text-zinc-500 dark:text-zinc-400">
-            <button onClick={() => router.push('/dashboard')} className="hover:text-zinc-900 dark:hover:text-zinc-100">我的记录</button>
-            <span className="hidden sm:inline">|</span>
-            <button onClick={() => router.push('/interview')} className="hover:text-zinc-900 dark:hover:text-zinc-100">面试训练</button>
-            <span className="hidden sm:inline">|</span>
-            <button onClick={() => router.push('/strengths')} className="hover:text-zinc-900 dark:hover:text-zinc-100">优势挖掘</button>
-            <span className="hidden sm:inline">|</span>
-            <button onClick={() => router.push('/match')} className="hover:text-zinc-900 dark:hover:text-zinc-100">岗位匹配</button>
+            <Link href="/dashboard" className="hover:text-zinc-900 dark:hover:text-zinc-100">我的记录</Link>
             <span className="hidden sm:inline">|</span>
             <button onClick={handleSignOut} className="hover:text-zinc-900 dark:hover:text-zinc-100">退出</button>
           </div>
         ) : (
           <div className="flex flex-wrap items-center justify-end gap-x-3 gap-y-1 text-xs sm:text-sm text-zinc-500 dark:text-zinc-400">
-            <button onClick={() => openModal('login')} className="hover:text-zinc-900 dark:hover:text-zinc-100">登录</button>
+            <button onClick={() => setModalOpen(true)} className="hover:text-zinc-900 dark:hover:text-zinc-100">登录</button>
             <span className="hidden sm:inline">|</span>
-            <button onClick={() => openModal('signup')} className="hover:text-zinc-900 dark:hover:text-zinc-100">注册</button>
-            <span className="hidden sm:inline">|</span>
-            <button onClick={() => openModal('login')} className="hover:text-zinc-900 dark:hover:text-zinc-100">面试训练</button>
-            <span className="hidden sm:inline">|</span>
-            <button onClick={() => router.push('/strengths')} className="hover:text-zinc-900 dark:hover:text-zinc-100">优势挖掘</button>
-            <span className="hidden sm:inline">|</span>
-            <button onClick={() => router.push('/match')} className="hover:text-zinc-900 dark:hover:text-zinc-100">岗位匹配</button>
+            <button onClick={() => { setPendingHref(null); setModalOpen(true) }} className="hover:text-zinc-900 dark:hover:text-zinc-100">注册</button>
           </div>
         )}
       </header>
 
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold mb-1">把真实经历变成可投递的简历</h2>
-        <p className="text-zinc-500 dark:text-zinc-400 text-sm">不编造，不包装，只优化表达</p>
+      <div className="mb-8">
+        <h2 className="text-2xl font-bold mb-1">把真实经历变成可投递的求职材料</h2>
+        <p className="text-zinc-500 dark:text-zinc-400 text-sm">不编造，不包装，选一个你现在最需要的功能开始</p>
       </div>
 
-      <div className="space-y-4 mb-6">
-        <ResumeUploader onTextReady={setResumeText} />
-        <JdInput value={jdText} onChange={setJdText} />
-        <AnalyzeButton
-          loading={loading}
-          disabled={!resumeText || !jdText}
-          onClick={handleAnalyze}
-        />
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-10">
+        {FEATURES.map((f) => (
+          <button
+            key={f.href}
+            onClick={() => handleFeatureClick(f.href, f.requireLogin)}
+            className="text-left border border-zinc-200 dark:border-zinc-800 rounded-xl p-5 hover:bg-zinc-50 dark:hover:bg-zinc-900 hover:border-zinc-400 dark:hover:border-zinc-600 transition-all group"
+          >
+            <p className="text-base font-semibold text-zinc-900 dark:text-zinc-100 mb-1 group-hover:text-zinc-700 dark:group-hover:text-zinc-200">
+              {f.title}
+            </p>
+            <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-2">{f.desc}</p>
+            <p className="text-xs text-zinc-400 dark:text-zinc-500 leading-relaxed">{f.detail}</p>
+          </button>
+        ))}
       </div>
 
-      <ResultStream suggestions={suggestions} loading={loading} />
-
-      {caseId && !loading && suggestions.length > 0 && (
-        <div className="mt-8 border-t border-zinc-200 dark:border-zinc-800 pt-6 text-center">
-          <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-3">保存结果，下次继续优化</p>
-          {user ? (
-            <button
-              onClick={() => router.push('/dashboard')}
-              className="border border-zinc-900 dark:border-zinc-100 text-zinc-900 dark:text-zinc-100 px-6 py-2 rounded-lg text-sm hover:bg-zinc-50 dark:hover:bg-zinc-800"
-            >
-              查看我的记录
-            </button>
-          ) : (
-            <button
-              onClick={() => openModal('signup')}
-              className="border border-zinc-900 dark:border-zinc-100 text-zinc-900 dark:text-zinc-100 px-6 py-2 rounded-lg text-sm hover:bg-zinc-50 dark:hover:bg-zinc-800"
-            >
-              注册保存
-            </button>
-          )}
+      {user && (
+        <div className="border-t border-zinc-200 dark:border-zinc-800 pt-6">
+          <Link
+            href="/dashboard"
+            className="flex items-center justify-between text-sm text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
+          >
+            <span>最近记录</span>
+            <span>→</span>
+          </Link>
         </div>
       )}
 
       <AuthModal
         isOpen={modalOpen}
-        defaultTab={modalTab}
-        onClose={() => setModalOpen(false)}
+        defaultTab="login"
+        onClose={() => { setModalOpen(false); setPendingHref(null) }}
         onAuthSuccess={handleAuthSuccess}
       />
     </main>
