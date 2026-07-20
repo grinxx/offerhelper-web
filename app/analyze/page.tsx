@@ -97,12 +97,16 @@ export default function AnalyzePage() {
         <Link href="/" className="text-xl font-semibold shrink-0">OfferHelper</Link>
         {user ? (
           <div className="flex flex-wrap items-center justify-end gap-x-3 gap-y-1 text-xs sm:text-sm text-zinc-500 dark:text-zinc-400">
+            <Link href="/" className="hover:text-zinc-900 dark:hover:text-zinc-100">首页</Link>
+            <span className="hidden sm:inline">|</span>
             <Link href="/dashboard?type=analysis" className="hover:text-zinc-900 dark:hover:text-zinc-100">我的记录</Link>
             <span className="hidden sm:inline">|</span>
             <button onClick={handleSignOut} className="hover:text-zinc-900 dark:hover:text-zinc-100">退出</button>
           </div>
         ) : (
           <div className="flex flex-wrap items-center justify-end gap-x-3 gap-y-1 text-xs sm:text-sm text-zinc-500 dark:text-zinc-400">
+            <Link href="/" className="hover:text-zinc-900 dark:hover:text-zinc-100">首页</Link>
+            <span className="hidden sm:inline">|</span>
             <button onClick={() => openModal('login')} className="hover:text-zinc-900 dark:hover:text-zinc-100">登录</button>
             <span className="hidden sm:inline">|</span>
             <button onClick={() => openModal('signup')} className="hover:text-zinc-900 dark:hover:text-zinc-100">注册</button>

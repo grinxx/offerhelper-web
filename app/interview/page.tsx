@@ -277,9 +277,15 @@ function InterviewPageInner() {
           </div>
           <textarea
             className="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 rounded p-3 text-sm h-40 resize-none placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-400 dark:focus:ring-zinc-600"
-            placeholder="请用 STAR 结构作答：背景（Situation）、任务（Task）、行动（Action）、结果（Result）..."
+            placeholder="请用 STAR 结构作答...（Enter 提交，Shift+Enter 换行）"
             value={userAnswer}
             onChange={e => setUserAnswer(e.target.value)}
+            onKeyDown={e => {
+              if (e.key === 'Enter' && !e.shiftKey && userAnswer.trim()) {
+                e.preventDefault()
+                handleSubmitAnswer()
+              }
+            }}
           />
           <div className="flex gap-2">
             <button
