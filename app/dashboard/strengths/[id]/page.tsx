@@ -31,7 +31,7 @@ export default async function StrengthsDetailPage({ params, searchParams }: Prop
   const result = session.result as StrengthsResult | null
 
   return (
-    <main className="max-w-2xl mx-auto px-4 py-10">
+    <main className="w-full px-4 sm:px-8 md:px-12 lg:px-20 xl:px-32 py-10 max-w-7xl mx-auto">
       <header className="flex items-center justify-between mb-8">
         <Link href="/" className="text-xl font-semibold">OfferHelper</Link>
         <Link href={backUrl} className="text-sm text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors">

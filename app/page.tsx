@@ -76,7 +76,7 @@ export default function HomePage() {
   }
 
   return (
-    <main className="max-w-2xl mx-auto px-4 py-10">
+    <main className="w-full px-4 sm:px-8 md:px-12 lg:px-20 xl:px-32 py-10 max-w-7xl mx-auto">
       <header className="flex items-start justify-between mb-10 gap-4">
         <h1 className="text-xl font-semibold shrink-0">OfferHelper</h1>
         {user ? (
@@ -99,7 +99,7 @@ export default function HomePage() {
         <p className="text-zinc-500 dark:text-zinc-400 text-sm">不编造，不包装，选一个你现在最需要的功能开始</p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-10">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
         {FEATURES.map((f) => (
           <button
             key={f.href}

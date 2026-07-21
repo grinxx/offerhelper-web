@@ -93,7 +93,7 @@ export default function AnalyzePage() {
   }
 
   return (
-    <main className="max-w-2xl mx-auto px-4 py-10">
+    <main className="w-full px-4 sm:px-8 md:px-12 lg:px-20 xl:px-32 py-10 max-w-7xl mx-auto">
       <header className="flex items-start justify-between mb-8 gap-4">
         <Link href="/" className="text-xl font-semibold shrink-0">OfferHelper</Link>
         {user ? (
