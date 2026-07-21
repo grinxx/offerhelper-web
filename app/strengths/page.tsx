@@ -293,7 +293,11 @@ function StrengthsPageInner() {
       {stage === 'chatting' && (
         <div className="space-y-4">
           <div className="flex justify-between items-center text-xs text-zinc-400 dark:text-zinc-500">
-            <span>第 {Math.min(answeredTurns + 1, TOTAL_TURNS)} 问 / 共 {TOTAL_TURNS} 问</span>
+            <span>
+              {isFinal
+                ? `第 ${answeredTurns + 1} 问（最后一问）`
+                : `第 ${answeredTurns + 1} 问`}
+            </span>
           </div>
           <div className="space-y-3 min-h-[200px]">
             {messages.map((m, i) => (
