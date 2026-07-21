@@ -38,6 +38,7 @@ function MatchPageInner() {
   const [jdList, setJdList] = useState<JdItem[]>([{ title: '', content: '' }, { title: '', content: '' }])
   const [stage, setStage] = useState<Stage>('idle')
   const [results, setResults] = useState<MatchResult[]>([])
+  const [previousResults, setPreviousResults] = useState<MatchResult[]>([])
   const [summary, setSummary] = useState('')
   const [sessionId, setSessionId] = useState<string | null>(null)
   const [currentJdIndex, setCurrentJdIndex] = useState(0)
@@ -168,6 +169,7 @@ function MatchPageInner() {
   }
 
   function handleReset() {
+    setPreviousResults(results)
     setStage('idle')
     setResults([])
     setSummary('')
@@ -314,6 +316,17 @@ function MatchPageInner() {
           >
             开始匹配
           </button>
+
+          {previousResults.length > 0 && (
+            <div className="border-t border-zinc-200 dark:border-zinc-800 pt-4">
+              <p className="text-xs text-zinc-400 dark:text-zinc-500 mb-3">上次匹配结果（供参考）</p>
+              <div className="space-y-3 opacity-60">
+                {previousResults.map(r => (
+                  <MatchCard key={r.jd_index} result={r} title={jdList[r.jd_index]?.title || undefined} />
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
