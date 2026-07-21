@@ -169,6 +169,17 @@ export default function AnalyzePage() {
 
       <ResultStream suggestions={suggestions} loading={loading} caseId={caseId} />
 
+      {!loading && suggestions.length > 0 && (
+        <div className="mt-4 flex justify-center">
+          <button
+            onClick={() => { setSuggestions([]); setCaseId(null) }}
+            className="text-xs text-zinc-400 dark:text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 border border-zinc-200 dark:border-zinc-700 rounded px-3 py-1.5 transition-colors"
+          >
+            重新分析（保留简历和 JD）
+          </button>
+        </div>
+      )}
+
       {caseId && !loading && suggestions.length > 0 && (
         <div className="mt-8 border-t border-zinc-200 dark:border-zinc-800 pt-6 text-center">
           <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-3">保存结果，下次继续优化</p>
