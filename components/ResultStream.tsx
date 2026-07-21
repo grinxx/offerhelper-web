@@ -6,9 +6,10 @@ import SuggestionCard from './SuggestionCard'
 interface Props {
   suggestions: Suggestion[]
   loading: boolean
+  caseId?: string | null
 }
 
-export default function ResultStream({ suggestions, loading }: Props) {
+export default function ResultStream({ suggestions, loading, caseId }: Props) {
   const [copiedAll, setCopiedAll] = useState(false)
 
   if (!loading && suggestions.length === 0) return null
@@ -50,7 +51,7 @@ export default function ResultStream({ suggestions, loading }: Props) {
       )}
 
       {suggestions.map((s, i) => (
-        <SuggestionCard key={i} suggestion={s} />
+        <SuggestionCard key={i} suggestion={s} storageKey={caseId ? `${caseId}_${i}` : undefined} />
       ))}
       {loading && (
         <div className="h-8 flex items-center">

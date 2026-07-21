@@ -167,7 +167,7 @@ export default function AnalyzePage() {
         />
       </div>
 
-      <ResultStream suggestions={suggestions} loading={loading} />
+      <ResultStream suggestions={suggestions} loading={loading} caseId={caseId} />
 
       {caseId && !loading && suggestions.length > 0 && (
         <div className="mt-8 border-t border-zinc-200 dark:border-zinc-800 pt-6 text-center">

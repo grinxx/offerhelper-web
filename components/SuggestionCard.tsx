@@ -1,13 +1,39 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import type { Suggestion } from '@/types'
 
 interface Props {
   suggestion: Suggestion
+  storageKey?: string
 }
 
-export default function SuggestionCard({ suggestion }: Props) {
+type Status = 'none' | 'applied' | 'pending'
+
+const STATUS_CONFIG: Record<Status, { label: string; className: string }> = {
+  none:    { label: '标记', className: 'text-zinc-400 dark:text-zinc-500 border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800' },
+  applied: { label: '✓ 已应用', className: 'text-green-600 dark:text-green-400 border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20' },
+  pending: { label: '◷ 待处理', className: 'text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20' },
+}
+
+export default function SuggestionCard({ suggestion, storageKey }: Props) {
   const [copied, setCopied] = useState(false)
+  const [status, setStatus] = useState<Status>('none')
+  const [menuOpen, setMenuOpen] = useState(false)
+
+  useEffect(() => {
+    if (!storageKey) return
+    const saved = localStorage.getItem(`offerhelper_suggestion_${storageKey}`)
+    if (saved === 'applied' || saved === 'pending') setStatus(saved)
+  }, [storageKey])
+
+  function handleSetStatus(s: Status) {
+    setStatus(s)
+    setMenuOpen(false)
+    if (storageKey) {
+      if (s === 'none') localStorage.removeItem(`offerhelper_suggestion_${storageKey}`)
+      else localStorage.setItem(`offerhelper_suggestion_${storageKey}`, s)
+    }
+  }
 
   async function handleCopy() {
     await navigator.clipboard.writeText(suggestion.suggestion)
@@ -17,7 +43,6 @@ export default function SuggestionCard({ suggestion }: Props) {
 
   return (
     <div className="border border-zinc-200 dark:border-zinc-800 rounded-lg p-4 space-y-3">
-      {/* diff 对比 */}
       <div className="rounded-lg overflow-hidden border border-zinc-100 dark:border-zinc-800 text-sm">
         <div className="bg-red-50 dark:bg-red-950/30 px-3 py-2 flex gap-2">
           <span className="text-red-400 shrink-0 select-none">−</span>
@@ -35,8 +60,30 @@ export default function SuggestionCard({ suggestion }: Props) {
         </div>
       </div>
 
-      {/* 理由 */}
-      <p className="text-xs text-zinc-400 dark:text-zinc-500 leading-relaxed">{suggestion.reason}</p>
+      <div className="flex items-start justify-between gap-3">
+        <p className="text-xs text-zinc-400 dark:text-zinc-500 leading-relaxed">{suggestion.reason}</p>
+        <div className="relative shrink-0">
+          <button
+            onClick={() => setMenuOpen(v => !v)}
+            className={`text-xs border rounded px-2 py-0.5 transition-colors ${STATUS_CONFIG[status].className}`}
+          >
+            {STATUS_CONFIG[status].label}
+          </button>
+          {menuOpen && (
+            <div className="absolute right-0 top-6 z-10 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg shadow-lg overflow-hidden min-w-[100px]">
+              {(['applied', 'pending', 'none'] as Status[]).map(s => (
+                <button
+                  key={s}
+                  onClick={() => handleSetStatus(s)}
+                  className="w-full text-left text-xs px-3 py-2 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-300"
+                >
+                  {s === 'applied' ? '✓ 已应用' : s === 'pending' ? '◷ 待处理' : '清除标记'}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
 
       {suggestion.needs_proof && (
         <div className="flex items-center gap-1 text-amber-600 dark:text-amber-400 text-xs bg-amber-50 dark:bg-amber-900/20 px-2 py-1 rounded">
