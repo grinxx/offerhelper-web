@@ -116,6 +116,15 @@ function MatchPageInner() {
             } else if (obj.type === 'done') {
               if (obj.session_id) setSessionId(obj.session_id)
               setStage('done')
+              // 存评分最高的 JD 供面试训练使用
+              setResults(prev => {
+                const top = [...prev].sort((a, b) => b.score - a.score)[0]
+                if (top) {
+                  const topJd = validJds[top.jd_index]
+                  if (topJd) localStorage.setItem('offerhelper_match_top_jd', JSON.stringify(topJd))
+                }
+                return prev
+              })
             } else if (obj.type === 'error') {
               if (obj.jd_index === -1) {
                 setError(obj.message)

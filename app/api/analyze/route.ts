@@ -7,13 +7,13 @@ import type { Suggestion } from '@/types'
 export const runtime = 'nodejs'
 
 export async function POST(request: Request) {
-  let body: { resume_text?: string; jd_text?: string } = {}
+  let body: { resume_text?: string; jd_text?: string; strengths_context?: string } = {}
   try {
     body = await request.json()
   } catch {
     return new Response(JSON.stringify({ error: 'invalid json' }), { status: 400 })
   }
-  const { resume_text, jd_text } = body
+  const { resume_text, jd_text, strengths_context } = body
 
   if (!resume_text || !jd_text) {
     return new Response(JSON.stringify({ error: '简历和 JD 均为必填项' }), {
@@ -64,7 +64,7 @@ export async function POST(request: Request) {
           model: 'claude-sonnet-4-6',
           max_tokens: 4096,
           system: SYSTEM_PROMPT,
-          messages: [{ role: 'user', content: buildUserPrompt(resume_text, jd_text) }],
+          messages: [{ role: 'user', content: buildUserPrompt(resume_text, jd_text, strengths_context) }],
           stream: true,
         })
 

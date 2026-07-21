@@ -64,10 +64,16 @@ function InterviewPageInner() {
   const [currentEval, setCurrentEval] = useState<CurrentEval | null>(null)
   const [summary, setSummary] = useState<SummaryData | null>(null)
   const [error, setError] = useState('')
+  const [topMatchJd, setTopMatchJd] = useState<{ title?: string; content: string } | null>(null)
 
   useEffect(() => {
     const supabase = createClient()
     supabase.auth.getUser().then(({ data: { user } }) => setUser(user))
+
+    const cached = localStorage.getItem('offerhelper_match_top_jd')
+    if (cached) {
+      try { setTopMatchJd(JSON.parse(cached)) } catch {}
+    }
   }, [])
 
   useEffect(() => {
@@ -239,6 +245,22 @@ function InterviewPageInner() {
       {/* idle */}
       {stage === 'idle' && (
         <div className="space-y-4">
+          {topMatchJd && !jdText && (
+            <div className="flex items-center justify-between bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg px-4 py-3">
+              <div className="min-w-0 mr-3">
+                <p className="text-xs font-medium text-zinc-700 dark:text-zinc-300">
+                  检测到岗位匹配结果：{topMatchJd.title || '最匹配岗位'}
+                </p>
+                <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-0.5">使用该岗位 JD 开始面试训练</p>
+              </div>
+              <button
+                onClick={() => { setJdText(topMatchJd.content); setTopMatchJd(null) }}
+                className="shrink-0 text-xs px-3 py-1.5 rounded-lg border border-zinc-300 dark:border-zinc-600 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+              >
+                使用
+              </button>
+            </div>
+          )}
           <div>
             <label className="block text-sm font-medium mb-1">
               目标 JD <span className="text-red-500">*</span>

@@ -22,10 +22,25 @@ export default function AnalyzePage() {
   const [user, setUser] = useState<User | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
   const [modalTab, setModalTab] = useState<'login' | 'signup'>('login')
+  const [strengthsContext, setStrengthsContext] = useState<string | null>(null)
+  const [useStrengths, setUseStrengths] = useState(false)
 
   useEffect(() => {
     const supabase = createClient()
     supabase.auth.getUser().then(({ data: { user } }) => setUser(user))
+
+    const cached = localStorage.getItem('offerhelper_strengths_result')
+    if (cached) {
+      try {
+        const data = JSON.parse(cached)
+        if (data?.strengths?.length) {
+          const ctx = data.strengths.map((s: { label: string; evidence: string }) =>
+            `${s.label}：${s.evidence}`
+          ).join('\n')
+          setStrengthsContext(ctx)
+        }
+      } catch {}
+    }
   }, [])
 
   const handleAuthSuccess = useCallback(async () => {
@@ -56,7 +71,11 @@ export default function AnalyzePage() {
       const res = await fetch('/api/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ resume_text: resumeText, jd_text: jdText }),
+        body: JSON.stringify({
+          resume_text: resumeText,
+          jd_text: jdText,
+          ...(useStrengths && strengthsContext ? { strengths_context: strengthsContext } : {}),
+        }),
       })
 
       const reader = res.body!.getReader()
@@ -121,6 +140,24 @@ export default function AnalyzePage() {
       </div>
 
       <div className="space-y-4 mb-6">
+        {strengthsContext && (
+          <div className="flex items-center justify-between bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg px-4 py-3">
+            <div className="min-w-0 mr-3">
+              <p className="text-xs font-medium text-zinc-700 dark:text-zinc-300">检测到你的优势挖掘结果</p>
+              <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-0.5">作为参考可让建议更贴合你的真实优势</p>
+            </div>
+            <button
+              onClick={() => setUseStrengths(v => !v)}
+              className={`shrink-0 text-xs px-3 py-1.5 rounded-lg border transition-colors ${
+                useStrengths
+                  ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 border-zinc-900 dark:border-zinc-100'
+                  : 'border-zinc-300 dark:border-zinc-600 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800'
+              }`}
+            >
+              {useStrengths ? '✓ 已加入参考' : '加入参考'}
+            </button>
+          </div>
+        )}
         <ResumeUploader onTextReady={setResumeText} />
         <JdInput value={jdText} onChange={setJdText} />
         <AnalyzeButton

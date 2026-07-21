@@ -163,6 +163,7 @@ function StrengthsPageInner() {
       const data = await res.json()
       setResult(data)
       setStage('done')
+      localStorage.setItem('offerhelper_strengths_result', JSON.stringify(data))
     } catch {
       setError('优势提炼失败，请重试')
       setStage('chatting')
