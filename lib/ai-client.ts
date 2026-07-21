@@ -49,11 +49,17 @@ export const PROVIDERS = [
   },
 ]
 
+const rawBase = process.env.ANTHROPIC_BASE_URL ?? ''
+const isLocal = rawBase.includes('localhost')
+const defaultBaseURL = isLocal
+  ? rawBase.endsWith('/') ? rawBase.slice(0, -1) : rawBase
+  : 'https://api.siliconflow.cn/v1'
+
 const DEFAULT_CONFIG: AIConfig = {
-  baseURL: process.env.ANTHROPIC_BASE_URL?.replace('/anthropic/', '') || 'https://api.siliconflow.cn/v1',
+  baseURL: defaultBaseURL,
   apiKey: process.env.ANTHROPIC_API_KEY || '',
-  modelFast: 'Qwen/Qwen2.5-7B-Instruct',
-  modelSmart: 'Pro/claude-sonnet-4-5',
+  modelFast: isLocal ? 'claude-haiku-4-5-20251001' : 'Qwen/Qwen2.5-7B-Instruct',
+  modelSmart: isLocal ? 'claude-sonnet-4-6' : 'Pro/claude-sonnet-4-5',
 }
 
 export async function getAIConfig(userId: string | null): Promise<AIConfig> {
