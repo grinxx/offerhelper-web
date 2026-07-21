@@ -98,9 +98,10 @@ function StrengthsPageInner() {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, streamingText])
 
-  async function callMessage(msgs: ChatMessage[], ti: number, sid: string | null) {
+  async function callMessage(msgs: ChatMessage[], ti: number, sid: string | null): Promise<string | null> {
     setStreamingText('')
     setError('')
+    let latestSessionId = sid
 
     try {
       const res = await fetch('/api/strengths/message', {
@@ -139,7 +140,10 @@ function StrengthsPageInner() {
               aiText += obj.text
               setStreamingText(aiText)
             } else if ('is_final' in obj) {
-              if (obj.session_id) setSessionId(obj.session_id)
+              if (obj.session_id) {
+                setSessionId(obj.session_id)
+                latestSessionId = obj.session_id
+              }
               setIsFinal(obj.is_final)
             } else if (obj.error) {
               setError(obj.error)
@@ -156,8 +160,8 @@ function StrengthsPageInner() {
     } catch {
       setError('请求失败，请重试')
       setStreamingText('')
-      // 保留对话历史，不重置到 idle
     }
+    return latestSessionId
   }
 
   async function handleStart() {
@@ -176,25 +180,25 @@ function StrengthsPageInner() {
     setMessages(newMessages)
     setUserInput('')
 
-    // After user's 3rd answer (responding to turn_index=2 AI question), generate result
     if (isFinal) {
       setStage('generating_result')
-      await generateResult(newMessages)
+      await generateResult(newMessages, sessionId)
     } else {
       const nextTurnIndex = turnIndex + 1
       setTurnIndex(nextTurnIndex)
-      await callMessage(newMessages, nextTurnIndex, sessionId)
+      const latestSid = await callMessage(newMessages, nextTurnIndex, sessionId)
+      if (latestSid) setSessionId(latestSid)
     }
   }
 
-  async function generateResult(msgs: ChatMessage[]) {
+  async function generateResult(msgs: ChatMessage[], sid: string | null = sessionId) {
     setError('')
     try {
       const res = await fetch('/api/strengths/result', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          session_id: sessionId,
+          session_id: sid,
           messages: msgs,
           jd_text: jdText || null,
         }),
