@@ -116,6 +116,7 @@ function InterviewPageInner() {
   const [currentEval, setCurrentEval] = useState<CurrentEval | null>(null)
   const [summary, setSummary] = useState<SummaryData | null>(null)
   const [error, setError] = useState('')
+  const [skippedIndexes, setSkippedIndexes] = useState<Set<number>>(new Set())
   const [topMatchJd, setTopMatchJd] = useState<{ title?: string; content: string } | null>(null)
 
   useEffect(() => {
@@ -236,6 +237,18 @@ function InterviewPageInner() {
     }
   }
 
+  function handleSkip() {
+    setSkippedIndexes(prev => new Set(prev).add(currentIndex))
+    if (currentIndex < TOTAL_QUESTIONS - 1) {
+      setCurrentIndex(i => i + 1)
+      setUserAnswer('')
+      setCurrentEval(null)
+      setStage('questioning')
+    } else {
+      handleFinish()
+    }
+  }
+
   function handleReset() {
     setStage('idle')
     setJdText('')
@@ -246,6 +259,7 @@ function InterviewPageInner() {
     setCurrentEval(null)
     setSummary(null)
     setError('')
+    setSkippedIndexes(new Set())
   }
 
   if (!user) {
@@ -408,6 +422,12 @@ function InterviewPageInner() {
               提交回答
             </button>
             <button
+              onClick={handleSkip}
+              className="border border-zinc-300 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300 px-4 py-2.5 rounded-lg text-sm hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+            >
+              跳过
+            </button>
+            <button
               onClick={handleFinish}
               className="border border-zinc-300 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300 px-4 py-2.5 rounded-lg text-sm hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
             >
@@ -479,7 +499,12 @@ function InterviewPageInner() {
           <div className="space-y-3">
             {summary.turns.map((turn) => (
               <div key={turn.question_index} className="border border-zinc-200 dark:border-zinc-800 rounded-lg p-4 space-y-2">
-                <p className="text-xs text-zinc-400 dark:text-zinc-500">第 {turn.question_index + 1} 题</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-xs text-zinc-400 dark:text-zinc-500">第 {turn.question_index + 1} 题</p>
+                  {skippedIndexes.has(turn.question_index) && (
+                    <span className="text-xs text-zinc-400 dark:text-zinc-500 bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded">已跳过</span>
+                  )}
+                </div>
                 <p className="text-sm text-zinc-700 dark:text-zinc-300">{turn.question}</p>
                 <div className="bg-zinc-50 dark:bg-zinc-900 rounded px-3 py-2">
                   <div className="flex items-start justify-between gap-2">
