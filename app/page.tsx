@@ -175,6 +175,8 @@ export default function HomePage() {
         </div>
       )}
 
+      <p className="mt-6 text-xs text-zinc-300 dark:text-zinc-700 text-center">每次分析调用 AI，建议按需使用 · 结果仅供参考，不构成任何承诺</p>
+
       <AuthModal
         isOpen={modalOpen}
         defaultTab="login"
