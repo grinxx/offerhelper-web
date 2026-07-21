@@ -336,6 +336,18 @@ function StrengthsPageInner() {
             >
               重新开始
             </button>
+            <button
+              onClick={() => {
+                setStage('chatting')
+                setIsFinal(false)
+                setResult(null)
+                setUserInput('')
+                setStreamingText('')
+              }}
+              className="border border-zinc-300 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300 px-4 py-2.5 rounded-lg text-sm hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+            >
+              继续追问
+            </button>
             <Link
               href="/"
               className="border border-zinc-300 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300 px-4 py-2.5 rounded-lg text-sm hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors text-center"
