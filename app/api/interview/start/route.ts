@@ -12,14 +12,14 @@ export async function POST(request: Request) {
     return new Response(JSON.stringify({ error: '未登录' }), { status: 401 })
   }
 
-  let body: { jd_text?: string; case_id?: string | null } = {}
+  let body: { jd_text?: string; case_id?: string | null; question_type?: string } = {}
   try {
     body = await request.json()
   } catch {
     return new Response(JSON.stringify({ error: 'invalid json' }), { status: 400 })
   }
 
-  const { jd_text, case_id } = body
+  const { jd_text, case_id, question_type = 'all' } = body
   if (!jd_text?.trim()) {
     return new Response(JSON.stringify({ error: 'jd_text 为必填项' }), { status: 400 })
   }
@@ -35,7 +35,7 @@ export async function POST(request: Request) {
       model: 'claude-sonnet-4-6',
       max_tokens: 1024,
       system: INTERVIEW_QUESTION_SYSTEM,
-      messages: [{ role: 'user', content: buildInterviewQuestionPrompt(jd_text) }],
+      messages: [{ role: 'user', content: buildInterviewQuestionPrompt(jd_text, question_type) }],
     })
 
     const raw = message.content[0]?.type === 'text' ? message.content[0].text : ''

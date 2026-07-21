@@ -21,15 +21,24 @@ ${jdText}${strengthsPart}
 请输出简历修改建议 JSON 数组。`
 }
 
-export const INTERVIEW_QUESTION_SYSTEM = `你是专业面试官。根据提供的 JD，生成 5 道针对性的行为面试题。
+export const INTERVIEW_QUESTION_SYSTEM = `你是专业面试官。根据提供的 JD 和题型要求，生成 5 道针对性的行为面试题。
 规则：
-1. 优先生成与 JD 岗位要求直接相关的行为问题（如「请描述一次你主导复杂项目的经历」）
-2. 如果 JD 内容不足，用通用 STAR 结构行为题补足至恰好 5 道
-3. 输出严格的 JSON 数组，每项为一个中文问题字符串，格式：["题目1","题目2","题目3","题目4","题目5"]
-4. 不输出任何其他内容，不加 markdown 代码块`;
+1. 严格按照指定题型生成，不偏离
+2. 优先生成与 JD 岗位要求直接相关的问题
+3. 如果 JD 内容不足，用该题型的通用 STAR 结构行为题补足至恰好 5 道
+4. 输出严格的 JSON 数组，每项为一个中文问题字符串，格式：["题目1","题目2","题目3","题目4","题目5"]
+5. 不输出任何其他内容，不加 markdown 代码块`;
 
-export function buildInterviewQuestionPrompt(jdText: string): string {
-  return `JD 内容：\n${jdText}\n\n请生成 5 道面试题 JSON 数组。`;
+const QUESTION_TYPE_PROMPTS: Record<string, string> = {
+  all: '生成综合类行为面试题，覆盖项目经历、团队协作、职业规划等方面',
+  intro: '只生成自我介绍相关题目，包括「请做一下自我介绍」及追问变体（如「用一句话介绍自己」「为什么选择这个岗位」）',
+  project: '只生成项目/实习经历相关题目，聚焦具体项目细节、个人贡献、遇到的挑战和结果',
+  career: '只生成职业规划相关题目，包括「你的三五年规划」「为什么选择这个行业」「你的优势和短板」等',
+}
+
+export function buildInterviewQuestionPrompt(jdText: string, questionType = 'all'): string {
+  const typeInstruction = QUESTION_TYPE_PROMPTS[questionType] ?? QUESTION_TYPE_PROMPTS.all
+  return `JD 内容：\n${jdText}\n\n题型要求：${typeInstruction}\n\n请生成 5 道面试题 JSON 数组。`
 }
 
 export const INTERVIEW_EVAL_SYSTEM = `你是面试评估专家。对应聘者的面试回答进行结构化评估。

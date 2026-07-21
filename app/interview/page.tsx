@@ -56,6 +56,7 @@ function InterviewPageInner() {
   const [user, setUser] = useState<User | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
   const [jdText, setJdText] = useState('')
+  const [questionType, setQuestionType] = useState('all')
   const [stage, setStage] = useState<Stage>('idle')
   const [sessionId, setSessionId] = useState('')
   const [questions, setQuestions] = useState<string[]>([])
@@ -91,7 +92,7 @@ function InterviewPageInner() {
     const res = await fetch('/api/interview/start', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ jd_text: jdText, case_id: caseId }),
+      body: JSON.stringify({ jd_text: jdText, case_id: caseId, question_type: questionType }),
     })
     const data = await res.json()
 
@@ -271,6 +272,29 @@ function InterviewPageInner() {
               value={jdText}
               onChange={e => setJdText(e.target.value)}
             />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">题型</label>
+            <div className="flex flex-wrap gap-2">
+              {[
+                { value: 'all', label: '综合' },
+                { value: 'intro', label: '自我介绍' },
+                { value: 'project', label: '项目/实习经历' },
+                { value: 'career', label: '职业规划' },
+              ].map(t => (
+                <button
+                  key={t.value}
+                  onClick={() => setQuestionType(t.value)}
+                  className={`px-3 py-1.5 rounded-lg text-sm border transition-colors ${
+                    questionType === t.value
+                      ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 border-zinc-900 dark:border-zinc-100'
+                      : 'border-zinc-300 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800'
+                  }`}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
           </div>
           <button
             onClick={handleStart}
