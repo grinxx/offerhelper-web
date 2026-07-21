@@ -59,9 +59,12 @@ export default function ScoreCard({ scores, feedback, reference_answer, loading 
         <p className="text-sm text-zinc-700 dark:text-zinc-300">{feedback}</p>
       </div>
 
-      <div>
-        <p className="text-xs text-zinc-400 dark:text-zinc-500 uppercase tracking-wide mb-1">参考回答框架</p>
-        <p className="text-sm text-zinc-600 dark:text-zinc-400 whitespace-pre-wrap">{reference_answer}</p>
+      <div className="bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg p-4">
+        <div className="flex items-center gap-2 mb-2">
+          <span className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">参考回答框架</span>
+          <span className="text-xs text-zinc-400 dark:text-zinc-500 bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded">STAR 结构</span>
+        </div>
+        <p className="text-sm text-zinc-600 dark:text-zinc-400 whitespace-pre-wrap leading-relaxed">{reference_answer}</p>
       </div>
     </div>
   )
