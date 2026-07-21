@@ -53,26 +53,47 @@ export async function POST(request: Request) {
   const stream = new ReadableStream({
     async start(controller) {
       const suggestions: Suggestion[] = []
+      let buffer = ''
 
       try {
-        const message = await client.chat.completions.create({
+        const response = await client.chat.completions.create({
           model: config.modelSmart,
           max_tokens: 4096,
           messages: [
             { role: 'system', content: SYSTEM_PROMPT },
             { role: 'user', content: buildUserPrompt(resume_text, jd_text, strengths_context) },
           ],
+          stream: true,
         })
 
-        const raw = message.choices[0]?.message?.content ?? ''
-        const cleaned = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim()
-        const parsed = JSON.parse(cleaned)
-        const items = Array.isArray(parsed) ? parsed : []
+        for await (const chunk of response) {
+          const text = chunk.choices[0]?.delta?.content ?? ''
+          if (!text) continue
+          buffer += text
 
-        for (const obj of items) {
-          if (obj.original && obj.suggestion) {
-            suggestions.push(obj as Suggestion)
-            controller.enqueue(encoder.encode(JSON.stringify(obj) + '\n'))
+          let startIdx = buffer.indexOf('{')
+          while (startIdx !== -1) {
+            let depth = 0
+            let endIdx = -1
+            for (let i = startIdx; i < buffer.length; i++) {
+              if (buffer[i] === '{') depth++
+              if (buffer[i] === '}') {
+                depth--
+                if (depth === 0) { endIdx = i; break }
+              }
+            }
+            if (endIdx === -1) break
+
+            try {
+              const obj = JSON.parse(buffer.slice(startIdx, endIdx + 1)) as Suggestion
+              if (obj.original && obj.suggestion) {
+                suggestions.push(obj)
+                controller.enqueue(encoder.encode(JSON.stringify(obj) + '\n'))
+              }
+            } catch {}
+
+            buffer = buffer.slice(endIdx + 1)
+            startIdx = buffer.indexOf('{')
           }
         }
 

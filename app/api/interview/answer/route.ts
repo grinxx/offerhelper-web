@@ -46,17 +46,22 @@ export async function POST(request: Request) {
   const stream = new ReadableStream({
     async start(controller) {
       try {
-        const message = await client.chat.completions.create({
+        let buffer = ''
+        const response = await client.chat.completions.create({
           model: config.modelSmart,
           max_tokens: 2048,
           messages: [
             { role: 'system', content: INTERVIEW_EVAL_SYSTEM },
             { role: 'user', content: buildInterviewEvalPrompt(question, user_answer, sessionRow.jd_text) },
           ],
+          stream: true,
         })
 
-        const raw = message.choices[0]?.message?.content ?? ''
-        const cleaned = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim()
+        for await (const chunk of response) {
+          buffer += chunk.choices[0]?.delta?.content ?? ''
+        }
+
+        const cleaned = buffer.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim()
         const result: { scores: InterviewScores; feedback: string; reference_answer: string } = JSON.parse(cleaned)
 
         if (!result?.scores || !result.feedback || !result.reference_answer) {

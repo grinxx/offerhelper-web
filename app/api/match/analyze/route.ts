@@ -56,16 +56,18 @@ export async function POST(request: Request) {
         for (let i = 0; i < jd_list.length; i++) {
           const jd = jd_list[i]
           try {
-            const message = await client.chat.completions.create({
+            let buf = ''
+            const resp = await client.chat.completions.create({
               model: config.modelSmart,
               max_tokens: 1024,
               messages: [
                 { role: 'system', content: MATCH_EVAL_SYSTEM },
                 { role: 'user', content: buildMatchEvalPrompt(resume_text, jd.content, jd.title ?? null) },
               ],
+              stream: true,
             })
-            const raw = message.choices[0]?.message?.content ?? ''
-            const cleaned = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim()
+            for await (const chunk of resp) buf += chunk.choices[0]?.delta?.content ?? ''
+            const cleaned = buf.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim()
             const parsed = JSON.parse(cleaned) as Omit<MatchResult, 'jd_index'>
             const result: MatchResult = { jd_index: i, ...parsed }
             results.push(result)
