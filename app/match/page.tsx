@@ -29,6 +29,7 @@ function MatchPageInner() {
   const [resumeText, setResumeText] = useState('')
   const [recommendations, setRecommendations] = useState<Recommendation[]>([])
   const [recommending, setRecommending] = useState(false)
+  const [cachedJdList, setCachedJdList] = useState<JdItem[] | null>(null)
 
   function handleResumeReady(text: string) {
     setResumeText(text)
@@ -46,6 +47,13 @@ function MatchPageInner() {
   useEffect(() => {
     const supabase = createClient()
     supabase.auth.getUser().then(({ data: { user } }) => setUser(user))
+    const cached = localStorage.getItem('offerhelper_match_jd_list')
+    if (cached) {
+      try {
+        const list = JSON.parse(cached)
+        if (Array.isArray(list) && list.length > 0) setCachedJdList(list)
+      } catch {}
+    }
   }, [])
 
   useEffect(() => {
@@ -116,13 +124,14 @@ function MatchPageInner() {
             } else if (obj.type === 'done') {
               if (obj.session_id) setSessionId(obj.session_id)
               setStage('done')
-              // 存评分最高的 JD 供面试训练使用
               setResults(prev => {
                 const top = [...prev].sort((a, b) => b.score - a.score)[0]
                 if (top) {
                   const topJd = validJds[top.jd_index]
                   if (topJd) localStorage.setItem('offerhelper_match_top_jd', JSON.stringify(topJd))
                 }
+                // 保存完整 JD 列表供下次复用
+                localStorage.setItem('offerhelper_match_jd_list', JSON.stringify(validJds))
                 return prev
               })
             } else if (obj.type === 'error') {
@@ -228,6 +237,30 @@ function MatchPageInner() {
           </div>
           <div>
             <h3 className="text-sm font-medium mb-2">目标岗位 JD（最多 5 个）</h3>
+            {cachedJdList && (
+              <div className="flex items-center justify-between mb-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg px-4 py-3">
+                <div className="min-w-0 mr-3">
+                  <p className="text-xs font-medium text-zinc-700 dark:text-zinc-300">检测到上次的 {cachedJdList.length} 个岗位 JD</p>
+                  <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-0.5">
+                    {cachedJdList.map(j => j.title || j.content.slice(0, 10)).join('、')}
+                  </p>
+                </div>
+                <div className="flex gap-2 shrink-0">
+                  <button
+                    onClick={() => { setJdList(cachedJdList); setCachedJdList(null) }}
+                    className="text-xs text-zinc-900 dark:text-zinc-100 font-medium border border-zinc-300 dark:border-zinc-600 rounded px-2.5 py-1 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                  >
+                    使用
+                  </button>
+                  <button
+                    onClick={() => setCachedJdList(null)}
+                    className="text-xs text-zinc-400 dark:text-zinc-500 hover:underline"
+                  >
+                    忽略
+                  </button>
+                </div>
+              </div>
+            )}
             {resumeText && recommendations.length === 0 && (
               <button
                 onClick={handleRecommend}
