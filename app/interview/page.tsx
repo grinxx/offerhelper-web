@@ -41,6 +41,40 @@ const WEAKEST_LABEL: Record<keyof InterviewScores, string> = {
 
 const TOTAL_QUESTIONS = 5
 
+function InterviewExample() {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className="border border-zinc-200 dark:border-zinc-800 rounded-lg overflow-hidden">
+      <button
+        onClick={() => setOpen(v => !v)}
+        className="w-full flex items-center justify-between px-4 py-3 text-xs text-zinc-400 dark:text-zinc-500 hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors"
+      >
+        <span>查看 STAR 回答示例</span>
+        <span>{open ? '▾' : '▸'}</span>
+      </button>
+      {open && (
+        <div className="px-4 pb-4 border-t border-zinc-100 dark:border-zinc-800 pt-3 space-y-3">
+          <p className="text-xs font-medium text-zinc-600 dark:text-zinc-400">题目：请描述一次你主导解决复杂问题的经历</p>
+          <div className="space-y-2">
+            {[
+              { tag: 'S 背景', color: 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400', text: '大三参与校企合作项目，客户反映新功能上线后用户留存下降，但原因不明。' },
+              { tag: 'T 任务', color: 'bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400', text: '我负责从用户行为日志中定位流失节点，需要在两周内给出可行方案。' },
+              { tag: 'A 行动', color: 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400', text: '用 Python 搭建漏斗分析模型，把用户路径拆成 7 个步骤逐一统计流失率，发现第 4 步跳出率是其他步骤的 3 倍，进一步排查发现是加载超时导致。' },
+              { tag: 'R 结果', color: 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400', text: '提交报告后客户优化了该步骤的接口，次月留存提升 12%，客户续签了合作。' },
+            ].map(s => (
+              <div key={s.tag} className={`rounded px-3 py-2 ${s.color}`}>
+                <span className="text-xs font-semibold">{s.tag}：</span>
+                <span className="text-xs">{s.text}</span>
+              </div>
+            ))}
+          </div>
+          <p className="text-xs text-zinc-400 dark:text-zinc-500">回答时尽量具体：有数据、有工具、有个人贡献、有可验证的结果。</p>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function InterviewPage() {
   return (
     <Suspense>
@@ -296,6 +330,7 @@ function InterviewPageInner() {
               ))}
             </div>
           </div>
+          <InterviewExample />
           <button
             onClick={handleStart}
             disabled={!jdText.trim()}

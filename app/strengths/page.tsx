@@ -2,8 +2,7 @@
 'use client'
 import { useState, useEffect, useRef, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
-import Link from 'next/link'
-import type { User } from '@supabase/supabase-js'
+import Link from 'next/link'import type { User } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/client'
 import ChatBubble from '@/components/ChatBubble'
 import StrengthsResultComponent from '@/components/StrengthsResult'
@@ -19,6 +18,50 @@ interface StrengthsResultData {
 }
 
 const TOTAL_TURNS = 3
+
+function StrengthsExample() {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className="border border-zinc-200 dark:border-zinc-800 rounded-lg overflow-hidden">
+      <button
+        onClick={() => setOpen(v => !v)}
+        className="w-full flex items-center justify-between px-4 py-3 text-xs text-zinc-400 dark:text-zinc-500 hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors"
+      >
+        <span>查看示例对话</span>
+        <span>{open ? '▾' : '▸'}</span>
+      </button>
+      {open && (
+        <div className="px-4 pb-4 space-y-3 border-t border-zinc-100 dark:border-zinc-800 pt-3">
+          <div className="space-y-2">
+            <div className="bg-zinc-100 dark:bg-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-600 dark:text-zinc-300 max-w-[85%]">
+              请描述一次你觉得最有成就感或最有挑战的经历，可以是课程项目、实习、社团、竞赛或任何事情。
+            </div>
+            <div className="bg-zinc-900 dark:bg-zinc-100 rounded-lg px-3 py-2 text-xs text-white dark:text-zinc-900 max-w-[85%] ml-auto">
+              大三时我参与了一个校企合作项目，负责用 Python 做用户行为数据分析，最后帮客户发现了一个流失率高的关键节点，他们据此改了产品流程，次月留存提升了 12%。
+            </div>
+            <div className="bg-zinc-100 dark:bg-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-600 dark:text-zinc-300 max-w-[85%]">
+              很好！你说"发现了关键节点"——具体是怎么发现的？用了什么方法或工具？
+            </div>
+          </div>
+          <div className="border-t border-zinc-100 dark:border-zinc-700 pt-3">
+            <p className="text-xs text-zinc-400 dark:text-zinc-500 mb-2">最终提炼出的优势示例：</p>
+            <div className="space-y-1.5">
+              {[
+                { label: '数据驱动分析', evidence: '独立完成用户行为漏斗分析，定位流失节点，留存提升 12%' },
+                { label: '问题拆解能力', evidence: '把"用户流失"拆解为多个可量化的行为指标，逐一验证' },
+              ].map(s => (
+                <div key={s.label} className="bg-zinc-50 dark:bg-zinc-900 rounded px-3 py-2">
+                  <p className="text-xs font-medium text-zinc-700 dark:text-zinc-300">{s.label}</p>
+                  <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-0.5">{s.evidence}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
 
 function StrengthsPageInner() {
   const searchParams = useSearchParams()
@@ -206,6 +249,9 @@ function StrengthsPageInner() {
       {stage === 'idle' && (
         <div className="space-y-4">
           <p className="text-sm text-zinc-500 dark:text-zinc-400">AI 将通过 3 个问题了解你的经历，帮你整理有证据的优势</p>
+
+          <StrengthsExample />
+
           <div>
             <label className="block text-sm font-medium mb-1">目标 JD（选填）</label>
             <textarea
