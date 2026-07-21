@@ -147,6 +147,36 @@ export default async function DashboardPage({ searchParams }: Props) {
   const baseUrl = activeType ? `/dashboard?type=${activeType}` : '/dashboard'
   const backParam = activeType ? `?back=/dashboard%3Ftype%3D${activeType}` : '?back=/dashboard'
 
+  // 面试进度：取最近 10 次已完成 session 的平均分
+  type ScoreSummary = { session_id: string; avg_structure: number; avg_evidence: number; avg_relevance: number; created_at: string }
+  let interviewProgress: ScoreSummary[] = []
+  if (activeType === 'interview' && (interviewRes.data ?? []).length >= 2) {
+    const sessionIds = (interviewRes.data ?? []).slice(0, 10).map((r: { id: string }) => r.id)
+    const { data: turns } = await supabase
+      .from('interview_turns')
+      .select('session_id, scores')
+      .in('session_id', sessionIds)
+
+    if (turns && turns.length > 0) {
+      const bySession: Record<string, { structure: number[]; evidence: number[]; relevance: number[] }> = {}
+      for (const t of turns) {
+        if (!bySession[t.session_id]) bySession[t.session_id] = { structure: [], evidence: [], relevance: [] }
+        bySession[t.session_id].structure.push(t.scores?.structure ?? 0)
+        bySession[t.session_id].evidence.push(t.scores?.evidence ?? 0)
+        bySession[t.session_id].relevance.push(t.scores?.relevance ?? 0)
+      }
+      interviewProgress = sessionIds
+        .filter((id: string) => bySession[id])
+        .map((id: string) => {
+          const s = bySession[id]
+          const avg = (arr: number[]) => arr.length ? Math.round(arr.reduce((a, b) => a + b, 0) / arr.length * 10) / 10 : 0
+          const session = (interviewRes.data ?? []).find((r: { id: string; created_at: string }) => r.id === id)
+          return { session_id: id, avg_structure: avg(s.structure), avg_evidence: avg(s.evidence), avg_relevance: avg(s.relevance), created_at: session?.created_at ?? '' }
+        })
+        .reverse()
+    }
+  }
+
   return (
     <main className="w-full px-4 sm:px-8 md:px-12 lg:px-20 xl:px-32 py-10 max-w-7xl mx-auto">
       <header className="flex items-center justify-between mb-8">
@@ -163,6 +193,38 @@ export default async function DashboardPage({ searchParams }: Props) {
       </header>
 
       <h2 className="text-xl font-bold mb-4">{pageTitle}</h2>
+
+      {interviewProgress.length >= 2 && (
+        <div className="mb-6 border border-zinc-200 dark:border-zinc-800 rounded-lg p-4">
+          <p className="text-xs text-zinc-400 dark:text-zinc-500 uppercase tracking-wide mb-3">训练趋势（近 {interviewProgress.length} 次）</p>
+          <div className="grid grid-cols-3 gap-4">
+            {(['avg_structure', 'avg_evidence', 'avg_relevance'] as const).map((dim, di) => {
+              const labels = ['结构', '证据', '岗位关联']
+              const values = interviewProgress.map(s => s[dim])
+              const latest = values[values.length - 1]
+              const prev = values[values.length - 2]
+              const trend = latest > prev ? '↑' : latest < prev ? '↓' : '—'
+              const trendColor = latest > prev ? 'text-green-500' : latest < prev ? 'text-red-400' : 'text-zinc-400'
+              return (
+                <div key={dim} className="text-center">
+                  <p className="text-xs text-zinc-400 dark:text-zinc-500 mb-1">{labels[di]}</p>
+                  <p className="text-2xl font-semibold text-zinc-900 dark:text-zinc-100">{latest}</p>
+                  <p className={`text-xs font-medium ${trendColor}`}>{trend} 较上次</p>
+                  <div className="flex items-end justify-center gap-0.5 mt-2 h-8">
+                    {values.map((v, i) => (
+                      <div
+                        key={i}
+                        className="w-2 rounded-sm bg-zinc-300 dark:bg-zinc-600"
+                        style={{ height: `${Math.max(4, (v / 5) * 100)}%`, opacity: i === values.length - 1 ? 1 : 0.5 }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
 
       {records.length === 0 && page === 1 ? (
         <p className="text-zinc-500 dark:text-zinc-400 text-sm">

@@ -37,6 +37,18 @@ export default function ResultStream({ suggestions, loading }: Props) {
           </button>
         )}
       </div>
+
+      {!loading && suggestions.filter(s => s.needs_proof).length > 0 && (
+        <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg px-4 py-3">
+          <p className="text-xs text-amber-700 dark:text-amber-400 font-medium mb-0.5">
+            ⚠️ {suggestions.filter(s => s.needs_proof).length} 条建议标注了「缺少证据」
+          </p>
+          <p className="text-xs text-amber-600 dark:text-amber-500 leading-relaxed">
+            这些建议的表达方向正确，但你需要用真实的数据、项目或经历来支撑，直接使用可能在面试中被追问时无法回答。
+          </p>
+        </div>
+      )}
+
       {suggestions.map((s, i) => (
         <SuggestionCard key={i} suggestion={s} />
       ))}
