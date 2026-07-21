@@ -76,7 +76,7 @@ export default function HomePage() {
   }
 
   return (
-    <main className="w-full px-4 sm:px-8 md:px-12 lg:px-20 xl:px-32 py-10 max-w-7xl mx-auto">
+    <main className="w-full px-4 sm:px-8 md:px-12 lg:px-20 xl:px-32 py-10 max-w-7xl mx-auto min-h-screen flex flex-col justify-center">
       <header className="flex items-start justify-between mb-10 gap-4">
         <h1 className="text-xl font-semibold shrink-0">OfferHelper</h1>
         {user ? (
