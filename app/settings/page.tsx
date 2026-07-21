@@ -156,6 +156,30 @@ export default function SettingsPage() {
               value={settings.ai_base_url}
               onChange={e => setSettings(prev => ({ ...prev, ai_base_url: e.target.value }))}
             />
+            <div className="mt-2 space-y-1.5">
+              <p className="text-xs text-zinc-400 dark:text-zinc-500 font-medium">常用 Base URL 参考：</p>
+              {[
+                { label: '硅基流动', url: 'https://api.siliconflow.cn/v1', note: '国内推荐' },
+                { label: 'DeepSeek', url: 'https://api.deepseek.com/v1', note: '国内可用' },
+                { label: '阿里云百炼', url: 'https://dashscope.aliyuncs.com/compatible-mode/v1', note: '国内可用' },
+                { label: 'OpenAI 官方', url: 'https://api.openai.com/v1', note: '需翻墙' },
+                { label: 'Groq', url: 'https://api.groq.com/openai/v1', note: '免费额度大，需翻墙' },
+              ].map(item => (
+                <div key={item.url} className="flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="text-zinc-600 dark:text-zinc-300 shrink-0">{item.label}</span>
+                    <span className="text-zinc-300 dark:text-zinc-600 truncate">{item.url}</span>
+                    <span className="text-zinc-400 dark:text-zinc-500 shrink-0">{item.note}</span>
+                  </div>
+                  <button
+                    onClick={() => setSettings(prev => ({ ...prev, ai_base_url: item.url }))}
+                    className="text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 border border-zinc-200 dark:border-zinc-700 rounded px-1.5 py-0.5 ml-2 shrink-0 transition-colors"
+                  >
+                    填入
+                  </button>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
