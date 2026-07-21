@@ -358,6 +358,7 @@ function InterviewPageInner() {
             </p>
           </div>
           <textarea
+            ref={el => { if (el) el.addEventListener('focus', () => setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'center' }), 300), { once: false }) }}
             className="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 rounded p-3 text-sm h-40 resize-none placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-400 dark:focus:ring-zinc-600"
             placeholder="请用 STAR 结构作答...（Enter 提交，Shift+Enter 换行）"
             value={userAnswer}
