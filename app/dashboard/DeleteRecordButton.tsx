@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { deleteRecord } from './actions'
 
 type RecordType = 'analysis' | 'interview' | 'strengths' | 'match'
@@ -9,37 +9,69 @@ interface Props {
   type: RecordType
 }
 
-export default function DeleteRecordButton({ id, type }: Props) {
-  const [confirming, setConfirming] = useState(false)
-  const [deleting, setDeleting] = useState(false)
+const UNDO_SECONDS = 5
 
-  async function handleDelete() {
-    setDeleting(true)
-    try {
-      await deleteRecord(id, type)
-    } catch {
-      setDeleting(false)
-      setConfirming(false)
+export default function DeleteRecordButton({ id, type }: Props) {
+  const [pending, setPending] = useState(false)
+  const [countdown, setCountdown] = useState(UNDO_SECONDS)
+  const [deleting, setDeleting] = useState(false)
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current)
+      if (intervalRef.current) clearInterval(intervalRef.current)
     }
+  }, [])
+
+  function handleClick(e: React.MouseEvent) {
+    e.preventDefault()
+    setPending(true)
+    setCountdown(UNDO_SECONDS)
+
+    intervalRef.current = setInterval(() => {
+      setCountdown(c => {
+        if (c <= 1) {
+          clearInterval(intervalRef.current!)
+          return 0
+        }
+        return c - 1
+      })
+    }, 1000)
+
+    timerRef.current = setTimeout(async () => {
+      setDeleting(true)
+      try {
+        await deleteRecord(id, type)
+      } catch {
+        setPending(false)
+        setDeleting(false)
+      }
+    }, UNDO_SECONDS * 1000)
   }
 
-  if (confirming) {
+  function handleUndo(e: React.MouseEvent) {
+    e.preventDefault()
+    if (timerRef.current) clearTimeout(timerRef.current)
+    if (intervalRef.current) clearInterval(intervalRef.current)
+    setPending(false)
+    setCountdown(UNDO_SECONDS)
+  }
+
+  if (deleting) {
+    return <span className="text-xs text-zinc-300 dark:text-zinc-600">删除中...</span>
+  }
+
+  if (pending) {
     return (
       <div className="flex items-center gap-2" onClick={e => e.preventDefault()}>
-        <span className="text-xs text-zinc-500 dark:text-zinc-400">确认删除？</span>
+        <span className="text-xs text-zinc-400 dark:text-zinc-500">{countdown}s 后删除</span>
         <button
-          onClick={handleDelete}
-          disabled={deleting}
-          className="text-xs text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 disabled:opacity-40"
+          onClick={handleUndo}
+          className="text-xs text-zinc-600 dark:text-zinc-300 border border-zinc-300 dark:border-zinc-600 rounded px-1.5 py-0.5 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
         >
-          {deleting ? '删除中...' : '确认'}
-        </button>
-        <button
-          onClick={() => setConfirming(false)}
-          disabled={deleting}
-          className="text-xs text-zinc-400 dark:text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
-        >
-          取消
+          撤销
         </button>
       </div>
     )
@@ -47,7 +79,7 @@ export default function DeleteRecordButton({ id, type }: Props) {
 
   return (
     <button
-      onClick={e => { e.preventDefault(); setConfirming(true) }}
+      onClick={handleClick}
       className="text-xs text-zinc-300 dark:text-zinc-600 hover:text-red-500 dark:hover:text-red-400 transition-colors"
     >
       删除
