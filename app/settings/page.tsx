@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { PROVIDERS } from '@/lib/ai-client'
+import { PROVIDERS } from '@/lib/ai-providers'
 
 interface Settings {
   ai_provider: string
