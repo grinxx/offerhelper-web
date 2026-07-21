@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import type { InterviewScores } from '@/types'
 
 interface Props {
@@ -29,6 +30,7 @@ function ScoreBar({ label, score }: { label: string; score: number }) {
 }
 
 export default function ScoreCard({ scores, feedback, reference_answer, loading }: Props) {
+  const [showBasis, setShowBasis] = useState(false)
   if (loading) {
     return (
       <div className="border border-zinc-200 dark:border-zinc-800 rounded-lg p-5 space-y-4 animate-pulse">
@@ -66,6 +68,20 @@ export default function ScoreCard({ scores, feedback, reference_answer, loading 
         </div>
         <p className="text-sm text-zinc-600 dark:text-zinc-400 whitespace-pre-wrap leading-relaxed">{reference_answer}</p>
       </div>
+
+      <button
+        onClick={() => setShowBasis(v => !v)}
+        className="text-xs text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors"
+      >
+        {showBasis ? '▾ 收起评分标准' : '▸ 查看评分标准'}
+      </button>
+      {showBasis && (
+        <div className="space-y-1.5 text-xs text-zinc-400 dark:text-zinc-500 bg-zinc-50 dark:bg-zinc-900 rounded-lg p-3">
+          <p><span className="font-medium text-zinc-600 dark:text-zinc-400">结构（1-5）：</span>回答是否有清晰的 STAR 框架，背景、任务、行动、结果是否完整</p>
+          <p><span className="font-medium text-zinc-600 dark:text-zinc-400">证据（1-5）：</span>是否引用了具体数据、案例、工具或可验证的事实</p>
+          <p><span className="font-medium text-zinc-600 dark:text-zinc-400">岗位关联（1-5）：</span>回答内容是否扣住了 JD 中的关键要求和岗位特点</p>
+        </div>
+      )}
     </div>
   )
 }

@@ -11,6 +11,7 @@ interface Props {
 
 export default function ResultStream({ suggestions, loading, caseId }: Props) {
   const [copiedAll, setCopiedAll] = useState(false)
+  const [showBasis, setShowBasis] = useState(false)
 
   if (!loading && suggestions.length === 0) return null
 
@@ -56,6 +57,24 @@ export default function ResultStream({ suggestions, loading, caseId }: Props) {
       {loading && (
         <div className="h-8 flex items-center">
           <span className="animate-pulse text-zinc-400 text-sm">●●●</span>
+        </div>
+      )}
+
+      {!loading && suggestions.length > 0 && (
+        <div>
+          <button
+            onClick={() => setShowBasis(v => !v)}
+            className="text-xs text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors"
+          >
+            {showBasis ? '▾ 收起分析依据' : '▸ 查看分析依据'}
+          </button>
+          {showBasis && (
+            <div className="mt-2 space-y-1.5 text-xs text-zinc-400 dark:text-zinc-500 bg-zinc-50 dark:bg-zinc-900 rounded-lg p-3">
+              <p><span className="font-medium text-zinc-600 dark:text-zinc-400">建议来源：</span>每条建议均回溯到你简历中的真实经历，不编造内容</p>
+              <p><span className="font-medium text-zinc-600 dark:text-zinc-400">优化方向：</span>结合目标 JD 的关键词和要求，调整表达方式和侧重点</p>
+              <p><span className="font-medium text-zinc-600 dark:text-zinc-400">⚠️ 缺少证据：</span>表达方向正确但简历中缺乏支撑，需要你补充真实事实后再使用</p>
+            </div>
+          )}
         </div>
       )}
     </div>
