@@ -1,6 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import type { User } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/client'
@@ -42,6 +41,8 @@ export default function HomePage() {
   const [user, setUser] = useState<User | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
   const [pendingHref, setPendingHref] = useState<string | null>(null)
+
+  const [guideOpen, setGuideOpen] = useState(false)
 
   useEffect(() => {
     const supabase = createClient()
@@ -97,6 +98,52 @@ export default function HomePage() {
       <div className="mb-8">
         <h2 className="text-2xl font-bold mb-1">把真实经历变成可投递的求职材料</h2>
         <p className="text-zinc-500 dark:text-zinc-400 text-sm">不编造，不包装，选一个你现在最需要的功能开始</p>
+      </div>
+
+      <div className="mb-6">
+        <button
+          onClick={() => setGuideOpen(v => !v)}
+          className="flex items-center gap-2 text-sm text-zinc-400 dark:text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors"
+        >
+          <span>{guideOpen ? '▾' : '▸'}</span>
+          <span>不知道从哪里开始？</span>
+        </button>
+
+        {guideOpen && (
+          <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {[
+              {
+                condition: '已有简历，想投某个岗位',
+                step: '简历优化 → 岗位匹配 → 面试训练',
+                start: '/analyze',
+                startLabel: '从简历优化开始',
+              },
+              {
+                condition: '不清楚自己有哪些优势',
+                step: '优势挖掘 → 简历优化 → 岗位匹配',
+                start: '/strengths',
+                startLabel: '从优势挖掘开始',
+              },
+              {
+                condition: '已有目标岗位，想准备面试',
+                step: '岗位匹配 → 面试训练 → 优势挖掘',
+                start: '/match',
+                startLabel: '从岗位匹配开始',
+              },
+            ].map(g => (
+              <div key={g.start} className="border border-zinc-200 dark:border-zinc-800 rounded-lg p-4">
+                <p className="text-xs font-medium text-zinc-700 dark:text-zinc-300 mb-1">{g.condition}</p>
+                <p className="text-xs text-zinc-400 dark:text-zinc-500 mb-3 leading-relaxed">{g.step}</p>
+                <button
+                  onClick={() => handleFeatureClick(g.start, g.start === '/interview')}
+                  className="text-xs text-zinc-600 dark:text-zinc-300 border border-zinc-300 dark:border-zinc-600 rounded px-2.5 py-1 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+                >
+                  {g.startLabel} →
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
