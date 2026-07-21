@@ -41,6 +41,23 @@ const WEAKEST_LABEL: Record<keyof InterviewScores, string> = {
 
 const TOTAL_QUESTIONS = 5
 
+function CopyButton({ text, label = '复制' }: { text: string; label?: string }) {
+  const [copied, setCopied] = useState(false)
+  async function handleCopy() {
+    await navigator.clipboard.writeText(text)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+  return (
+    <button
+      onClick={handleCopy}
+      className="text-xs text-zinc-400 dark:text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 border border-zinc-200 dark:border-zinc-700 rounded px-2.5 py-1 transition-colors shrink-0"
+    >
+      {copied ? '已复制' : label}
+    </button>
+  )
+}
+
 function InterviewExample() {
   const [open, setOpen] = useState(false)
   return (
@@ -449,9 +466,15 @@ function InterviewPageInner() {
 
           <div className="space-y-3">
             {summary.turns.map((turn) => (
-              <div key={turn.question_index} className="border border-zinc-200 dark:border-zinc-800 rounded-lg p-4">
-                <p className="text-xs text-zinc-400 dark:text-zinc-500 mb-1">第 {turn.question_index + 1} 题</p>
-                <p className="text-sm text-zinc-700 dark:text-zinc-300 mb-2">{turn.question}</p>
+              <div key={turn.question_index} className="border border-zinc-200 dark:border-zinc-800 rounded-lg p-4 space-y-2">
+                <p className="text-xs text-zinc-400 dark:text-zinc-500">第 {turn.question_index + 1} 题</p>
+                <p className="text-sm text-zinc-700 dark:text-zinc-300">{turn.question}</p>
+                <div className="bg-zinc-50 dark:bg-zinc-900 rounded px-3 py-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400 whitespace-pre-wrap flex-1">{turn.feedback}</p>
+                    <CopyButton text={`题目：${turn.question}\n我的回答评分：结构${turn.scores.structure}/证据${turn.scores.evidence}/岗位关联${turn.scores.relevance}\n点评：${turn.feedback}`} />
+                  </div>
+                </div>
                 <div className="flex gap-4 text-xs text-zinc-500 dark:text-zinc-400">
                   <span>结构 {turn.scores.structure}/5</span>
                   <span>证据 {turn.scores.evidence}/5</span>
@@ -459,6 +482,15 @@ function InterviewPageInner() {
                 </div>
               </div>
             ))}
+          </div>
+
+          <div className="flex justify-center">
+            <CopyButton
+              text={summary.turns.map(t =>
+                `【第 ${t.question_index + 1} 题】${t.question}\n结构${t.scores.structure}/证据${t.scores.evidence}/岗位关联${t.scores.relevance}\n点评：${t.feedback}`
+              ).join('\n\n')}
+              label="复制全部回答与评分"
+            />
           </div>
 
           <div className="flex gap-2">
