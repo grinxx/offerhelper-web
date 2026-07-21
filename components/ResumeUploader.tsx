@@ -13,6 +13,7 @@ export default function ResumeUploader({ onTextReady }: Props) {
   const [fileName, setFileName] = useState('')
   const [parsedText, setParsedText] = useState('')
   const [parsing, setParsing] = useState(false)
+  const [parseStep, setParseStep] = useState('')
   const [expanded, setExpanded] = useState(false)
   const [pasteMode, setPasteMode] = useState(false)
   const [pasteText, setPasteText] = useState('')
@@ -51,11 +52,13 @@ export default function ResumeUploader({ onTextReady }: Props) {
     const name = file.name
     setFileName(name)
     setParsing(true)
+    setParseStep('正在提取文本...')
     setParsedText('')
     setCachedName(null)
     try {
       const formData = new FormData()
       formData.append('file', file)
+      setParseStep('AI 格式化中...')
       const res = await fetch('/api/parse-resume', { method: 'POST', body: formData })
       const { text } = await res.json()
       setParsedText(text)
@@ -63,6 +66,7 @@ export default function ResumeUploader({ onTextReady }: Props) {
       onTextReady(text)
     } finally {
       setParsing(false)
+      setParseStep('')
     }
   }
 
@@ -70,8 +74,9 @@ export default function ResumeUploader({ onTextReady }: Props) {
   if (parsing) {
     return (
       <div className="border border-zinc-200 dark:border-zinc-800 rounded-lg p-4">
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-zinc-500 dark:text-zinc-400 animate-pulse">正在解析简历...</span>
+        <div className="flex items-center gap-3">
+          <div className="w-4 h-4 border-2 border-zinc-400 border-t-transparent rounded-full animate-spin shrink-0" />
+          <span className="text-sm text-zinc-500 dark:text-zinc-400 animate-pulse">{parseStep}</span>
         </div>
       </div>
     )
