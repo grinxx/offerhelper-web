@@ -1,6 +1,6 @@
 'use client'
-import { useState, useCallback, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useCallback, useEffect, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import type { User } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/client'
@@ -13,7 +13,16 @@ import NextStepBar from '@/components/NextStepBar'
 import type { Suggestion } from '@/types'
 
 export default function AnalyzePage() {
+  return (
+    <Suspense>
+      <AnalyzePageInner />
+    </Suspense>
+  )
+}
+
+function AnalyzePageInner() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [resumeText, setResumeText] = useState('')
   const [jdText, setJdText] = useState('')
   const [suggestions, setSuggestions] = useState<Suggestion[]>([])
@@ -40,6 +49,15 @@ export default function AnalyzePage() {
           setStrengthsContext(ctx)
         }
       } catch {}
+    }
+
+    if (searchParams.get('reanalyze') === '1') {
+      const resume = localStorage.getItem('offerhelper_reanalyze_resume')
+      const jd = localStorage.getItem('offerhelper_reanalyze_jd')
+      if (resume) setResumeText(resume)
+      if (jd) setJdText(jd)
+      localStorage.removeItem('offerhelper_reanalyze_resume')
+      localStorage.removeItem('offerhelper_reanalyze_jd')
     }
   }, [])
 
