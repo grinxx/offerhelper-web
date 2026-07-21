@@ -1,69 +1,30 @@
 import OpenAI from 'openai'
+import Anthropic from '@anthropic-ai/sdk'
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
+export { PROVIDERS } from '@/lib/ai-providers'
 
 export interface AIConfig {
   baseURL: string
   apiKey: string
   modelFast: string
   modelSmart: string
+  isAnthropic: boolean
 }
-
-export const PROVIDERS = [
-  {
-    id: 'siliconflow',
-    label: '硅基流动',
-    baseURL: 'https://api.siliconflow.cn/v1',
-    models: [
-      { id: 'Pro/claude-sonnet-4-5', label: 'Claude Sonnet 4.5（推荐）' },
-      { id: 'Pro/claude-haiku-4-5', label: 'Claude Haiku 4.5（快速）' },
-      { id: 'deepseek-ai/DeepSeek-V3', label: 'DeepSeek V3' },
-      { id: 'Qwen/Qwen2.5-72B-Instruct', label: 'Qwen2.5 72B' },
-      { id: 'Qwen/Qwen2.5-7B-Instruct', label: 'Qwen2.5 7B（快速）' },
-    ],
-  },
-  {
-    id: 'deepseek',
-    label: 'DeepSeek',
-    baseURL: 'https://api.deepseek.com/v1',
-    models: [
-      { id: 'deepseek-chat', label: 'DeepSeek Chat（推荐）' },
-      { id: 'deepseek-reasoner', label: 'DeepSeek Reasoner' },
-    ],
-  },
-  {
-    id: 'aliyun',
-    label: '阿里云百炼',
-    baseURL: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
-    models: [
-      { id: 'qwen-max', label: 'Qwen Max（推荐）' },
-      { id: 'qwen-plus', label: 'Qwen Plus' },
-      { id: 'qwen-turbo', label: 'Qwen Turbo（快速）' },
-    ],
-  },
-  {
-    id: 'custom',
-    label: '自定义',
-    baseURL: '',
-    models: [],
-  },
-]
 
 const rawBase = process.env.ANTHROPIC_BASE_URL ?? ''
 const isLocal = rawBase.includes('localhost')
-const defaultBaseURL = isLocal
-  ? rawBase.endsWith('/') ? rawBase.slice(0, -1) : rawBase
-  : 'https://api.siliconflow.cn/v1'
 
 const DEFAULT_CONFIG: AIConfig = {
-  baseURL: defaultBaseURL,
+  baseURL: rawBase || 'https://api.siliconflow.cn/v1',
   apiKey: process.env.ANTHROPIC_API_KEY || '',
   modelFast: isLocal ? 'claude-haiku-4-5-20251001' : 'Qwen/Qwen2.5-7B-Instruct',
   modelSmart: isLocal ? 'claude-sonnet-4-6' : 'Pro/claude-sonnet-4-5',
+  isAnthropic: isLocal,
 }
 
 export async function getAIConfig(userId: string | null): Promise<AIConfig> {
-  if (!userId) return DEFAULT_CONFIG
+  if (!userId || isLocal) return DEFAULT_CONFIG
 
   try {
     const supabase = createServiceClient(
@@ -82,6 +43,7 @@ export async function getAIConfig(userId: string | null): Promise<AIConfig> {
         apiKey: data.ai_api_key,
         modelFast: data.ai_model_fast,
         modelSmart: data.ai_model_smart,
+        isAnthropic: false,
       }
     }
   } catch {}
@@ -89,17 +51,75 @@ export async function getAIConfig(userId: string | null): Promise<AIConfig> {
   return DEFAULT_CONFIG
 }
 
-export function createAIClient(config: AIConfig): OpenAI {
-  return new OpenAI({
-    baseURL: config.baseURL,
-    apiKey: config.apiKey,
-  })
-}
-
-export async function getAIClientForRequest(): Promise<{ client: OpenAI; config: AIConfig }> {
+export async function getAIClientForRequest(): Promise<{ config: AIConfig; chat: ChatClient }> {
   const sessionSupabase = await createClient()
   const { data: { user } } = await sessionSupabase.auth.getUser()
   const config = await getAIConfig(user?.id ?? null)
-  const client = createAIClient(config)
-  return { client, config }
+  const chat = config.isAnthropic ? new AnthropicChatClient(config) : new OpenAIChatClient(config)
+  return { config, chat }
+}
+
+export interface ChatMessage {
+  role: 'system' | 'user' | 'assistant'
+  content: string
+}
+
+export interface StreamChunk {
+  text: string
+}
+
+export interface ChatClient {
+  complete(messages: ChatMessage[], model: string, maxTokens: number): Promise<string>
+  stream(messages: ChatMessage[], model: string, maxTokens: number): AsyncIterable<StreamChunk>
+}
+
+class OpenAIChatClient implements ChatClient {
+  private client: OpenAI
+  constructor(config: AIConfig) {
+    this.client = new OpenAI({ baseURL: config.baseURL, apiKey: config.apiKey })
+  }
+
+  async complete(messages: ChatMessage[], model: string, maxTokens: number): Promise<string> {
+    const res = await this.client.chat.completions.create({ model, max_tokens: maxTokens, messages })
+    return res.choices[0]?.message?.content ?? ''
+  }
+
+  async *stream(messages: ChatMessage[], model: string, maxTokens: number): AsyncIterable<StreamChunk> {
+    const res = await this.client.chat.completions.create({ model, max_tokens: maxTokens, messages, stream: true })
+    for await (const chunk of res) {
+      const text = chunk.choices[0]?.delta?.content ?? ''
+      if (text) yield { text }
+    }
+  }
+}
+
+class AnthropicChatClient implements ChatClient {
+  private client: Anthropic
+  constructor(config: AIConfig) {
+    this.client = new Anthropic({ baseURL: config.baseURL, apiKey: config.apiKey })
+  }
+
+  async complete(messages: ChatMessage[], model: string, maxTokens: number): Promise<string> {
+    const system = messages.find(m => m.role === 'system')?.content
+    const rest = messages.filter(m => m.role !== 'system').map(m => ({
+      role: m.role as 'user' | 'assistant',
+      content: m.content,
+    }))
+    const res = await this.client.messages.create({ model, max_tokens: maxTokens, system, messages: rest })
+    return res.content[0]?.type === 'text' ? res.content[0].text : ''
+  }
+
+  async *stream(messages: ChatMessage[], model: string, maxTokens: number): AsyncIterable<StreamChunk> {
+    const system = messages.find(m => m.role === 'system')?.content
+    const rest = messages.filter(m => m.role !== 'system').map(m => ({
+      role: m.role as 'user' | 'assistant',
+      content: m.content,
+    }))
+    const res = await this.client.messages.create({ model, max_tokens: maxTokens, system, messages: rest, stream: true })
+    for await (const event of res) {
+      if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
+        yield { text: event.delta.text }
+      }
+    }
+  }
 }

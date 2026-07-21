@@ -5,33 +5,25 @@ export const runtime = 'nodejs'
 
 export async function POST(request: Request) {
   let body: { resume_text?: string } = {}
-  try {
-    body = await request.json()
-  } catch {
+  try { body = await request.json() } catch {
     return Response.json({ error: 'invalid json' }, { status: 400 })
   }
 
   const { resume_text } = body
-  if (!resume_text?.trim()) {
-    return Response.json({ error: '请先上传简历' }, { status: 400 })
-  }
+  if (!resume_text?.trim()) return Response.json({ error: '请先上传简历' }, { status: 400 })
 
-  const { client, config } = await getAIClientForRequest()
+  const { chat, config } = await getAIClientForRequest()
 
   try {
-    const message = await client.chat.completions.create({
-      model: config.modelFast,
-      max_tokens: 1024,
-      messages: [
+    const raw = await chat.complete(
+      [
         { role: 'system', content: MATCH_RECOMMEND_SYSTEM },
         { role: 'user', content: buildMatchRecommendPrompt(resume_text) },
       ],
-    })
-
-    const raw = message.choices[0]?.message?.content ?? ''
+      config.modelFast, 1024
+    )
     const cleaned = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim()
     const recommendations = JSON.parse(cleaned)
-
     if (!Array.isArray(recommendations)) throw new Error('invalid format')
     return Response.json({ recommendations })
   } catch {

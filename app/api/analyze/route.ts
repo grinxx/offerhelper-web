@@ -16,10 +16,7 @@ export async function POST(request: Request) {
   const { resume_text, jd_text, strengths_context } = body
 
   if (!resume_text || !jd_text) {
-    return new Response(JSON.stringify({ error: '简历和 JD 均为必填项' }), {
-      status: 400,
-      headers: { 'Content-Type': 'application/json' },
-    })
+    return new Response(JSON.stringify({ error: '简历和 JD 均为必填项' }), { status: 400 })
   }
 
   const sessionSupabase = await createSessionClient()
@@ -34,20 +31,14 @@ export async function POST(request: Request) {
   if (user) insertData.user_id = user.id
 
   const { data: caseRow, error: insertError } = await supabase
-    .from('cases')
-    .insert(insertData)
-    .select('id')
-    .single()
+    .from('cases').insert(insertData).select('id').single()
 
   if (insertError || !caseRow) {
-    return new Response(JSON.stringify({ error: '创建案例失败', detail: insertError?.message }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    })
+    return new Response(JSON.stringify({ error: '创建案例失败' }), { status: 500 })
   }
 
   const caseId = caseRow.id
-  const { client, config } = await getAIClientForRequest()
+  const { chat, config } = await getAIClientForRequest()
 
   const encoder = new TextEncoder()
   const stream = new ReadableStream({
@@ -56,34 +47,24 @@ export async function POST(request: Request) {
       let buffer = ''
 
       try {
-        const response = await client.chat.completions.create({
-          model: config.modelSmart,
-          max_tokens: 4096,
-          messages: [
+        for await (const chunk of chat.stream(
+          [
             { role: 'system', content: SYSTEM_PROMPT },
             { role: 'user', content: buildUserPrompt(resume_text, jd_text, strengths_context) },
           ],
-          stream: true,
-        })
-
-        for await (const chunk of response) {
-          const text = chunk.choices[0]?.delta?.content ?? ''
-          if (!text) continue
-          buffer += text
+          config.modelSmart,
+          4096
+        )) {
+          buffer += chunk.text
 
           let startIdx = buffer.indexOf('{')
           while (startIdx !== -1) {
-            let depth = 0
-            let endIdx = -1
+            let depth = 0, endIdx = -1
             for (let i = startIdx; i < buffer.length; i++) {
               if (buffer[i] === '{') depth++
-              if (buffer[i] === '}') {
-                depth--
-                if (depth === 0) { endIdx = i; break }
-              }
+              if (buffer[i] === '}') { depth--; if (depth === 0) { endIdx = i; break } }
             }
             if (endIdx === -1) break
-
             try {
               const obj = JSON.parse(buffer.slice(startIdx, endIdx + 1)) as Suggestion
               if (obj.original && obj.suggestion) {
@@ -91,17 +72,12 @@ export async function POST(request: Request) {
                 controller.enqueue(encoder.encode(JSON.stringify(obj) + '\n'))
               }
             } catch {}
-
             buffer = buffer.slice(endIdx + 1)
             startIdx = buffer.indexOf('{')
           }
         }
 
-        await supabase
-          .from('cases')
-          .update({ result_json: suggestions, status: 'done' })
-          .eq('id', caseId)
-
+        await supabase.from('cases').update({ result_json: suggestions, status: 'done' }).eq('id', caseId)
         controller.enqueue(encoder.encode(JSON.stringify({ case_id: caseId }) + '\n'))
       } catch {
         await supabase.from('cases').update({ status: 'error' }).eq('id', caseId)
@@ -113,10 +89,6 @@ export async function POST(request: Request) {
   })
 
   return new Response(stream, {
-    headers: {
-      'Content-Type': 'text/event-stream',
-      'Cache-Control': 'no-cache',
-      'X-Accel-Buffering': 'no',
-    },
+    headers: { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', 'X-Accel-Buffering': 'no' },
   })
 }

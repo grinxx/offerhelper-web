@@ -12,9 +12,7 @@ export async function POST(request: Request) {
     jd_text?: string | null
     turn_index?: number
   } = {}
-  try {
-    body = await request.json()
-  } catch {
+  try { body = await request.json() } catch {
     return new Response(JSON.stringify({ error: 'invalid json' }), { status: 400 })
   }
 
@@ -25,7 +23,7 @@ export async function POST(request: Request) {
   const sessionSupabase = await createClient()
   const { data: { user } } = await sessionSupabase.auth.getUser()
 
-  const { client, config } = await getAIClientForRequest()
+  const { chat, config } = await getAIClientForRequest()
 
   const encoder = new TextEncoder()
   const stream = new ReadableStream({
@@ -36,50 +34,25 @@ export async function POST(request: Request) {
       try {
         const chatMessages = [
           { role: 'system' as const, content: STRENGTHS_CHAT_SYSTEM },
-          ...safeMessages.map(m => ({
-            role: m.role as 'user' | 'assistant',
-            content: m.content,
-          })),
-          {
-            role: 'user' as const,
-            content: buildStrengthsChatPrompt(safeMessages, jd_text, safeTurnIndex),
-          },
+          ...safeMessages.map(m => ({ role: m.role as 'user' | 'assistant', content: m.content })),
+          { role: 'user' as const, content: buildStrengthsChatPrompt(safeMessages, jd_text, safeTurnIndex) },
         ]
 
-        const response = await client.chat.completions.create({
-          model: config.modelSmart,
-          max_tokens: 512,
-          messages: chatMessages,
-          stream: true,
-        })
-
-        for await (const chunk of response) {
-          const text = chunk.choices[0]?.delta?.content ?? ''
-          if (text) {
-            aiText += text
-            controller.enqueue(encoder.encode(JSON.stringify({ text }) + '\n'))
-          }
+        for await (const chunk of chat.stream(chatMessages, config.modelSmart, 512)) {
+          aiText += chunk.text
+          controller.enqueue(encoder.encode(JSON.stringify({ text: chunk.text }) + '\n'))
         }
 
         if (user) {
-          const supabase = createServiceClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.SUPABASE_SERVICE_ROLE_KEY!
-          )
+          const supabase = createServiceClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
           const updatedMessages = [...safeMessages, { role: 'assistant', content: aiText }]
           if (!currentSessionId) {
-            const { data: newSession } = await supabase
-              .from('strength_sessions')
-              .insert({ user_id: user.id, jd_text, messages: updatedMessages })
-              .select('id')
-              .single()
+            const { data: newSession } = await supabase.from('strength_sessions')
+              .insert({ user_id: user.id, jd_text, messages: updatedMessages }).select('id').single()
             if (newSession) currentSessionId = newSession.id
           } else {
-            await supabase
-              .from('strength_sessions')
-              .update({ messages: updatedMessages })
-              .eq('id', currentSessionId)
-              .eq('user_id', user.id)
+            await supabase.from('strength_sessions').update({ messages: updatedMessages })
+              .eq('id', currentSessionId).eq('user_id', user.id)
           }
         }
 
@@ -97,10 +70,6 @@ export async function POST(request: Request) {
   })
 
   return new Response(stream, {
-    headers: {
-      'Content-Type': 'text/event-stream',
-      'Cache-Control': 'no-cache',
-      'X-Accel-Buffering': 'no',
-    },
+    headers: { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', 'X-Accel-Buffering': 'no' },
   })
 }

@@ -7,36 +7,27 @@ import type { StrengthsResult } from '@/types'
 export const runtime = 'nodejs'
 
 export async function POST(request: Request) {
-  let body: {
-    session_id?: string | null
-    messages?: { role: string; content: string }[]
-    jd_text?: string | null
-  } = {}
-  try {
-    body = await request.json()
-  } catch {
+  let body: { session_id?: string | null; messages?: { role: string; content: string }[]; jd_text?: string | null } = {}
+  try { body = await request.json() } catch {
     return new Response(JSON.stringify({ error: 'invalid json' }), { status: 400 })
   }
 
   const { session_id, messages = [], jd_text = null } = body
-
   const sessionSupabase = await createClient()
   const { data: { user } } = await sessionSupabase.auth.getUser()
 
-  const { client, config } = await getAIClientForRequest()
+  const { chat, config } = await getAIClientForRequest()
 
   let result: StrengthsResult
   try {
-    const message = await client.chat.completions.create({
-      model: config.modelSmart,
-      max_tokens: 2048,
-      messages: [
+    const raw = await chat.complete(
+      [
         { role: 'system', content: STRENGTHS_RESULT_SYSTEM },
         { role: 'user', content: buildStrengthsResultPrompt(messages, jd_text) },
       ],
-    })
-
-    const raw = message.choices[0]?.message?.content ?? ''
+      config.modelSmart,
+      2048
+    )
     const cleaned = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim()
     result = JSON.parse(cleaned)
     if (!Array.isArray(result.strengths) || !result.summary) throw new Error('invalid')
@@ -45,18 +36,10 @@ export async function POST(request: Request) {
   }
 
   if (user && session_id) {
-    const supabase = createServiceClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    )
-    await supabase
-      .from('strength_sessions')
-      .update({ result, messages, status: 'done' })
-      .eq('id', session_id)
-      .eq('user_id', user.id)
+    const supabase = createServiceClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
+    await supabase.from('strength_sessions').update({ result, messages, status: 'done' })
+      .eq('id', session_id).eq('user_id', user.id)
   }
 
-  return new Response(JSON.stringify(result), {
-    headers: { 'Content-Type': 'application/json' },
-  })
+  return new Response(JSON.stringify(result), { headers: { 'Content-Type': 'application/json' } })
 }
