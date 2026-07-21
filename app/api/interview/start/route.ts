@@ -1,6 +1,6 @@
-import Anthropic from '@anthropic-ai/sdk'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
+import { getAIClientForRequest } from '@/lib/ai-client'
 import { INTERVIEW_QUESTION_SYSTEM, buildInterviewQuestionPrompt } from '@/lib/prompts'
 
 export const runtime = 'nodejs'
@@ -24,29 +24,28 @@ export async function POST(request: Request) {
     return new Response(JSON.stringify({ error: 'jd_text 为必填项' }), { status: 400 })
   }
 
-  const client = new Anthropic({
-    apiKey: process.env.ANTHROPIC_API_KEY,
-    baseURL: process.env.ANTHROPIC_BASE_URL,
-  })
+  const { client, config } = await getAIClientForRequest()
 
   let questions: string[] = []
   try {
-    const message = await client.messages.create({
-      model: 'claude-sonnet-4-6',
+    const message = await client.chat.completions.create({
+      model: config.modelSmart,
       max_tokens: 1024,
-      system: INTERVIEW_QUESTION_SYSTEM,
-      messages: [{ role: 'user', content: buildInterviewQuestionPrompt(jd_text, question_type) }],
+      messages: [
+        { role: 'system', content: INTERVIEW_QUESTION_SYSTEM },
+        { role: 'user', content: buildInterviewQuestionPrompt(jd_text, question_type) },
+      ],
     })
 
-    const raw = message.content[0]?.type === 'text' ? message.content[0].text : ''
+    const raw = message.choices[0]?.message?.content ?? ''
+    const cleaned = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim()
     try {
-      questions = JSON.parse(raw)
+      questions = JSON.parse(cleaned)
       if (!Array.isArray(questions) || questions.length === 0) throw new Error('invalid')
     } catch {
       return new Response(JSON.stringify({ error: '题目生成失败，请重试' }), { status: 500 })
     }
   } catch (err: unknown) {
-    // If already returned above, this won't be reached. This catches network/API errors.
     const msg = err instanceof Error ? err.message : 'unknown'
     return new Response(JSON.stringify({ error: '题目生成失败，请重试', detail: msg }), { status: 500 })
   }

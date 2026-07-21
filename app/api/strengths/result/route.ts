@@ -1,6 +1,6 @@
-import Anthropic from '@anthropic-ai/sdk'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
+import { getAIClientForRequest } from '@/lib/ai-client'
 import { STRENGTHS_RESULT_SYSTEM, buildStrengthsResultPrompt } from '@/lib/prompts'
 import type { StrengthsResult } from '@/types'
 
@@ -23,21 +23,20 @@ export async function POST(request: Request) {
   const sessionSupabase = await createClient()
   const { data: { user } } = await sessionSupabase.auth.getUser()
 
-  const client = new Anthropic({
-    apiKey: process.env.ANTHROPIC_API_KEY,
-    baseURL: process.env.ANTHROPIC_BASE_URL,
-  })
+  const { client, config } = await getAIClientForRequest()
 
   let result: StrengthsResult
   try {
-    const message = await client.messages.create({
-      model: 'claude-sonnet-4-6',
+    const message = await client.chat.completions.create({
+      model: config.modelSmart,
       max_tokens: 2048,
-      system: STRENGTHS_RESULT_SYSTEM,
-      messages: [{ role: 'user', content: buildStrengthsResultPrompt(messages, jd_text) }],
+      messages: [
+        { role: 'system', content: STRENGTHS_RESULT_SYSTEM },
+        { role: 'user', content: buildStrengthsResultPrompt(messages, jd_text) },
+      ],
     })
 
-    const raw = message.content[0]?.type === 'text' ? message.content[0].text : ''
+    const raw = message.choices[0]?.message?.content ?? ''
     const cleaned = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim()
     result = JSON.parse(cleaned)
     if (!Array.isArray(result.strengths) || !result.summary) throw new Error('invalid')
@@ -45,20 +44,16 @@ export async function POST(request: Request) {
     return new Response(JSON.stringify({ error: '优势提炼失败，请重试' }), { status: 500 })
   }
 
-  // Persist if logged in and session exists
   if (user && session_id) {
     const supabase = createServiceClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
-    const { error: updateError } = await supabase
+    await supabase
       .from('strength_sessions')
       .update({ result, messages, status: 'done' })
       .eq('id', session_id)
       .eq('user_id', user.id)
-    if (updateError) {
-      console.error('Failed to persist strength session:', updateError.message)
-    }
   }
 
   return new Response(JSON.stringify(result), {

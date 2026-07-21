@@ -1,6 +1,6 @@
-import Anthropic from '@anthropic-ai/sdk'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
+import { getAIClientForRequest } from '@/lib/ai-client'
 import { INTERVIEW_EVAL_SYSTEM, buildInterviewEvalPrompt } from '@/lib/prompts'
 import type { InterviewScores } from '@/types'
 
@@ -40,36 +40,25 @@ export async function POST(request: Request) {
     return new Response(JSON.stringify({ error: '无权访问' }), { status: 403 })
   }
 
-  const client = new Anthropic({
-    apiKey: process.env.ANTHROPIC_API_KEY,
-    baseURL: process.env.ANTHROPIC_BASE_URL,
-  })
+  const { client, config } = await getAIClientForRequest()
 
   const encoder = new TextEncoder()
   const stream = new ReadableStream({
     async start(controller) {
-      let buffer = ''
-      let result: { scores: InterviewScores; feedback: string; reference_answer: string } | null = null
-
       try {
-        const response = await client.messages.create({
-          model: 'claude-sonnet-4-6',
+        const message = await client.chat.completions.create({
+          model: config.modelSmart,
           max_tokens: 2048,
-          system: INTERVIEW_EVAL_SYSTEM,
-          messages: [{
-            role: 'user',
-            content: buildInterviewEvalPrompt(question, user_answer, sessionRow.jd_text),
-          }],
-          stream: true,
+          messages: [
+            { role: 'system', content: INTERVIEW_EVAL_SYSTEM },
+            { role: 'user', content: buildInterviewEvalPrompt(question, user_answer, sessionRow.jd_text) },
+          ],
         })
 
-        for await (const event of response) {
-          if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
-            buffer += event.delta.text
-          }
-        }
+        const raw = message.choices[0]?.message?.content ?? ''
+        const cleaned = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim()
+        const result: { scores: InterviewScores; feedback: string; reference_answer: string } = JSON.parse(cleaned)
 
-        result = JSON.parse(buffer)
         if (!result?.scores || !result.feedback || !result.reference_answer) {
           throw new Error('invalid response')
         }

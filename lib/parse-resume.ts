@@ -1,13 +1,13 @@
-import Anthropic from '@anthropic-ai/sdk'
+import OpenAI from 'openai'
 
 async function formatResumeWithAI(rawText: string): Promise<string> {
-  const client = new Anthropic({
-    apiKey: process.env.ANTHROPIC_API_KEY,
-    baseURL: process.env.ANTHROPIC_BASE_URL,
+  const client = new OpenAI({
+    baseURL: process.env.ANTHROPIC_BASE_URL?.replace('/anthropic/', '') || 'https://api.siliconflow.cn/v1',
+    apiKey: process.env.ANTHROPIC_API_KEY || '',
   })
 
-  const message = await client.messages.create({
-    model: 'claude-haiku-4-5-20251001',
+  const message = await client.chat.completions.create({
+    model: 'Qwen/Qwen2.5-7B-Instruct',
     max_tokens: 2048,
     messages: [{
       role: 'user',
@@ -25,7 +25,7 @@ ${rawText}`,
     }],
   })
 
-  const result = message.content[0]?.type === 'text' ? message.content[0].text : rawText
+  const result = message.choices[0]?.message?.content ?? rawText
   return result.trim()
 }
 

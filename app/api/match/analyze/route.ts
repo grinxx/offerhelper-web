@@ -1,6 +1,6 @@
-import Anthropic from '@anthropic-ai/sdk'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
+import { getAIClientForRequest } from '@/lib/ai-client'
 import {
   MATCH_EVAL_SYSTEM,
   buildMatchEvalPrompt,
@@ -31,10 +31,7 @@ export async function POST(request: Request) {
   const sessionSupabase = await createClient()
   const { data: { user } } = await sessionSupabase.auth.getUser()
 
-  const client = new Anthropic({
-    apiKey: process.env.ANTHROPIC_API_KEY,
-    baseURL: process.env.ANTHROPIC_BASE_URL,
-  })
+  const { client, config } = await getAIClientForRequest()
 
   const encoder = new TextEncoder()
   const stream = new ReadableStream({
@@ -44,13 +41,9 @@ export async function POST(request: Request) {
 
       try {
         const supabase = user
-          ? createServiceClient(
-              process.env.NEXT_PUBLIC_SUPABASE_URL!,
-              process.env.SUPABASE_SERVICE_ROLE_KEY!
-            )
+          ? createServiceClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
           : null
 
-        // Create session for logged-in users
         if (supabase && !currentSessionId) {
           const { data: newSession } = await supabase
             .from('match_sessions')
@@ -60,27 +53,23 @@ export async function POST(request: Request) {
           if (newSession) currentSessionId = newSession.id
         }
 
-        // Evaluate each JD serially
         for (let i = 0; i < jd_list.length; i++) {
           const jd = jd_list[i]
           try {
-            const message = await client.messages.create({
-              model: 'claude-sonnet-4-6',
+            const message = await client.chat.completions.create({
+              model: config.modelSmart,
               max_tokens: 1024,
-              system: MATCH_EVAL_SYSTEM,
-              messages: [{
-                role: 'user',
-                content: buildMatchEvalPrompt(resume_text, jd.content, jd.title ?? null),
-              }],
+              messages: [
+                { role: 'system', content: MATCH_EVAL_SYSTEM },
+                { role: 'user', content: buildMatchEvalPrompt(resume_text, jd.content, jd.title ?? null) },
+              ],
             })
-
-            const raw = message.content[0]?.type === 'text' ? message.content[0].text : ''
-            const parsed = JSON.parse(raw) as Omit<MatchResult, 'jd_index'>
+            const raw = message.choices[0]?.message?.content ?? ''
+            const cleaned = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim()
+            const parsed = JSON.parse(cleaned) as Omit<MatchResult, 'jd_index'>
             const result: MatchResult = { jd_index: i, ...parsed }
             results.push(result)
-            controller.enqueue(encoder.encode(
-              JSON.stringify({ type: 'result', ...result }) + '\n'
-            ))
+            controller.enqueue(encoder.encode(JSON.stringify({ type: 'result', ...result }) + '\n'))
           } catch {
             controller.enqueue(encoder.encode(
               JSON.stringify({ type: 'error', jd_index: i, message: '该岗位评估失败，请重试' }) + '\n'
@@ -88,45 +77,33 @@ export async function POST(request: Request) {
           }
         }
 
-        // Generate summary
         let summary = ''
         if (results.length > 0) {
           try {
-            const summaryMessage = await client.messages.create({
-              model: 'claude-sonnet-4-6',
+            const summaryMsg = await client.chat.completions.create({
+              model: config.modelFast,
               max_tokens: 512,
-              system: MATCH_SUMMARY_SYSTEM,
-              messages: [{
-                role: 'user',
-                content: buildMatchSummaryPrompt(results, jd_list),
-              }],
+              messages: [
+                { role: 'system', content: MATCH_SUMMARY_SYSTEM },
+                { role: 'user', content: buildMatchSummaryPrompt(results, jd_list) },
+              ],
             })
-            summary = summaryMessage.content[0]?.type === 'text' ? summaryMessage.content[0].text : ''
-            controller.enqueue(encoder.encode(
-              JSON.stringify({ type: 'summary', text: summary }) + '\n'
-            ))
+            summary = summaryMsg.choices[0]?.message?.content ?? ''
+            controller.enqueue(encoder.encode(JSON.stringify({ type: 'summary', text: summary }) + '\n'))
           } catch {
-            controller.enqueue(encoder.encode(
-              JSON.stringify({ type: 'summary', text: '' }) + '\n'
-            ))
+            controller.enqueue(encoder.encode(JSON.stringify({ type: 'summary', text: '' }) + '\n'))
           }
         }
 
-        // Persist results for logged-in users
         if (supabase && currentSessionId) {
-          const { error: updateError } = await supabase
+          await supabase
             .from('match_sessions')
             .update({ results, summary, status: 'done' })
             .eq('id', currentSessionId)
             .eq('user_id', user!.id)
-          if (updateError) {
-            console.error('Failed to persist match session:', updateError.message)
-          }
         }
 
-        controller.enqueue(encoder.encode(
-          JSON.stringify({ type: 'done', session_id: currentSessionId }) + '\n'
-        ))
+        controller.enqueue(encoder.encode(JSON.stringify({ type: 'done', session_id: currentSessionId }) + '\n'))
       } catch {
         controller.enqueue(encoder.encode(
           JSON.stringify({ type: 'error', jd_index: -1, message: '分析失败，请重试' }) + '\n'

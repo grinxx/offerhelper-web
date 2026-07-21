@@ -93,6 +93,8 @@ export default function HomePage() {
           <div className="flex flex-wrap items-center justify-end gap-x-3 gap-y-1 text-xs sm:text-sm text-zinc-500 dark:text-zinc-400">
             <Link href="/dashboard" className="hover:text-zinc-900 dark:hover:text-zinc-100">我的记录</Link>
             <span className="hidden sm:inline">|</span>
+            <Link href="/settings" className="hover:text-zinc-900 dark:hover:text-zinc-100">AI 设置</Link>
+            <span className="hidden sm:inline">|</span>
             <button onClick={handleSignOut} className="hover:text-zinc-900 dark:hover:text-zinc-100">退出</button>
           </div>
         ) : (

@@ -1,6 +1,6 @@
-import Anthropic from '@anthropic-ai/sdk'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
+import { getAIClientForRequest } from '@/lib/ai-client'
 import { STRENGTHS_CHAT_SYSTEM, buildStrengthsChatPrompt } from '@/lib/prompts'
 
 export const runtime = 'nodejs'
@@ -19,20 +19,13 @@ export async function POST(request: Request) {
   }
 
   const { session_id, messages = [], jd_text = null, turn_index = 0 } = body
-
-  // Clamp turn_index to valid range
   const safeTurnIndex = Math.max(0, Math.min(2, turn_index ?? 0))
-
-  // Bound messages to prevent unbounded token usage (3 turns × 2 messages each = max 6)
   const safeMessages = messages.slice(-6)
 
   const sessionSupabase = await createClient()
   const { data: { user } } = await sessionSupabase.auth.getUser()
 
-  const client = new Anthropic({
-    apiKey: process.env.ANTHROPIC_API_KEY,
-    baseURL: process.env.ANTHROPIC_BASE_URL,
-  })
+  const { client, config } = await getAIClientForRequest()
 
   const encoder = new TextEncoder()
   const stream = new ReadableStream({
@@ -41,40 +34,39 @@ export async function POST(request: Request) {
       let currentSessionId = session_id ?? null
 
       try {
-        const response = await client.messages.create({
-          model: 'claude-sonnet-4-6',
+        const chatMessages = [
+          { role: 'system' as const, content: STRENGTHS_CHAT_SYSTEM },
+          ...safeMessages.map(m => ({
+            role: m.role as 'user' | 'assistant',
+            content: m.content,
+          })),
+          {
+            role: 'user' as const,
+            content: buildStrengthsChatPrompt(safeMessages, jd_text, safeTurnIndex),
+          },
+        ]
+
+        const response = await client.chat.completions.create({
+          model: config.modelSmart,
           max_tokens: 512,
-          system: STRENGTHS_CHAT_SYSTEM,
-          messages: [
-            ...safeMessages.map(m => ({
-              role: m.role as 'user' | 'assistant',
-              content: m.content,
-            })),
-            {
-              role: 'user',
-              content: buildStrengthsChatPrompt(safeMessages, jd_text, safeTurnIndex),
-            },
-          ],
+          messages: chatMessages,
           stream: true,
         })
 
-        for await (const event of response) {
-          if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
-            aiText += event.delta.text
-            controller.enqueue(encoder.encode(JSON.stringify({ text: event.delta.text }) + '\n'))
+        for await (const chunk of response) {
+          const text = chunk.choices[0]?.delta?.content ?? ''
+          if (text) {
+            aiText += text
+            controller.enqueue(encoder.encode(JSON.stringify({ text }) + '\n'))
           }
         }
 
-        // Persist to DB if logged in
         if (user) {
           const supabase = createServiceClient(
             process.env.NEXT_PUBLIC_SUPABASE_URL!,
             process.env.SUPABASE_SERVICE_ROLE_KEY!
           )
-          const updatedMessages = [
-            ...safeMessages,
-            { role: 'assistant', content: aiText },
-          ]
+          const updatedMessages = [...safeMessages, { role: 'assistant', content: aiText }]
           if (!currentSessionId) {
             const { data: newSession } = await supabase
               .from('strength_sessions')

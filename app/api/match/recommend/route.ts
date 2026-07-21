@@ -1,4 +1,4 @@
-import Anthropic from '@anthropic-ai/sdk'
+import { getAIClientForRequest } from '@/lib/ai-client'
 import { MATCH_RECOMMEND_SYSTEM, buildMatchRecommendPrompt } from '@/lib/prompts'
 
 export const runtime = 'nodejs'
@@ -16,20 +16,19 @@ export async function POST(request: Request) {
     return Response.json({ error: '请先上传简历' }, { status: 400 })
   }
 
-  const client = new Anthropic({
-    apiKey: process.env.ANTHROPIC_API_KEY,
-    baseURL: process.env.ANTHROPIC_BASE_URL,
-  })
+  const { client, config } = await getAIClientForRequest()
 
   try {
-    const message = await client.messages.create({
-      model: 'claude-haiku-4-5-20251001',
+    const message = await client.chat.completions.create({
+      model: config.modelFast,
       max_tokens: 1024,
-      system: MATCH_RECOMMEND_SYSTEM,
-      messages: [{ role: 'user', content: buildMatchRecommendPrompt(resume_text) }],
+      messages: [
+        { role: 'system', content: MATCH_RECOMMEND_SYSTEM },
+        { role: 'user', content: buildMatchRecommendPrompt(resume_text) },
+      ],
     })
 
-    const raw = message.content[0]?.type === 'text' ? message.content[0].text : ''
+    const raw = message.choices[0]?.message?.content ?? ''
     const cleaned = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim()
     const recommendations = JSON.parse(cleaned)
 
