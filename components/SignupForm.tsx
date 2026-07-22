@@ -57,6 +57,12 @@ export default function SignupForm({ onSwitchToLogin }: Props) {
         />
       </div>
       {error && <p className="text-red-500 dark:text-red-400 text-xs">{error}</p>}
+      <p className="text-xs text-zinc-400 dark:text-zinc-500">
+        注册即表示你同意我们的
+        <a href="/terms" target="_blank" className="underline hover:text-zinc-600 dark:hover:text-zinc-300 mx-1">服务条款</a>
+        和
+        <a href="/privacy" target="_blank" className="underline hover:text-zinc-600 dark:hover:text-zinc-300 mx-1">隐私政策</a>
+      </p>
       <button
         type="submit"
         disabled={loading}
