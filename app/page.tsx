@@ -48,14 +48,6 @@ export default function HomePage() {
   useEffect(() => {
     const supabase = createClient()
     supabase.auth.getUser().then(({ data: { user } }) => setUser(user))
-
-    const hasUsed = !!(
-      localStorage.getItem('offerhelper_resume_text') ||
-      localStorage.getItem('offerhelper_strengths_result') ||
-      localStorage.getItem('offerhelper_match_top_jd') ||
-      localStorage.getItem('offerhelper_jd_text')
-    )
-    setGuideOpen(!hasUsed)
   }, [])
 
   const handleSignOut = async () => {
