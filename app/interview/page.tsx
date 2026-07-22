@@ -9,6 +9,7 @@ import InterviewProgress from '@/components/InterviewProgress'
 import ScoreCard from '@/components/ScoreCard'
 import AuthModal from '@/components/AuthModal'
 import NextStepBar from '@/components/NextStepBar'
+import ErrorBanner from '@/components/ErrorBanner'
 import type { InterviewScores } from '@/types'
 
 type Stage = 'idle' | 'loading_questions' | 'questioning' | 'evaluating' | 'summary'
@@ -304,7 +305,8 @@ function InterviewPageInner() {
 
       <h2 className="text-2xl font-bold mb-6">面试训练</h2>
 
-      {error && (
+      {error && <ErrorBanner error={error} />}
+      {error && !error.includes('额度已用完') && !error.includes('游客每天') && (
         <div className="flex items-center justify-between mb-4 bg-red-50 dark:bg-red-950/30 px-3 py-2 rounded">
           <p className="text-red-500 dark:text-red-400 text-sm">{error}</p>
           <button

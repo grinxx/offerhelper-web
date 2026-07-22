@@ -9,6 +9,7 @@ import ChatBubble from '@/components/ChatBubble'
 import StrengthsResultComponent from '@/components/StrengthsResult'
 import AuthModal from '@/components/AuthModal'
 import NextStepBar from '@/components/NextStepBar'
+import ErrorBanner from '@/components/ErrorBanner'
 import type { ChatMessage, StrengthItem } from '@/types'
 
 type Stage = 'idle' | 'chatting' | 'generating_result' | 'done'
@@ -247,6 +248,9 @@ function StrengthsPageInner() {
       <h2 className="text-2xl font-bold mb-6">优势挖掘</h2>
 
       {error && (
+        <ErrorBanner error={error} />
+      )}
+      {error && !error.includes('额度已用完') && !error.includes('游客每天') && (
         <div className="flex items-center justify-between mb-4 bg-red-50 dark:bg-red-950/30 px-3 py-2 rounded">
           <p className="text-red-500 dark:text-red-400 text-sm">{error}</p>
           <button
