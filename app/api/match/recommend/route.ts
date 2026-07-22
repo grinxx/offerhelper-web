@@ -18,7 +18,7 @@ export async function POST(request: Request) {
     return Response.json({ error: '今日免费额度已用完（每天 10 次），请前往「AI 设置」配置自己的 API Key 可无限使用', code: 'LIMIT_EXCEEDED' }, { status: 429 })
   }
 
-  const { chat, config } = await getAIClientForRequest()
+  const { chat, config } = await getAIClientForRequest(usage.userId)
   console.log('[recommend] baseURL:', config.baseURL, 'model:', config.modelFast, 'hasKey:', !!config.apiKey)
 
   try {

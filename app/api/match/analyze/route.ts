@@ -24,7 +24,7 @@ export async function POST(request: Request) {
 
   const sessionSupabase = await createClient()
   const { data: { user } } = await sessionSupabase.auth.getUser()
-  const { chat, config } = await getAIClientForRequest()
+  const { chat, config } = await getAIClientForRequest(usage.userId)
 
   const encoder = new TextEncoder()
   const stream = new ReadableStream({

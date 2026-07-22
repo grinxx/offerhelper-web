@@ -21,6 +21,7 @@ export interface UsageCheckResult {
   allowed: boolean
   remaining: number
   usingOwnKey: boolean
+  userId: string | null
 }
 
 export async function checkAndRecordUsage(action: string): Promise<UsageCheckResult> {
@@ -37,7 +38,7 @@ export async function checkAndRecordUsage(action: string): Promise<UsageCheckRes
       .single()
 
     if (settings?.ai_api_key) {
-      return { allowed: true, remaining: Infinity, usingOwnKey: true }
+      return { allowed: true, remaining: Infinity, usingOwnKey: true, userId: user.id }
     }
   }
 
@@ -66,17 +67,16 @@ export async function checkAndRecordUsage(action: string): Promise<UsageCheckRes
   }
 
   if (count >= DAILY_LIMIT) {
-    return { allowed: false, remaining: 0, usingOwnKey: false }
+    return { allowed: false, remaining: 0, usingOwnKey: false, userId: user?.id ?? null }
   }
 
-  // 记录本次使用
   await supabase.from('usage_logs').insert({
     user_id: user?.id ?? null,
     ip: user ? null : ip,
     action,
   })
 
-  return { allowed: true, remaining: DAILY_LIMIT - count - 1, usingOwnKey: false }
+  return { allowed: true, remaining: DAILY_LIMIT - count - 1, usingOwnKey: false, userId: user?.id ?? null }
 }
 
 export async function getTodayUsage(): Promise<{ used: number; limit: number; usingOwnKey: boolean }> {

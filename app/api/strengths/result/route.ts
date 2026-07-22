@@ -17,12 +17,12 @@ export async function POST(request: Request) {
   const sessionSupabase = await createClient()
   const { data: { user } } = await sessionSupabase.auth.getUser()
 
-  const { chat, config } = await getAIClientForRequest()
-
   const usage = await checkAndRecordUsage('strengths_result')
   if (!usage.allowed) {
     return new Response(JSON.stringify({ error: '今日免费额度已用完（每天 10 次），请前往「AI 设置」配置自己的 API Key 可无限使用', code: 'LIMIT_EXCEEDED' }), { status: 429 })
   }
+
+  const { chat, config } = await getAIClientForRequest(usage.userId)
 
   let result: StrengthsResult
   try {

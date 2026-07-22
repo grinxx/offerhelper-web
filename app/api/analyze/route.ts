@@ -44,7 +44,7 @@ export async function POST(request: Request) {
   }
 
   const caseId = caseRow.id
-  const { chat, config } = await getAIClientForRequest()
+  const { chat, config } = await getAIClientForRequest(usage.userId)
 
   const encoder = new TextEncoder()
   const stream = new ReadableStream({

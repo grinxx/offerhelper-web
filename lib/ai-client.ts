@@ -18,8 +18,8 @@ const isLocal = rawBase.includes('localhost')
 const DEFAULT_CONFIG: AIConfig = {
   baseURL: rawBase || 'https://api.siliconflow.cn/v1',
   apiKey: process.env.ANTHROPIC_API_KEY || '',
-  modelFast: isLocal ? 'claude-haiku-4-5-20251001' : 'Qwen/Qwen2.5-7B-Instruct',
-  modelSmart: isLocal ? 'claude-sonnet-4-6' : 'Qwen/Qwen2.5-72B-Instruct',
+  modelFast: isLocal ? 'claude-haiku-4-5-20251001' : 'deepseek-ai/DeepSeek-V3',
+  modelSmart: isLocal ? 'claude-sonnet-4-6' : 'deepseek-ai/DeepSeek-V3',
   isAnthropic: isLocal,
 }
 
@@ -51,10 +51,14 @@ export async function getAIConfig(userId: string | null): Promise<AIConfig> {
   return DEFAULT_CONFIG
 }
 
-export async function getAIClientForRequest(): Promise<{ config: AIConfig; chat: ChatClient }> {
-  const sessionSupabase = await createClient()
-  const { data: { user } } = await sessionSupabase.auth.getUser()
-  const config = await getAIConfig(user?.id ?? null)
+export async function getAIClientForRequest(userId?: string | null): Promise<{ config: AIConfig; chat: ChatClient }> {
+  let resolvedUserId = userId
+  if (resolvedUserId === undefined) {
+    const sessionSupabase = await createClient()
+    const { data: { user } } = await sessionSupabase.auth.getUser()
+    resolvedUserId = user?.id ?? null
+  }
+  const config = await getAIConfig(resolvedUserId)
   const chat = config.isAnthropic ? new AnthropicChatClient(config) : new OpenAIChatClient(config)
   return { config, chat }
 }
