@@ -44,10 +44,16 @@ export default function HomePage() {
   const [pendingHref, setPendingHref] = useState<string | null>(null)
 
   const [guideOpen, setGuideOpen] = useState(false)
+  const [usageInfo, setUsageInfo] = useState<{ used: number; limit: number; usingOwnKey: boolean } | null>(null)
 
   useEffect(() => {
     const supabase = createClient()
-    supabase.auth.getUser().then(({ data: { user } }) => setUser(user))
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setUser(user)
+      if (user) {
+        fetch('/api/usage').then(r => r.json()).then(setUsageInfo)
+      }
+    })
   }, [])
 
   const handleSignOut = async () => {
@@ -83,6 +89,20 @@ export default function HomePage() {
         <h1 className="text-xl font-semibold shrink-0">OfferHelper</h1>
         {user ? (
           <div className="flex flex-wrap items-center justify-end gap-x-3 gap-y-1 text-xs sm:text-sm text-zinc-500 dark:text-zinc-400">
+            {usageInfo && !usageInfo.usingOwnKey && (
+              <>
+                <span className={`${usageInfo.limit - usageInfo.used <= 3 ? 'text-amber-500' : 'text-zinc-400 dark:text-zinc-500'}`}>
+                  今日剩余 {usageInfo.limit - usageInfo.used} 次
+                </span>
+                <span className="hidden sm:inline">|</span>
+              </>
+            )}
+            {usageInfo?.usingOwnKey && (
+              <>
+                <span className="text-green-500 dark:text-green-400">自己的 Key</span>
+                <span className="hidden sm:inline">|</span>
+              </>
+            )}
             <Link href="/dashboard" className="hover:text-zinc-900 dark:hover:text-zinc-100">我的记录</Link>
             <span className="hidden sm:inline">|</span>
             <Link href="/settings" className="hover:text-zinc-900 dark:hover:text-zinc-100">AI 设置</Link>

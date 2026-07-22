@@ -1,6 +1,7 @@
 import { createClient as createServiceClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
 import { getAIClientForRequest } from '@/lib/ai-client'
+import { checkAndRecordUsage } from '@/lib/usage'
 import { INTERVIEW_QUESTION_SYSTEM, buildInterviewQuestionPrompt } from '@/lib/prompts'
 
 export const runtime = 'nodejs'
@@ -17,6 +18,11 @@ export async function POST(request: Request) {
 
   const { jd_text, case_id, question_type = 'all' } = body
   if (!jd_text?.trim()) return new Response(JSON.stringify({ error: 'jd_text 为必填项' }), { status: 400 })
+
+  const usage = await checkAndRecordUsage('interview_start')
+  if (!usage.allowed) {
+    return new Response(JSON.stringify({ error: '今日免费额度已用完（每天 10 次），请前往「AI 设置」配置自己的 API Key 可无限使用', code: 'LIMIT_EXCEEDED' }), { status: 429 })
+  }
 
   const { chat, config } = await getAIClientForRequest()
 

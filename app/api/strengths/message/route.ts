@@ -1,6 +1,7 @@
 import { createClient as createServiceClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
 import { getAIClientForRequest } from '@/lib/ai-client'
+import { checkAndRecordUsage } from '@/lib/usage'
 import { STRENGTHS_CHAT_SYSTEM, buildStrengthsChatPrompt } from '@/lib/prompts'
 
 export const runtime = 'nodejs'
@@ -24,6 +25,18 @@ export async function POST(request: Request) {
   const { data: { user } } = await sessionSupabase.auth.getUser()
 
   const { chat, config } = await getAIClientForRequest()
+
+  const usage = await checkAndRecordUsage('strengths_message')
+  if (!usage.allowed) {
+    const encoder = new TextEncoder()
+    const stream = new ReadableStream({
+      start(controller) {
+        controller.enqueue(encoder.encode(JSON.stringify({ error: '今日免费额度已用完（每天 10 次），请前往「AI 设置」配置自己的 API Key 可无限使用', code: 'LIMIT_EXCEEDED' }) + '\n'))
+        controller.close()
+      }
+    })
+    return new Response(stream, { headers: { 'Content-Type': 'text/event-stream' } })
+  }
 
   const encoder = new TextEncoder()
   const stream = new ReadableStream({

@@ -1,6 +1,7 @@
 import { createClient as createServiceClient } from '@supabase/supabase-js'
 import { createClient as createSessionClient } from '@/lib/supabase/server'
 import { getAIClientForRequest } from '@/lib/ai-client'
+import { checkAndRecordUsage } from '@/lib/usage'
 import { SYSTEM_PROMPT, buildUserPrompt } from '@/lib/prompts'
 import type { Suggestion } from '@/types'
 
@@ -17,6 +18,11 @@ export async function POST(request: Request) {
 
   if (!resume_text || !jd_text) {
     return new Response(JSON.stringify({ error: '简历和 JD 均为必填项' }), { status: 400 })
+  }
+
+  const usage = await checkAndRecordUsage('analyze')
+  if (!usage.allowed) {
+    return new Response(JSON.stringify({ error: `今日免费额度已用完（每天 10 次），请前往「AI 设置」配置自己的 API Key 可无限使用`, code: 'LIMIT_EXCEEDED' }), { status: 429 })
   }
 
   const sessionSupabase = await createSessionClient()

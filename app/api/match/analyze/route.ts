@@ -1,6 +1,7 @@
 import { createClient as createServiceClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
 import { getAIClientForRequest } from '@/lib/ai-client'
+import { checkAndRecordUsage } from '@/lib/usage'
 import { MATCH_EVAL_SYSTEM, buildMatchEvalPrompt, MATCH_SUMMARY_SYSTEM, buildMatchSummaryPrompt } from '@/lib/prompts'
 import type { MatchResult, JdItem } from '@/types'
 
@@ -15,6 +16,11 @@ export async function POST(request: Request) {
   const { resume_text, jd_list = [], session_id = null } = body
   if (!resume_text?.trim()) return new Response(JSON.stringify({ error: '简历内容不能为空' }), { status: 400 })
   if (jd_list.length === 0 || jd_list.length > 5) return new Response(JSON.stringify({ error: 'JD 数量需在 1-5 条之间' }), { status: 400 })
+
+  const usage = await checkAndRecordUsage('match_analyze')
+  if (!usage.allowed) {
+    return new Response(JSON.stringify({ error: '今日免费额度已用完（每天 10 次），请前往「AI 设置」配置自己的 API Key 可无限使用', code: 'LIMIT_EXCEEDED' }), { status: 429 })
+  }
 
   const sessionSupabase = await createClient()
   const { data: { user } } = await sessionSupabase.auth.getUser()

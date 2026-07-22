@@ -1,6 +1,7 @@
 import { createClient as createServiceClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
 import { getAIClientForRequest } from '@/lib/ai-client'
+import { checkAndRecordUsage } from '@/lib/usage'
 import { INTERVIEW_EVAL_SYSTEM, buildInterviewEvalPrompt } from '@/lib/prompts'
 import type { InterviewScores } from '@/types'
 
@@ -24,6 +25,11 @@ export async function POST(request: Request) {
   const supabase = createServiceClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
   const { data: sessionRow } = await supabase.from('interview_sessions').select('jd_text, user_id').eq('id', session_id).single()
   if (!sessionRow || sessionRow.user_id !== user.id) return new Response(JSON.stringify({ error: '无权访问' }), { status: 403 })
+
+  const usage = await checkAndRecordUsage('interview_answer')
+  if (!usage.allowed) {
+    return new Response(JSON.stringify({ error: '今日免费额度已用完（每天 10 次），请前往「AI 设置」配置自己的 API Key 可无限使用', code: 'LIMIT_EXCEEDED' }), { status: 429 })
+  }
 
   const { chat, config } = await getAIClientForRequest()
 
