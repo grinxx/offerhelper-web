@@ -98,15 +98,13 @@ export default function SettingsPage() {
     setSaving(true)
     setError('')
     try {
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error('未登录')
-
-      const { error: upsertError } = await supabase
-        .from('user_settings')
-        .upsert({ user_id: user.id, ...settings, updated_at: new Date().toISOString() })
-
-      if (upsertError) throw upsertError
+      const res = await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(settings),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? '保存失败')
       setSaved(true)
       setTimeout(() => setSaved(false), 3000)
     } catch (e) {

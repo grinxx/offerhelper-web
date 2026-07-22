@@ -2,6 +2,7 @@ import OpenAI from 'openai'
 import Anthropic from '@anthropic-ai/sdk'
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
+import { decrypt } from '@/lib/crypto'
 export { PROVIDERS } from '@/lib/ai-providers'
 
 export interface AIConfig {
@@ -40,7 +41,7 @@ export async function getAIConfig(userId: string | null): Promise<AIConfig> {
     if (data?.ai_api_key) {
       return {
         baseURL: data.ai_base_url,
-        apiKey: data.ai_api_key,
+        apiKey: decrypt(data.ai_api_key) || data.ai_api_key, // 兼容旧的明文 Key
         modelFast: data.ai_model_fast,
         modelSmart: data.ai_model_smart,
         isAnthropic: false,
