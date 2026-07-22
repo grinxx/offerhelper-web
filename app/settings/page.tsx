@@ -29,6 +29,8 @@ export default function SettingsPage() {
   const [saved, setSaved] = useState(false)
   const [showKey, setShowKey] = useState(false)
   const [error, setError] = useState('')
+  const [testing, setTesting] = useState(false)
+  const [testResult, setTestResult] = useState<'ok' | 'fail' | null>(null)
 
   useEffect(() => {
     const supabase = createClient()
@@ -61,6 +63,35 @@ export default function SettingsPage() {
       ai_model_fast: provider.models[1]?.id ?? firstModel,
       ai_model_smart: firstModel,
     }))
+  }
+
+  async function handleTest() {
+    setTesting(true)
+    setTestResult(null)
+    setError('')
+    try {
+      const res = await fetch('/api/test-ai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          base_url: settings.ai_base_url,
+          api_key: settings.ai_api_key,
+          model: settings.ai_model_fast,
+        }),
+      })
+      const data = await res.json()
+      if (data.ok) {
+        setTestResult('ok')
+      } else {
+        setTestResult('fail')
+        setError(data.error ?? '连接失败')
+      }
+    } catch {
+      setTestResult('fail')
+      setError('网络请求失败')
+    } finally {
+      setTesting(false)
+    }
   }
 
   async function handleSave() {
@@ -262,13 +293,22 @@ export default function SettingsPage() {
 
         {error && <p className="text-red-500 text-sm">{error}</p>}
 
-        <button
-          onClick={handleSave}
-          disabled={saving || !settings.ai_api_key.trim()}
-          className="w-full bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 py-2.5 rounded-lg text-sm font-medium disabled:opacity-40 hover:bg-zinc-700 dark:hover:bg-zinc-300 transition-colors"
-        >
-          {saving ? '保存中...' : saved ? '✓ 已保存' : '保存设置'}
-        </button>
+        <div className="flex gap-3">
+          <button
+            onClick={handleTest}
+            disabled={testing || !settings.ai_api_key.trim()}
+            className="flex-1 border border-zinc-300 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300 py-2.5 rounded-lg text-sm font-medium disabled:opacity-40 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+          >
+            {testing ? '测试中...' : testResult === 'ok' ? '✓ 连接成功' : testResult === 'fail' ? '✕ 连接失败' : '测试连接'}
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={saving || !settings.ai_api_key.trim()}
+            className="flex-1 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 py-2.5 rounded-lg text-sm font-medium disabled:opacity-40 hover:bg-zinc-700 dark:hover:bg-zinc-300 transition-colors"
+          >
+            {saving ? '保存中...' : saved ? '✓ 已保存' : '保存设置'}
+          </button>
+        </div>
 
         <p className="text-xs text-zinc-400 dark:text-zinc-500 text-center">
           未配置时使用系统默认 AI，配置后优先使用你自己的 Key
