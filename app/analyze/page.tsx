@@ -158,6 +158,10 @@ function AnalyzePageInner() {
       </div>
 
       <div className="space-y-4 mb-6">
+        <p className="text-xs text-zinc-400 dark:text-zinc-500 flex items-center gap-1">
+          <span>🔒</span>
+          <span>简历仅用于本次分析，不会用于模型训练，不会对外共享</span>
+        </p>
         {strengthsContext && (
           <div className="flex items-center justify-between bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg px-4 py-3">
             <div className="min-w-0 mr-3">
