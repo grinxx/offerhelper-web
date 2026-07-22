@@ -29,7 +29,7 @@ export async function POST(request: Request) {
     const encoder = new TextEncoder()
     const stream = new ReadableStream({
       start(controller) {
-        controller.enqueue(encoder.encode(JSON.stringify({ error: '今日免费额度已用完（每天 10 次），请前往「AI 设置」配置自己的 API Key 可无限使用', code: 'LIMIT_EXCEEDED' }) + '\n'))
+        controller.enqueue(encoder.encode(JSON.stringify({ error: `${usage.limitMessage}`, code: 'LIMIT_EXCEEDED' }) + '\n'))
         controller.close()
       }
     })

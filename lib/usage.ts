@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { headers } from 'next/headers'
 
 const DAILY_LIMIT = 10
+const GUEST_LIMIT = 3
 
 function getServiceClient() {
   return createServiceClient(
@@ -22,6 +23,7 @@ export interface UsageCheckResult {
   remaining: number
   usingOwnKey: boolean
   userId: string | null
+  limitMessage: string
 }
 
 export async function checkAndRecordUsage(action: string): Promise<UsageCheckResult> {
@@ -38,7 +40,7 @@ export async function checkAndRecordUsage(action: string): Promise<UsageCheckRes
       .single()
 
     if (settings?.ai_api_key) {
-      return { allowed: true, remaining: Infinity, usingOwnKey: true, userId: user.id }
+      return { allowed: true, remaining: Infinity, usingOwnKey: true, userId: user.id, limitMessage: '' }
     }
   }
 
@@ -66,8 +68,13 @@ export async function checkAndRecordUsage(action: string): Promise<UsageCheckRes
     count = c ?? 0
   }
 
-  if (count >= DAILY_LIMIT) {
-    return { allowed: false, remaining: 0, usingOwnKey: false, userId: user?.id ?? null }
+  const limit = user ? DAILY_LIMIT : GUEST_LIMIT
+  const limitMessage = user
+    ? `今日免费额度已用完（每天 ${DAILY_LIMIT} 次），请前往「AI 设置」配置自己的 API Key 可无限使用`
+    : `游客每天最多使用 ${GUEST_LIMIT} 次，注册登录后每天可使用 ${DAILY_LIMIT} 次`
+
+  if (count >= limit) {
+    return { allowed: false, remaining: 0, usingOwnKey: false, userId: user?.id ?? null, limitMessage }
   }
 
   await supabase.from('usage_logs').insert({
@@ -76,7 +83,7 @@ export async function checkAndRecordUsage(action: string): Promise<UsageCheckRes
     action,
   })
 
-  return { allowed: true, remaining: DAILY_LIMIT - count - 1, usingOwnKey: false, userId: user?.id ?? null }
+  return { allowed: true, remaining: limit - count - 1, usingOwnKey: false, userId: user?.id ?? null, limitMessage: '' }
 }
 
 export async function getTodayUsage(): Promise<{ used: number; limit: number; usingOwnKey: boolean }> {
