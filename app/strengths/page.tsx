@@ -354,6 +354,10 @@ function StrengthsPageInner() {
       {/* done */}
       {stage === 'done' && result && (
         <div className="space-y-6">
+          <div className="bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg px-5 py-4 text-center">
+            <p className="text-green-700 dark:text-green-400 font-medium text-sm mb-0.5">🎉 优势挖掘完成</p>
+            <p className="text-xs text-green-600 dark:text-green-500">以下是基于你真实经历提炼的职业优势，可直接用于简历和面试</p>
+          </div>
           <StrengthsResultComponent strengths={result.strengths} summary={result.summary} />
           <div className="flex gap-2 pt-2">
             <button

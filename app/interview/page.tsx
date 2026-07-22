@@ -477,6 +477,10 @@ function InterviewPageInner() {
       {/* summary */}
       {stage === 'summary' && summary && (
         <div className="space-y-6">
+          <div className="bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg px-5 py-4 text-center">
+            <p className="text-green-700 dark:text-green-400 font-medium text-sm mb-0.5">🎉 本次面试训练完成</p>
+            <p className="text-xs text-green-600 dark:text-green-500">查看下方总结，找到你的薄弱维度重点加强</p>
+          </div>
           <div className="border border-zinc-200 dark:border-zinc-800 rounded-lg p-5">
             <h3 className="text-sm font-medium mb-3">本次训练总结</h3>
             <div className="space-y-2 mb-4">
