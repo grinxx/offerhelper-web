@@ -177,7 +177,7 @@ function AnalyzePageInner() {
           </div>
         )}
         <ResumeUploader onTextReady={setResumeText} />
-        <JdInput value={jdText} onChange={setJdText} />
+        <JdInput value={jdText} onChange={setJdText} onSubmit={resumeText ? handleAnalyze : undefined} />
         <AnalyzeButton
           loading={loading}
           disabled={!resumeText || !jdText}
