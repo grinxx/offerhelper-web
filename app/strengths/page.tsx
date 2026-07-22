@@ -118,7 +118,7 @@ function StrengthsPageInner() {
       if (!res.body) {
         setError('请求失败，请重试')
         setStage('idle')
-        return
+        return null
       }
 
       const reader = res.body.getReader()
