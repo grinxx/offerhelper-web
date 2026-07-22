@@ -197,6 +197,36 @@ export default function HomePage() {
         </div>
       )}
 
+      <div className="mt-8 border-t border-zinc-200 dark:border-zinc-800 pt-6">
+        <details className="group">
+          <summary className="flex items-center justify-between cursor-pointer text-xs text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors list-none">
+            <span>为什么用 OfferHelper？</span>
+            <span className="group-open:rotate-180 transition-transform">▾</span>
+          </summary>
+          <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {[
+              {
+                title: '不编造，只优化表达',
+                desc: '每条建议都必须回溯到你的真实经历。缺乏证据的内容会单独标注，不会让你写出面试时无法回答的内容。',
+              },
+              {
+                title: '四个功能，覆盖求职全流程',
+                desc: '从挖掘优势、匹配岗位、优化简历，到模拟面试，四个功能相互联动，数据可以跨功能复用。',
+              },
+              {
+                title: '应届生专属逻辑',
+                desc: '专门针对课程项目、实习、社团等应届生经历设计，不用担心"没有工作经验"的问题。',
+              },
+            ].map(item => (
+              <div key={item.title} className="space-y-1">
+                <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300">{item.title}</p>
+                <p className="text-xs text-zinc-400 dark:text-zinc-500 leading-relaxed">{item.desc}</p>
+              </div>
+            ))}
+          </div>
+        </details>
+      </div>
+
       <p className="mt-6 text-xs text-zinc-300 dark:text-zinc-700 text-center">
         每次分析调用 AI，建议按需使用 · 结果仅供参考，不构成任何承诺 ·{' '}
         <a href="mailto:xinyuzhang9055@163.com" className="hover:text-zinc-500 dark:hover:text-zinc-400 transition-colors">反馈与建议</a>
