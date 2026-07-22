@@ -19,6 +19,7 @@ export async function POST(request: Request) {
   }
 
   const { chat, config } = await getAIClientForRequest()
+  console.log('[recommend] baseURL:', config.baseURL, 'model:', config.modelFast, 'hasKey:', !!config.apiKey)
 
   try {
     const raw = await chat.complete(
