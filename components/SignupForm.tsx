@@ -10,11 +10,16 @@ interface Props {
 export default function SignupForm({ onSwitchToLogin }: Props) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [agreed, setAgreed] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    if (!agreed) {
+      setError('请先同意服务条款和隐私政策')
+      return
+    }
     setLoading(true)
     setError('')
 
@@ -56,13 +61,21 @@ export default function SignupForm({ onSwitchToLogin }: Props) {
           disabled={loading}
         />
       </div>
+      <label className="flex items-start gap-2 cursor-pointer">
+        <input
+          type="checkbox"
+          checked={agreed}
+          onChange={e => setAgreed(e.target.checked)}
+          className="mt-0.5 shrink-0"
+        />
+        <span className="text-xs text-zinc-500 dark:text-zinc-400">
+          我已阅读并同意
+          <a href="/terms" target="_blank" className="underline hover:text-zinc-700 dark:hover:text-zinc-300 mx-1">服务条款</a>
+          和
+          <a href="/privacy" target="_blank" className="underline hover:text-zinc-700 dark:hover:text-zinc-300 mx-1">隐私政策</a>
+        </span>
+      </label>
       {error && <p className="text-red-500 dark:text-red-400 text-xs">{error}</p>}
-      <p className="text-xs text-zinc-400 dark:text-zinc-500">
-        注册即表示你同意我们的
-        <a href="/terms" target="_blank" className="underline hover:text-zinc-600 dark:hover:text-zinc-300 mx-1">服务条款</a>
-        和
-        <a href="/privacy" target="_blank" className="underline hover:text-zinc-600 dark:hover:text-zinc-300 mx-1">隐私政策</a>
-      </p>
       <button
         type="submit"
         disabled={loading}

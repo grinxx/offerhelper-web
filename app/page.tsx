@@ -230,10 +230,11 @@ export default function HomePage() {
       <p className="mt-6 text-xs text-zinc-300 dark:text-zinc-700 text-center">
         每次分析调用 AI，建议按需使用 · 结果仅供参考，不构成任何承诺 ·{' '}
         <a href="mailto:xinyuzhang9055@163.com" className="hover:text-zinc-500 dark:hover:text-zinc-400 transition-colors">反馈与建议</a>
+      </p>
+      <p className="mt-1 text-xs text-zinc-400 dark:text-zinc-600 text-center">
+        <a href="/privacy" className="underline hover:text-zinc-600 dark:hover:text-zinc-400 transition-colors">隐私政策</a>
         {' · '}
-        <a href="/privacy" className="hover:text-zinc-500 dark:hover:text-zinc-400 transition-colors">隐私政策</a>
-        {' · '}
-        <a href="/terms" className="hover:text-zinc-500 dark:hover:text-zinc-400 transition-colors">服务条款</a>
+        <a href="/terms" className="underline hover:text-zinc-600 dark:hover:text-zinc-400 transition-colors">服务条款</a>
       </p>
 
       <AuthModal
