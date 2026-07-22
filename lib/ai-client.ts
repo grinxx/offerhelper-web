@@ -18,8 +18,8 @@ const isLocal = rawBase.includes('localhost')
 const DEFAULT_CONFIG: AIConfig = {
   baseURL: rawBase || 'https://api.siliconflow.cn/v1',
   apiKey: process.env.ANTHROPIC_API_KEY || '',
-  modelFast: isLocal ? 'claude-haiku-4-5-20251001' : 'Qwen/Qwen2.5-7B-Instruct',
-  modelSmart: isLocal ? 'claude-sonnet-4-6' : 'Pro/claude-sonnet-4-5',
+  modelFast: isLocal ? 'claude-haiku-4-5-20251001' : 'deepseek-ai/DeepSeek-V3',
+  modelSmart: isLocal ? 'claude-sonnet-4-6' : 'deepseek-ai/DeepSeek-V3',
   isAnthropic: isLocal,
 }
 
