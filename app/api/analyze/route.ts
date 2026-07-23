@@ -2,7 +2,7 @@ import { createClient as createServiceClient } from '@supabase/supabase-js'
 import { createClient as createSessionClient } from '@/lib/supabase/server'
 import { getAIClientForRequest } from '@/lib/ai-client'
 import { checkAndRecordUsage } from '@/lib/usage'
-import { SYSTEM_PROMPT, buildUserPrompt } from '@/lib/prompts'
+import { SYSTEM_PROMPT, buildUserPrompt, RESUME_SCORE_SYSTEM, buildResumeScorePrompt } from '@/lib/prompts'
 import type { Suggestion } from '@/types'
 
 export const runtime = 'nodejs'
@@ -84,6 +84,23 @@ export async function POST(request: Request) {
         }
 
         await supabase.from('cases').update({ result_json: suggestions, status: 'done' }).eq('id', caseId)
+
+        // 额外生成整体评分
+        try {
+          const scoreRaw = await chat.complete(
+            [
+              { role: 'system', content: RESUME_SCORE_SYSTEM },
+              { role: 'user', content: buildResumeScorePrompt(resume_text, jd_text) },
+            ],
+            config.modelFast, 256
+          )
+          const cleaned = scoreRaw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim()
+          const scoreData = JSON.parse(cleaned)
+          if (typeof scoreData.score === 'number') {
+            controller.enqueue(encoder.encode(JSON.stringify({ score: scoreData.score, score_summary: scoreData.summary }) + '\n'))
+          }
+        } catch {}
+
         controller.enqueue(encoder.encode(JSON.stringify({ case_id: caseId }) + '\n'))
       } catch {
         await supabase.from('cases').update({ status: 'error' }).eq('id', caseId)

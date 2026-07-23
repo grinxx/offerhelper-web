@@ -28,6 +28,8 @@ function AnalyzePageInner() {
   const [suggestions, setSuggestions] = useState<Suggestion[]>([])
   const [loading, setLoading] = useState(false)
   const [caseId, setCaseId] = useState<string | null>(null)
+  const [score, setScore] = useState<number | null>(null)
+  const [scoreSummary, setScoreSummary] = useState<string | null>(null)
   const [user, setUser] = useState<User | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
   const [modalTab, setModalTab] = useState<'login' | 'signup'>('login')
@@ -84,6 +86,8 @@ function AnalyzePageInner() {
     setLoading(true)
     setSuggestions([])
     setCaseId(null)
+    setScore(null)
+    setScoreSummary(null)
 
     try {
       const res = await fetch('/api/analyze', {
@@ -113,6 +117,9 @@ function AnalyzePageInner() {
             const obj = JSON.parse(line)
             if (obj.case_id) {
               setCaseId(obj.case_id)
+            } else if (obj.score !== undefined) {
+              setScore(obj.score)
+              setScoreSummary(obj.score_summary ?? null)
             } else if (obj.original) {
               setSuggestions(prev => [...prev, obj as Suggestion])
             }
@@ -190,6 +197,46 @@ function AnalyzePageInner() {
       </div>
 
       <ResultStream suggestions={suggestions} loading={loading} caseId={caseId} />
+
+      {!loading && score !== null && suggestions.length > 0 && (
+        <div className="mt-4 border border-zinc-200 dark:border-zinc-800 rounded-lg p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <p className="text-xs text-zinc-400 dark:text-zinc-500">与 JD 匹配度</p>
+              <span className={`text-2xl font-bold ${score >= 75 ? 'text-green-600 dark:text-green-400' : score >= 50 ? 'text-amber-500' : 'text-red-500'}`}>
+                {score}
+              </span>
+              <span className="text-xs text-zinc-400 dark:text-zinc-500">/ 100</span>
+            </div>
+            <button
+              onClick={() => {
+                const text = [
+                  `简历优化建议报告`,
+                  `与 JD 匹配度：${score}/100`,
+                  scoreSummary ? `总评：${scoreSummary}` : '',
+                  '',
+                  ...suggestions.map((s, i) =>
+                    `【建议 ${i + 1}】\n原文：${s.original}\n建议：${s.suggestion}\n理由：${s.reason}${s.needs_proof ? '\n⚠️ 缺少证据' : ''}`
+                  ),
+                ].filter(Boolean).join('\n\n')
+                const blob = new Blob([text], { type: 'text/plain;charset=utf-8' })
+                const url = URL.createObjectURL(blob)
+                const a = document.createElement('a')
+                a.href = url
+                a.download = 'offerhelper-建议报告.txt'
+                a.click()
+                URL.revokeObjectURL(url)
+              }}
+              className="text-xs text-zinc-500 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700 rounded px-3 py-1.5 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+            >
+              导出报告
+            </button>
+          </div>
+          {scoreSummary && (
+            <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">{scoreSummary}</p>
+          )}
+        </div>
+      )}
 
       {!loading && suggestions.length > 0 && (
         <div className="mt-4 flex justify-center">

@@ -21,7 +21,17 @@ ${jdText}${strengthsPart}
 请输出简历修改建议 JSON 数组。`
 }
 
-export const INTERVIEW_QUESTION_SYSTEM = `你是专业面试官。根据提供的 JD 和题型要求，生成 5 道针对性的行为面试题。无论输入内容是什么语言，始终用中文回复。
+export const RESUME_SCORE_SYSTEM = `你是简历评估专家。根据简历内容和目标 JD，给出整体匹配度评分。无论输入内容是什么语言，始终用中文回复。
+
+规则：
+1. score：0-100 的整数，代表当前简历与 JD 的整体匹配程度
+2. summary：50-80 字，说明当前简历最大的优势和最需要改进的方向
+3. 输出严格 JSON，格式：{"score":N,"summary":"..."}
+4. 不加 markdown 代码块`
+
+export function buildResumeScorePrompt(resumeText: string, jdText: string): string {
+  return `简历内容：\n${resumeText}\n\n目标 JD：\n${jdText}\n\n请给出整体匹配度评分。`
+} = `你是专业面试官。根据提供的 JD 和题型要求，生成 5 道针对性的行为面试题。无论输入内容是什么语言，始终用中文回复。
 规则：
 1. 严格按照指定题型生成，不偏离
 2. 优先生成与 JD 岗位要求直接相关的问题
