@@ -74,7 +74,7 @@ export default async function DashboardPage({ searchParams }: Props) {
 
   const shouldFetch = (t: RecordType) => !activeType || activeType === t
 
-  const [casesRes, interviewRes, strengthsRes, matchRes] = await Promise.all([
+  const [casesRes, interviewRes, strengthsRes, matchRes, progressRes] = await Promise.all([
     shouldFetch('analysis') ? supabase
       .from('cases')
       .select('id, jd_text, created_at')
@@ -103,6 +103,12 @@ export default async function DashboardPage({ searchParams }: Props) {
       .eq('status', 'done')
       .order('created_at', { ascending: false })
       .limit(fetchLimit) : { data: [] },
+    !activeType ? Promise.all([
+      supabase.from('cases').select('id', { count: 'exact', head: true }).eq('user_id', user.id).eq('status', 'done'),
+      supabase.from('interview_sessions').select('id', { count: 'exact', head: true }).eq('user_id', user.id).eq('status', 'done'),
+      supabase.from('strength_sessions').select('id', { count: 'exact', head: true }).eq('user_id', user.id).eq('status', 'done'),
+      supabase.from('match_sessions').select('id', { count: 'exact', head: true }).eq('user_id', user.id).eq('status', 'done'),
+    ]) : Promise.resolve(null),
   ])
 
   const allRecords: TimelineRecord[] = [
@@ -193,6 +199,44 @@ export default async function DashboardPage({ searchParams }: Props) {
       </header>
 
       <h2 className="text-xl font-bold mb-4">{pageTitle}</h2>
+
+      {!activeType && progressRes && (() => {
+        const [cCount, iCount, sCount, mCount] = progressRes as Array<{ count: number | null }>
+        const checks = [
+          { label: '完成优势挖掘', done: (sCount.count ?? 0) > 0, href: '/strengths', type: 'strengths' },
+          { label: '完成简历优化', done: (cCount.count ?? 0) > 0, href: '/analyze', type: 'analysis' },
+          { label: '完成岗位匹配', done: (mCount.count ?? 0) > 0, href: '/match', type: 'match' },
+          { label: '完成面试训练', done: (iCount.count ?? 0) > 0, href: '/interview', type: 'interview' },
+        ]
+        const doneCount = checks.filter(c => c.done).length
+        const allDone = doneCount === 4
+        return (
+          <div className={`mb-6 border rounded-lg p-4 ${allDone ? 'border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950/20' : 'border-zinc-200 dark:border-zinc-800'}`}>
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-xs font-medium text-zinc-600 dark:text-zinc-400">求职准备进度</p>
+              <p className={`text-xs font-medium ${allDone ? 'text-green-600 dark:text-green-400' : 'text-zinc-400 dark:text-zinc-500'}`}>
+                {allDone ? '✓ 基础准备已完成' : `${doneCount} / 4 已完成`}
+              </p>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {checks.map(c => (
+                <Link
+                  key={c.label}
+                  href={c.done ? `/dashboard?type=${c.type}` : c.href}
+                  className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs transition-colors ${
+                    c.done
+                      ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400'
+                      : 'border border-dashed border-zinc-300 dark:border-zinc-700 text-zinc-400 dark:text-zinc-500 hover:border-zinc-400 dark:hover:border-zinc-600'
+                  }`}
+                >
+                  <span>{c.done ? '✓' : '○'}</span>
+                  <span>{c.label}</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )
+      })()}
 
       {interviewProgress.length >= 2 && (
         <div className="mb-6 border border-zinc-200 dark:border-zinc-800 rounded-lg p-4">
