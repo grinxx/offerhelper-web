@@ -54,6 +54,15 @@ export default function HomePage() {
         fetch('/api/usage').then(r => r.json()).then(setUsageInfo)
       }
     })
+
+    // 新用户（无任何本地使用记录）默认展开引导
+    const hasUsed = !!(
+      localStorage.getItem('offerhelper_resume_text') ||
+      localStorage.getItem('offerhelper_jd_text') ||
+      localStorage.getItem('offerhelper_strengths_result') ||
+      localStorage.getItem('offerhelper_match_top_jd')
+    )
+    if (!hasUsed) setGuideOpen(true)
   }, [])
 
   const handleSignOut = async () => {
