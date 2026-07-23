@@ -14,7 +14,9 @@ export async function POST(request: Request) {
   } catch {
     return new Response(JSON.stringify({ error: 'invalid json' }), { status: 400 })
   }
-  const { resume_text, jd_text, strengths_context } = body
+  const { resume_text: rawResume, jd_text: rawJd, strengths_context } = body
+  const resume_text = rawResume?.slice(0, 8000)
+  const jd_text = rawJd?.slice(0, 4000)
 
   if (!resume_text || !jd_text) {
     return new Response(JSON.stringify({ error: '简历和 JD 均为必填项' }), { status: 400 })

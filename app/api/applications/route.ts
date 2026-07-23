@@ -14,19 +14,26 @@ const STATUS_LABELS: Record<string, string> = {
   withdrawn: '已撤回',
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   const sessionSupabase = await createClient()
   const { data: { user } } = await sessionSupabase.auth.getUser()
   if (!user) return Response.json({ error: '未登录' }, { status: 401 })
 
+  const { searchParams } = new URL(request.url)
+  const page = Math.max(1, parseInt(searchParams.get('page') ?? '1', 10))
+  const limit = 20
+  const from = (page - 1) * limit
+  const to = from + limit - 1
+
   const supabase = createServiceClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
-  const { data } = await supabase
+  const { data, count } = await supabase
     .from('applications')
-    .select('*')
+    .select('*', { count: 'exact' })
     .eq('user_id', user.id)
     .order('applied_at', { ascending: false })
+    .range(from, to)
 
-  return Response.json({ applications: data ?? [] })
+  return Response.json({ applications: data ?? [], total: count ?? 0, page, limit })
 }
 
 export async function POST(request: NextRequest) {

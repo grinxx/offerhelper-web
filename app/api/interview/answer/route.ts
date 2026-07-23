@@ -17,7 +17,8 @@ export async function POST(request: Request) {
     return new Response(JSON.stringify({ error: 'invalid json' }), { status: 400 })
   }
 
-  const { session_id, question_index, question, user_answer } = body
+  const { session_id, question_index, question, user_answer: rawAnswer } = body
+  const user_answer = rawAnswer?.slice(0, 2000)
   if (!session_id || question_index === undefined || !question || !user_answer?.trim()) {
     return new Response(JSON.stringify({ error: '缺少必填字段' }), { status: 400 })
   }

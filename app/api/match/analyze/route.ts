@@ -13,7 +13,12 @@ export async function POST(request: Request) {
     return new Response(JSON.stringify({ error: 'invalid json' }), { status: 400 })
   }
 
-  const { resume_text, jd_list = [], session_id = null } = body
+  const { resume_text: rawResume, jd_list: rawJdList = [], session_id = null } = body
+  const resume_text = rawResume?.slice(0, 8000)
+  const jd_list = (rawJdList as Array<{title?: string; content: string}>).map(j => ({
+    title: j.title?.slice(0, 100),
+    content: j.content?.slice(0, 4000),
+  }))
   if (!resume_text?.trim()) return new Response(JSON.stringify({ error: '简历内容不能为空' }), { status: 400 })
   if (jd_list.length === 0 || jd_list.length > 5) return new Response(JSON.stringify({ error: 'JD 数量需在 1-5 条之间' }), { status: 400 })
 

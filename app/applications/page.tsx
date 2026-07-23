@@ -30,6 +30,9 @@ export default function ApplicationsPage() {
   const router = useRouter()
   const [apps, setApps] = useState<Application[]>([])
   const [loading, setLoading] = useState(true)
+  const [page, setPage] = useState(1)
+  const [total, setTotal] = useState(0)
+  const PAGE_SIZE = 20
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState(EMPTY_FORM)
   const [saving, setSaving] = useState(false)
@@ -48,11 +51,12 @@ export default function ApplicationsPage() {
     })
   }, [])
 
-  async function loadApps() {
+  async function loadApps(p = page) {
     setLoading(true)
-    const res = await fetch('/api/applications')
+    const res = await fetch(`/api/applications?page=${p}`)
     const data = await res.json()
     setApps(data.applications ?? [])
+    setTotal(data.total ?? 0)
     setLoading(false)
   }
 
@@ -234,6 +238,18 @@ export default function ApplicationsPage() {
               </div>
             )
           })}
+        </div>
+      )}
+
+      {total > PAGE_SIZE && (
+        <div className="flex items-center justify-between mt-6 text-sm text-zinc-500 dark:text-zinc-400">
+          {page > 1 ? (
+            <button onClick={() => { setPage(p => p - 1); loadApps(page - 1) }} className="hover:text-zinc-900 dark:hover:text-zinc-100">← 上一页</button>
+          ) : <span />}
+          <span className="text-xs text-zinc-400 dark:text-zinc-500">第 {page} 页 / 共 {Math.ceil(total / PAGE_SIZE)} 页</span>
+          {page * PAGE_SIZE < total ? (
+            <button onClick={() => { setPage(p => p + 1); loadApps(page + 1) }} className="hover:text-zinc-900 dark:hover:text-zinc-100">下一页 →</button>
+          ) : <span />}
         </div>
       )}
     </main>
