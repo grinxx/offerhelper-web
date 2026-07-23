@@ -137,51 +137,51 @@ export default function HomePage() {
         <p className="text-zinc-500 dark:text-zinc-400 text-sm">不编造，不包装，选一个你现在最需要的功能开始</p>
       </div>
 
-      <div className="mb-6">
+      <div className="mb-4">
         <button
-          onClick={() => setGuideOpen(v => !v)}
+          onClick={() => setGuideOpen(true)}
           className="flex items-center gap-2 text-sm text-zinc-400 dark:text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors"
         >
-          <span>{guideOpen ? '▾' : '▸'}</span>
+          <span>▸</span>
           <span>不知道从哪里开始？</span>
         </button>
-
-        {guideOpen && (
-          <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-3">
-            {[
-              {
-                condition: '已有简历，想投某个岗位',
-                step: '简历优化 → 岗位匹配 → 面试训练',
-                start: '/analyze',
-                startLabel: '从简历优化开始',
-              },
-              {
-                condition: '不清楚自己有哪些优势',
-                step: '优势挖掘 → 简历优化 → 岗位匹配',
-                start: '/strengths',
-                startLabel: '从优势挖掘开始',
-              },
-              {
-                condition: '已有目标岗位，想准备面试',
-                step: '岗位匹配 → 面试训练 → 优势挖掘',
-                start: '/match',
-                startLabel: '从岗位匹配开始',
-              },
-            ].map(g => (
-              <div key={g.start} className="border border-zinc-200 dark:border-zinc-800 rounded-lg p-4">
-                <p className="text-xs font-medium text-zinc-700 dark:text-zinc-300 mb-1">{g.condition}</p>
-                <p className="text-xs text-zinc-400 dark:text-zinc-500 mb-3 leading-relaxed">{g.step}</p>
-                <button
-                  onClick={() => handleFeatureClick(g.start, g.start === '/interview')}
-                  className="text-xs text-zinc-600 dark:text-zinc-300 border border-zinc-300 dark:border-zinc-600 rounded px-2.5 py-1 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
-                >
-                  {g.startLabel} →
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
       </div>
+
+      {/* 引导弹窗 */}
+      {guideOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={() => setGuideOpen(false)}>
+          <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-xl w-full max-w-lg p-6" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">选择适合你的起点</h3>
+              <button onClick={() => setGuideOpen(false)} className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 text-lg leading-none">×</button>
+            </div>
+            <div className="space-y-3">
+              {[
+                { condition: '已有简历，想投某个岗位', step: '简历优化 → 岗位匹配 → 面试训练', start: '/analyze', startLabel: '从简历优化开始' },
+                { condition: '不清楚自己有哪些优势', step: '优势挖掘 → 简历优化 → 岗位匹配', start: '/strengths', startLabel: '从优势挖掘开始' },
+                { condition: '已有目标岗位，想准备面试', step: '岗位匹配 → 面试训练 → 优势挖掘', start: '/match', startLabel: '从岗位匹配开始' },
+              ].map(g => (
+                <button
+                  key={g.start}
+                  onClick={() => { setGuideOpen(false); handleFeatureClick(g.start, g.start === '/interview') }}
+                  className="w-full text-left border border-zinc-200 dark:border-zinc-700 rounded-lg p-4 hover:bg-zinc-50 dark:hover:bg-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-500 transition-all group"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-zinc-800 dark:text-zinc-200 mb-0.5">{g.condition}</p>
+                      <p className="text-xs text-zinc-400 dark:text-zinc-500">{g.step}</p>
+                    </div>
+                    <span className="text-zinc-400 dark:text-zinc-500 group-hover:text-zinc-700 dark:group-hover:text-zinc-300 ml-3 shrink-0">→</span>
+                  </div>
+                </button>
+              ))}
+            </div>
+            <button onClick={() => setGuideOpen(false)} className="mt-4 w-full text-xs text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors">
+              我自己看看，关闭
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
         {FEATURES.map((f) => (
