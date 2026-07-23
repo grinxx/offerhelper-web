@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import type { Case } from '@/types'
 import SuggestionCard from '@/components/SuggestionCard'
 import ReanalyzeButton from '@/components/ReanalyzeButton'
+import AddToTrackerButton from '@/components/AddToTrackerButton'
 import Link from 'next/link'
 
 interface Props {
@@ -59,6 +60,7 @@ export default async function CaseDetailPage({ params, searchParams }: Props) {
           ))}
           <div className="pt-4 border-t border-zinc-200 dark:border-zinc-800 mt-2 space-y-2">
             <ReanalyzeButton resumeText={caseData.resume_text} jdText={caseData.jd_text} />
+            <AddToTrackerButton jdText={caseData.jd_text} />
             <Link
               href={`/interview?case_id=${caseData.id}`}
               className="block w-full text-center border border-zinc-900 dark:border-zinc-100 text-zinc-900 dark:text-zinc-100 px-6 py-2.5 rounded-lg text-sm hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
