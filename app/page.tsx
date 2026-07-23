@@ -56,14 +56,12 @@ export default function HomePage() {
       }
     })
 
-    // 新用户（无任何本地使用记录）默认展开引导
-    const hasUsed = !!(
-      localStorage.getItem('offerhelper_resume_text') ||
-      localStorage.getItem('offerhelper_jd_text') ||
-      localStorage.getItem('offerhelper_strengths_result') ||
-      localStorage.getItem('offerhelper_match_top_jd')
-    )
-    if (!hasUsed) setGuideOpen(true)
+    // 新用户（从未访问过）默认展开引导
+    const hasVisited = localStorage.getItem('offerhelper_visited')
+    if (!hasVisited) {
+      setGuideOpen(true)
+      localStorage.setItem('offerhelper_visited', '1')
+    }
   }, [])
 
   const handleSignOut = async () => {
