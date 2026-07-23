@@ -194,6 +194,8 @@ export default async function DashboardPage({ searchParams }: Props) {
               <span>|</span>
             </>
           )}
+          <Link href="/applications" className="hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors">投递跟踪</Link>
+          <span>|</span>
           <span className="text-zinc-400 dark:text-zinc-500">{user.email}</span>
         </div>
       </header>

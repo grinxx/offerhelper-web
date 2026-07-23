@@ -114,6 +114,8 @@ export default function HomePage() {
             )}
             <Link href="/dashboard" className="hover:text-zinc-900 dark:hover:text-zinc-100">我的记录</Link>
             <span className="hidden sm:inline">|</span>
+            <Link href="/applications" className="hover:text-zinc-900 dark:hover:text-zinc-100">投递跟踪</Link>
+            <span className="hidden sm:inline">|</span>
             <Link href="/settings" className="hover:text-zinc-900 dark:hover:text-zinc-100">AI 设置</Link>
             <span className="hidden sm:inline">|</span>
             <button onClick={handleSignOut} className="hover:text-zinc-900 dark:hover:text-zinc-100">退出</button>
