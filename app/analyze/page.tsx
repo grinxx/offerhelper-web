@@ -30,6 +30,7 @@ function AnalyzePageInner() {
   const [caseId, setCaseId] = useState<string | null>(null)
   const [score, setScore] = useState<number | null>(null)
   const [scoreSummary, setScoreSummary] = useState<string | null>(null)
+  const [prevScore, setPrevScore] = useState<number | null>(null)
   const [user, setUser] = useState<User | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
   const [modalTab, setModalTab] = useState<'login' | 'signup'>('login')
@@ -207,6 +208,15 @@ function AnalyzePageInner() {
                 {score}
               </span>
               <span className="text-xs text-zinc-400 dark:text-zinc-500">/ 100</span>
+              {prevScore !== null && (
+                <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                  score > prevScore ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400'
+                  : score < prevScore ? 'bg-red-100 dark:bg-red-900/30 text-red-500 dark:text-red-400'
+                  : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500'
+                }`}>
+                  {score > prevScore ? `↑ +${score - prevScore}` : score < prevScore ? `↓ ${score - prevScore}` : '持平'} 较上次
+                </span>
+              )}
             </div>
             <button
               onClick={() => {
@@ -241,7 +251,7 @@ function AnalyzePageInner() {
       {!loading && suggestions.length > 0 && (
         <div className="mt-4 flex justify-center">
           <button
-            onClick={() => { setSuggestions([]); setCaseId(null) }}
+            onClick={() => { if (score !== null) setPrevScore(score); setSuggestions([]); setCaseId(null); setScore(null); setScoreSummary(null) }}
             className="text-xs text-zinc-400 dark:text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 border border-zinc-200 dark:border-zinc-700 rounded px-3 py-1.5 transition-colors"
           >
             重新分析（保留简历和 JD）
