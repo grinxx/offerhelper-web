@@ -308,7 +308,7 @@ function StrengthsPageInner() {
                 : `第 ${answeredTurns + 1} 问`}
             </span>
           </div>
-          <div className="space-y-3 min-h-[200px]">
+          <div className="space-y-3 min-h-[160px] sm:min-h-[200px]">
             {messages.map((m, i) => (
               <ChatBubble key={i} role={m.role} content={m.content} />
             ))}
@@ -321,7 +321,7 @@ function StrengthsPageInner() {
             <div className="space-y-2">
               <textarea
                 ref={el => { if (el) el.addEventListener('focus', () => setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'center' }), 300), { once: false }) }}
-                className="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 rounded p-3 text-sm h-28 resize-none placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-400 dark:focus:ring-zinc-600"
+                className="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 rounded p-3 text-sm h-20 sm:h-28 resize-none placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-400 dark:focus:ring-zinc-600"
                 placeholder="请详细描述你的经历...（Enter 发送，Shift+Enter 换行）"
                 value={userInput}
                 onChange={e => setUserInput(e.target.value)}

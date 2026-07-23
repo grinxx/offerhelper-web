@@ -109,7 +109,7 @@ export default function ApplicationsPage() {
 
       {/* 统计 */}
       {apps.length > 0 && (
-        <div className="grid grid-cols-4 gap-3 mb-6">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
           {[
             { label: '总投递', value: stats.total },
             { label: '进行中', value: stats.active },
