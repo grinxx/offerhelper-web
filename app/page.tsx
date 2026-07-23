@@ -5,6 +5,7 @@ import Link from 'next/link'
 import type { User } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/client'
 import AuthModal from '@/components/AuthModal'
+import ThemeToggle from '@/components/ThemeToggle'
 
 const FEATURES = [
   {
@@ -119,12 +120,16 @@ export default function HomePage() {
             <Link href="/settings" className="hover:text-zinc-900 dark:hover:text-zinc-100">AI 设置</Link>
             <span className="hidden sm:inline">|</span>
             <button onClick={handleSignOut} className="hover:text-zinc-900 dark:hover:text-zinc-100">退出</button>
+            <span className="hidden sm:inline">|</span>
+            <ThemeToggle />
           </div>
         ) : (
           <div className="flex flex-wrap items-center justify-end gap-x-3 gap-y-1 text-xs sm:text-sm text-zinc-500 dark:text-zinc-400">
             <button onClick={() => setModalOpen(true)} className="hover:text-zinc-900 dark:hover:text-zinc-100">登录</button>
             <span className="hidden sm:inline">|</span>
             <button onClick={() => { setPendingHref(null); setModalOpen(true) }} className="hover:text-zinc-900 dark:hover:text-zinc-100">注册</button>
+            <span className="hidden sm:inline">|</span>
+            <ThemeToggle />
           </div>
         )}
       </header>
