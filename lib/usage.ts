@@ -4,6 +4,8 @@ import { headers } from 'next/headers'
 
 const DAILY_LIMIT = 10
 const GUEST_LIMIT = 3
+const RATE_WINDOW_SECONDS = 60
+const RATE_MAX_REQUESTS = 15  // 同一 IP 60 秒内最多 15 次
 
 function getServiceClient() {
   return createServiceClient(
@@ -48,6 +50,23 @@ export async function checkAndRecordUsage(action: string): Promise<UsageCheckRes
   const headersList = await headers()
   const ip = headersList.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
   const since = todayStart()
+
+  // 速率限制：同一 IP 60 秒内最多 15 次
+  const windowStart = new Date(Date.now() - RATE_WINDOW_SECONDS * 1000).toISOString()
+  const { count: recentCount } = await supabase
+    .from('usage_logs')
+    .select('*', { count: 'exact', head: true })
+    .eq('ip', ip)
+    .gte('created_at', windowStart)
+  if ((recentCount ?? 0) >= RATE_MAX_REQUESTS) {
+    return {
+      allowed: false,
+      remaining: 0,
+      usingOwnKey: false,
+      userId: user?.id ?? null,
+      limitMessage: `请求过于频繁，请 ${RATE_WINDOW_SECONDS} 秒后再试`,
+    }
+  }
 
   // 按 user_id 或 IP 统计今日使用次数
   let count = 0

@@ -54,16 +54,39 @@ export default function SuggestionCard({ suggestion, storageKey }: Props) {
 
   useEffect(() => {
     if (!storageKey) return
-    const saved = localStorage.getItem(`offerhelper_suggestion_${storageKey}`)
-    if (saved === 'applied' || saved === 'pending') setStatus(saved)
+    const [caseId] = storageKey.split('_')
+    const idx = parseInt(storageKey.split('_')[1])
+    // 先从 API 读取，失败则回退 localStorage
+    fetch(`/api/suggestion-status?case_id=${caseId}`)
+      .then(r => r.json())
+      .then(data => {
+        const s = data.statuses?.[idx]
+        if (s === 'applied' || s === 'pending') setStatus(s)
+        else {
+          const saved = localStorage.getItem(`offerhelper_suggestion_${storageKey}`)
+          if (saved === 'applied' || saved === 'pending') setStatus(saved)
+        }
+      })
+      .catch(() => {
+        const saved = localStorage.getItem(`offerhelper_suggestion_${storageKey}`)
+        if (saved === 'applied' || saved === 'pending') setStatus(saved)
+      })
   }, [storageKey])
 
   function handleSetStatus(s: Status) {
     setStatus(s)
     setMenuOpen(false)
     if (storageKey) {
-      if (s === 'none') localStorage.removeItem(`offerhelper_suggestion_${storageKey}`)
-      else localStorage.setItem(`offerhelper_suggestion_${storageKey}`, s)
+      const [caseId] = storageKey.split('_')
+      const idx = parseInt(storageKey.split('_')[1])
+      // 同时存 localStorage（离线）和 API（跨设备）
+      if (s === 'none') {
+        localStorage.removeItem(`offerhelper_suggestion_${storageKey}`)
+        fetch('/api/suggestion-status', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ case_id: caseId, suggestion_index: idx, status: null }) }).catch(() => {})
+      } else {
+        localStorage.setItem(`offerhelper_suggestion_${storageKey}`, s)
+        fetch('/api/suggestion-status', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ case_id: caseId, suggestion_index: idx, status: s }) }).catch(() => {})
+      }
     }
   }
 

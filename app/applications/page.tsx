@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -35,6 +35,10 @@ export default function ApplicationsPage() {
   const [saving, setSaving] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editStatus, setEditStatus] = useState<string>('')
+  const [pendingDelete, setPendingDelete] = useState<string | null>(null)
+  const [deleteCountdown, setDeleteCountdown] = useState(5)
+  const deleteTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const deleteIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   useEffect(() => {
     const supabase = createClient()
@@ -76,9 +80,23 @@ export default function ApplicationsPage() {
     setApps(prev => prev.map(a => a.id === id ? { ...a, status } : a))
   }
 
-  async function handleDelete(id: string) {
-    await fetch(`/api/applications?id=${id}`, { method: 'DELETE' })
-    setApps(prev => prev.filter(a => a.id !== id))
+  function handleDeleteClick(id: string) {
+    setPendingDelete(id)
+    setDeleteCountdown(5)
+    deleteIntervalRef.current = setInterval(() => {
+      setDeleteCountdown(c => { if (c <= 1) { clearInterval(deleteIntervalRef.current!); return 0 } return c - 1 })
+    }, 1000)
+    deleteTimerRef.current = setTimeout(async () => {
+      await fetch(`/api/applications?id=${id}`, { method: 'DELETE' })
+      setApps(prev => prev.filter(a => a.id !== id))
+      setPendingDelete(null)
+    }, 5000)
+  }
+
+  function handleUndoDelete() {
+    if (deleteTimerRef.current) clearTimeout(deleteTimerRef.current)
+    if (deleteIntervalRef.current) clearInterval(deleteIntervalRef.current)
+    setPendingDelete(null)
   }
 
   const stats = {
@@ -203,7 +221,14 @@ export default function ApplicationsPage() {
                         {statusOpt?.label ?? app.status}
                       </button>
                     )}
-                    <button onClick={() => handleDelete(app.id)} className="text-xs text-zinc-300 dark:text-zinc-600 hover:text-red-400 transition-colors">删除</button>
+                    {pendingDelete === app.id ? (
+                      <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
+                        <span className="text-xs text-zinc-400 dark:text-zinc-500">{deleteCountdown}s</span>
+                        <button onClick={handleUndoDelete} className="text-xs text-zinc-600 dark:text-zinc-300 border border-zinc-300 dark:border-zinc-600 rounded px-1.5 py-0.5 hover:bg-zinc-50 dark:hover:bg-zinc-800">撤销</button>
+                      </div>
+                    ) : (
+                      <button onClick={() => handleDeleteClick(app.id)} className="text-xs text-zinc-300 dark:text-zinc-600 hover:text-red-400 transition-colors">删除</button>
+                    )}
                   </div>
                 </div>
               </div>

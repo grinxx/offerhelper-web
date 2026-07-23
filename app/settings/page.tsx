@@ -230,6 +230,14 @@ export default function SettingsPage() {
               {showKey ? '隐藏' : '显示'}
             </button>
           </div>
+          {settings.ai_api_key && (
+            <button
+              onClick={() => setSettings(prev => ({ ...prev, ai_api_key: '' }))}
+              className="mt-1 text-xs text-red-400 hover:text-red-600 dark:hover:text-red-300 transition-colors"
+            >
+              清除 Key（保存后生效）
+            </button>
+          )}
           <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-1">Key 保存在服务器，不会泄露给其他用户</p>
         </div>
 
