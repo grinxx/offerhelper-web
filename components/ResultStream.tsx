@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import type { Suggestion } from '@/types'
 import SuggestionCard from './SuggestionCard'
 
@@ -12,6 +12,15 @@ interface Props {
 export default function ResultStream({ suggestions, loading, caseId }: Props) {
   const [copiedAll, setCopiedAll] = useState(false)
   const [showBasis, setShowBasis] = useState(false)
+  const [statusMap, setStatusMap] = useState<Record<number, string>>({})
+
+  useEffect(() => {
+    if (!caseId || suggestions.length === 0) return
+    fetch(`/api/suggestion-status?case_id=${caseId}`)
+      .then(r => r.json())
+      .then(data => { if (data.statuses) setStatusMap(data.statuses) })
+      .catch(() => {})
+  }, [caseId, suggestions.length])
 
   if (!loading && suggestions.length === 0) return null
 
@@ -52,7 +61,7 @@ export default function ResultStream({ suggestions, loading, caseId }: Props) {
       )}
 
       {suggestions.map((s, i) => (
-        <SuggestionCard key={i} suggestion={s} storageKey={caseId ? `${caseId}_${i}` : undefined} />
+        <SuggestionCard key={i} suggestion={s} storageKey={caseId ? `${caseId}_${i}` : undefined} initialStatus={statusMap[i] as 'applied' | 'pending' | undefined} />
       ))}
       {loading && (
         <div className="h-8 flex items-center">

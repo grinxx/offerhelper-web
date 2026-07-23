@@ -101,6 +101,11 @@ function AnalyzePageInner() {
         }),
       })
 
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err.error ?? `请求失败 (${res.status})`)
+      }
+
       const reader = res.body!.getReader()
       const decoder = new TextDecoder()
       let buffer = ''

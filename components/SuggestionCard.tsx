@@ -37,6 +37,7 @@ function FeedbackButtons({ storageKey }: { storageKey?: string }) {
 interface Props {
   suggestion: Suggestion
   storageKey?: string
+  initialStatus?: 'applied' | 'pending'
 }
 
 type Status = 'none' | 'applied' | 'pending'
@@ -47,31 +48,18 @@ const STATUS_CONFIG: Record<Status, { label: string; className: string }> = {
   pending: { label: '◷ 待处理', className: 'text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20' },
 }
 
-export default function SuggestionCard({ suggestion, storageKey }: Props) {
+export default function SuggestionCard({ suggestion, storageKey, initialStatus }: Props) {
   const [copied, setCopied] = useState(false)
-  const [status, setStatus] = useState<Status>('none')
+  const [status, setStatus] = useState<Status>(initialStatus ?? 'none')
   const [menuOpen, setMenuOpen] = useState(false)
 
   useEffect(() => {
     if (!storageKey) return
-    const [caseId] = storageKey.split('_')
-    const idx = parseInt(storageKey.split('_')[1])
-    // 先从 API 读取，失败则回退 localStorage
-    fetch(`/api/suggestion-status?case_id=${caseId}`)
-      .then(r => r.json())
-      .then(data => {
-        const s = data.statuses?.[idx]
-        if (s === 'applied' || s === 'pending') setStatus(s)
-        else {
-          const saved = localStorage.getItem(`offerhelper_suggestion_${storageKey}`)
-          if (saved === 'applied' || saved === 'pending') setStatus(saved)
-        }
-      })
-      .catch(() => {
-        const saved = localStorage.getItem(`offerhelper_suggestion_${storageKey}`)
-        if (saved === 'applied' || saved === 'pending') setStatus(saved)
-      })
-  }, [storageKey])
+    // 优先用 initialStatus（从父组件统一获取），回退 localStorage
+    if (initialStatus) { setStatus(initialStatus); return }
+    const saved = localStorage.getItem(`offerhelper_suggestion_${storageKey}`)
+    if (saved === 'applied' || saved === 'pending') setStatus(saved)
+  }, [storageKey, initialStatus])
 
   function handleSetStatus(s: Status) {
     setStatus(s)
