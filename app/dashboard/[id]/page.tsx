@@ -44,7 +44,7 @@ export default async function CaseDetailPage({ params, searchParams }: Props) {
       <div className="mb-6">
         <h2 className="text-xl font-bold mb-1">分析详情</h2>
         <p className="text-xs text-zinc-400 dark:text-zinc-500 mb-2">{new Date(caseData.created_at).toLocaleString('zh-CN')}</p>
-        <VersionLabelEditor caseId={caseData.id} initialLabel={(caseData as { version_label?: string | null }).version_label} />
+        <VersionLabelEditor caseId={caseData.id} initialLabel={caseData.version_label} />
       </div>
 
       <div className="border border-zinc-200 dark:border-zinc-800 rounded-lg p-4 mb-6">

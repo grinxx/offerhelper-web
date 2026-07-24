@@ -13,6 +13,7 @@ export interface Case {
   result_json: Suggestion[]
   status: 'pending' | 'done' | 'error'
   created_at: string
+  version_label?: string | null
 }
 
 export interface InterviewScores {
