@@ -77,7 +77,7 @@ export default async function DashboardPage({ searchParams }: Props) {
   const [casesRes, interviewRes, strengthsRes, matchRes, progressRes] = await Promise.all([
     shouldFetch('analysis') ? supabase
       .from('cases')
-      .select('id, jd_text, created_at')
+      .select('id, jd_text, created_at, version_label')
       .eq('user_id', user.id)
       .eq('status', 'done')
       .order('created_at', { ascending: false })
@@ -112,10 +112,12 @@ export default async function DashboardPage({ searchParams }: Props) {
   ])
 
   const allRecords: TimelineRecord[] = [
-    ...(casesRes.data ?? []).map((r: { id: string; jd_text?: string; created_at: string }) => ({
+    ...(casesRes.data ?? []).map((r: { id: string; jd_text?: string; created_at: string; version_label?: string | null }) => ({
       id: r.id,
       type: 'analysis' as RecordType,
-      summary: r.jd_text?.slice(0, 60) ?? '简历分析',
+      summary: r.version_label
+        ? `[${r.version_label}] ${r.jd_text?.slice(0, 40) ?? '简历分析'}`
+        : r.jd_text?.slice(0, 60) ?? '简历分析',
       created_at: r.created_at,
       href: `/dashboard/${r.id}`,
     })),

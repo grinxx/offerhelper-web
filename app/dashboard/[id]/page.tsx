@@ -4,6 +4,7 @@ import type { Case } from '@/types'
 import SuggestionCard from '@/components/SuggestionCard'
 import ReanalyzeButton from '@/components/ReanalyzeButton'
 import AddToTrackerButton from '@/components/AddToTrackerButton'
+import VersionLabelEditor from '@/components/VersionLabelEditor'
 import Link from 'next/link'
 
 interface Props {
@@ -22,7 +23,7 @@ export default async function CaseDetailPage({ params, searchParams }: Props) {
 
   const { data: c } = await supabase
     .from('cases')
-    .select('id, jd_text, resume_text, status, created_at, result_json')
+    .select('id, jd_text, resume_text, status, created_at, result_json, version_label')
     .eq('id', id)
     .eq('user_id', user.id)
     .single()
@@ -42,7 +43,8 @@ export default async function CaseDetailPage({ params, searchParams }: Props) {
 
       <div className="mb-6">
         <h2 className="text-xl font-bold mb-1">分析详情</h2>
-        <p className="text-xs text-zinc-400 dark:text-zinc-500">{new Date(caseData.created_at).toLocaleString('zh-CN')}</p>
+        <p className="text-xs text-zinc-400 dark:text-zinc-500 mb-2">{new Date(caseData.created_at).toLocaleString('zh-CN')}</p>
+        <VersionLabelEditor caseId={caseData.id} initialLabel={(caseData as { version_label?: string | null }).version_label} />
       </div>
 
       <div className="border border-zinc-200 dark:border-zinc-800 rounded-lg p-4 mb-6">
