@@ -38,9 +38,11 @@ export async function getAIConfig(userId: string | null): Promise<AIConfig> {
       .single()
 
     if (data?.ai_api_key) {
+      const apiKey = decrypt(data.ai_api_key)
+      if (!apiKey) return DEFAULT_CONFIG  // 解密失败，回退默认配置而非使用明文
       return {
         baseURL: data.ai_base_url,
-        apiKey: decrypt(data.ai_api_key) || data.ai_api_key, // 兼容旧的明文 Key
+        apiKey,
         modelFast: data.ai_model_fast,
         modelSmart: data.ai_model_smart,
         isAnthropic: false,
@@ -51,6 +53,17 @@ export async function getAIConfig(userId: string | null): Promise<AIConfig> {
   return DEFAULT_CONFIG
 }
 
+// 模块级缓存默认配置的客户端实例，避免每次请求重建连接池
+let _defaultChat: ChatClient | null = null
+function getDefaultChatClient(): ChatClient {
+  if (!_defaultChat) {
+    _defaultChat = DEFAULT_CONFIG.isAnthropic
+      ? new AnthropicChatClient(DEFAULT_CONFIG)
+      : new OpenAIChatClient(DEFAULT_CONFIG)
+  }
+  return _defaultChat
+}
+
 export async function getAIClientForRequest(userId?: string | null): Promise<{ config: AIConfig; chat: ChatClient }> {
   let resolvedUserId = userId
   if (resolvedUserId === undefined) {
@@ -59,7 +72,11 @@ export async function getAIClientForRequest(userId?: string | null): Promise<{ c
     resolvedUserId = user?.id ?? null
   }
   const config = await getAIConfig(resolvedUserId)
-  const chat = config.isAnthropic ? new AnthropicChatClient(config) : new OpenAIChatClient(config)
+  // 用户自定义配置不缓存（每人不同）；默认配置复用单例
+  const isDefault = config === DEFAULT_CONFIG
+  const chat = isDefault ? getDefaultChatClient()
+    : config.isAnthropic ? new AnthropicChatClient(config)
+    : new OpenAIChatClient(config)
   return { config, chat }
 }
 

@@ -53,10 +53,16 @@ export async function checkAndRecordUsage(action: string): Promise<UsageCheckRes
     p_rate_window_seconds: RATE_WINDOW_SECONDS,
   })
 
-  // RPC 失败时降级为允许（避免因 DB 问题拦截正常用户）
+  // RPC 失败时拒绝请求，避免计费绕过
   if (error) {
-    console.error('[usage] RPC error, allowing request:', error.message)
-    return { allowed: true, remaining: 0, usingOwnKey: false, userId: user?.id ?? null, limitMessage: '' }
+    console.error('[usage] RPC error:', error.message)
+    return {
+      allowed: false,
+      remaining: 0,
+      usingOwnKey: false,
+      userId: user?.id ?? null,
+      limitMessage: '服务暂时不可用，请稍后再试',
+    }
   }
 
   const result = data as { allowed: boolean; remaining: number; own_key: boolean; rate_limited?: boolean }

@@ -6,6 +6,7 @@ import { MATCH_EVAL_SYSTEM, buildMatchEvalPrompt, MATCH_SUMMARY_SYSTEM, buildMat
 import type { MatchResult, JdItem } from '@/types'
 
 export const runtime = 'nodejs'
+export const maxDuration = 60  // Vercel 最长 60s，避免串行调用被截断
 
 export async function POST(request: Request) {
   let body: { resume_text?: string; jd_list?: JdItem[]; session_id?: string | null } = {}
@@ -48,9 +49,9 @@ export async function POST(request: Request) {
           if (newSession) currentSessionId = newSession.id
         }
 
-        for (let i = 0; i < jd_list.length; i++) {
-          const jd = jd_list[i]
-          try {
+        // 并发评估所有 JD，避免串行超时
+        const evalResults = await Promise.allSettled(
+          jd_list.map(async (jd, i) => {
             let buf = ''
             for await (const chunk of chat.stream(
               [
@@ -61,10 +62,16 @@ export async function POST(request: Request) {
             )) buf += chunk.text
             const cleaned = buf.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim()
             const parsed = JSON.parse(cleaned) as Omit<MatchResult, 'jd_index'>
-            const result: MatchResult = { jd_index: i, ...parsed }
-            results.push(result)
-            controller.enqueue(encoder.encode(JSON.stringify({ type: 'result', ...result }) + '\n'))
-          } catch {
+            return { jd_index: i, ...parsed } as MatchResult
+          })
+        )
+
+        for (const res of evalResults) {
+          if (res.status === 'fulfilled') {
+            results.push(res.value)
+            controller.enqueue(encoder.encode(JSON.stringify({ type: 'result', ...res.value }) + '\n'))
+          } else {
+            const i = evalResults.indexOf(res)
             controller.enqueue(encoder.encode(JSON.stringify({ type: 'error', jd_index: i, message: '该岗位评估失败，请重试' }) + '\n'))
           }
         }
