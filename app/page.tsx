@@ -221,7 +221,7 @@ export default function HomePage() {
         <div className="space-y-1">
           <p className="text-xs font-medium text-zinc-600 dark:text-zinc-400">👤 关于作者</p>
           <p className="text-xs text-zinc-400 dark:text-zinc-500 leading-relaxed">
-            OfferHelper 由一名应届毕业生独立开发，亲历校招求职的困境，希望帮助更多同学把真实经历讲清楚。
+            OfferHelper 由一名应届毕业生独立开发，亲历校招求职的困境，希望帮助更多同学把真实经历讲清楚。希望大家都可以收到自己满意的 Offer！
           </p>
         </div>
         <div className="space-y-1">
