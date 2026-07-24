@@ -3,7 +3,6 @@ import Anthropic from '@anthropic-ai/sdk'
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
 import { decrypt } from '@/lib/crypto'
-export { PROVIDERS } from '@/lib/ai-providers'
 
 export interface AIConfig {
   baseURL: string

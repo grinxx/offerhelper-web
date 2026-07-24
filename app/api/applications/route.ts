@@ -4,16 +4,6 @@ import { NextRequest } from 'next/server'
 
 export const runtime = 'nodejs'
 
-const STATUS_LABELS: Record<string, string> = {
-  submitted: '已投递',
-  viewed: '已查看',
-  interview_scheduled: '约面试',
-  interviewed: '已面试',
-  offer: '收到 Offer',
-  rejected: '已拒绝',
-  withdrawn: '已撤回',
-}
-
 export async function GET(request: Request) {
   const sessionSupabase = await createClient()
   const { data: { user } } = await sessionSupabase.auth.getUser()

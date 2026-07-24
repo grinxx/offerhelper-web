@@ -55,10 +55,10 @@ export async function POST(request: Request) {
   const avg_scores: InterviewScores = { structure: 0, evidence: 0, relevance: 0 }
   if (count > 0) {
     for (const t of safeTurns) {
-      const s = t.scores as InterviewScores
-      avg_scores.structure += s.structure
-      avg_scores.evidence += s.evidence
-      avg_scores.relevance += s.relevance
+      const s = (t.scores ?? {}) as Partial<InterviewScores>
+      avg_scores.structure += s.structure ?? 0
+      avg_scores.evidence += s.evidence ?? 0
+      avg_scores.relevance += s.relevance ?? 0
     }
     avg_scores.structure = Math.round((avg_scores.structure / count) * 10) / 10
     avg_scores.evidence = Math.round((avg_scores.evidence / count) * 10) / 10
