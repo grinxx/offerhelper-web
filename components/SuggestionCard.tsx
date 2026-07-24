@@ -2,38 +2,6 @@
 import { useState, useEffect } from 'react'
 import type { Suggestion } from '@/types'
 
-function FeedbackButtons({ storageKey }: { storageKey?: string }) {
-  const [rating, setRating] = useState<1 | -1 | null>(null)
-
-  async function handleRate(r: 1 | -1) {
-    if (!storageKey) return
-    setRating(r)
-    const [caseId, idx] = storageKey.split('_')
-    await fetch('/api/feedback', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ case_id: caseId, suggestion_index: parseInt(idx), rating: r }),
-    })
-  }
-
-  if (!storageKey) return null
-
-  return (
-    <div className="flex items-center gap-2">
-      <span className="text-xs text-zinc-400 dark:text-zinc-500">这条建议有帮助吗？</span>
-      <button
-        onClick={() => handleRate(1)}
-        className={`text-sm transition-colors ${rating === 1 ? 'text-green-500' : 'text-zinc-300 dark:text-zinc-600 hover:text-green-500'}`}
-      >👍</button>
-      <button
-        onClick={() => handleRate(-1)}
-        className={`text-sm transition-colors ${rating === -1 ? 'text-red-400' : 'text-zinc-300 dark:text-zinc-600 hover:text-red-400'}`}
-      >👎</button>
-      {rating && <span className="text-xs text-zinc-400 dark:text-zinc-500">已记录，感谢反馈</span>}
-    </div>
-  )
-}
-
 interface Props {
   suggestion: Suggestion
   storageKey?: string
@@ -134,8 +102,6 @@ export default function SuggestionCard({ suggestion, storageKey, initialStatus }
           <span className="text-amber-500 dark:text-amber-500">— 需补充真实经历才能使用此表达</span>
         </div>
       )}
-
-      <FeedbackButtons storageKey={storageKey} />
     </div>
   )
 }

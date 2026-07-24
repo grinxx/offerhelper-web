@@ -3,6 +3,51 @@ import { useState, useEffect } from 'react'
 import type { Suggestion } from '@/types'
 import SuggestionCard from './SuggestionCard'
 
+function OverallFeedback({ caseId }: { caseId?: string | null }) {
+  const [rating, setRating] = useState<1 | -1 | null>(null)
+
+  async function handleRate(r: 1 | -1) {
+    if (!caseId) return
+    // 允许切换：再次点同一个就取消，点另一个就更新
+    const newRating = rating === r ? null : r
+    setRating(newRating)
+    if (newRating !== null) {
+      await fetch('/api/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ case_id: caseId, suggestion_index: -1, rating: newRating }),
+      }).catch(() => {})
+    }
+  }
+
+  if (!caseId) return null
+
+  return (
+    <div className="flex items-center gap-3 border-t border-zinc-100 dark:border-zinc-800 pt-3">
+      <span className="text-xs text-zinc-400 dark:text-zinc-500">这次分析对你有帮助吗？</span>
+      <button
+        onClick={() => handleRate(1)}
+        title="有帮助"
+        className={`text-base transition-all duration-150 hover:scale-125 ${
+          rating === 1 ? 'text-green-500 scale-125' : 'text-zinc-300 dark:text-zinc-600 hover:text-green-500'
+        }`}
+      >👍</button>
+      <button
+        onClick={() => handleRate(-1)}
+        title="没帮助"
+        className={`text-base transition-all duration-150 hover:scale-125 ${
+          rating === -1 ? 'text-red-400 scale-125' : 'text-zinc-300 dark:text-zinc-600 hover:text-red-400'
+        }`}
+      >👎</button>
+      {rating !== null && (
+        <span className="text-xs text-zinc-400 dark:text-zinc-500">
+          {rating === 1 ? '很高兴对你有帮助 🎉' : '感谢反馈，我们会继续改进'}
+        </span>
+      )}
+    </div>
+  )
+}
+
 interface Props {
   suggestions: Suggestion[]
   loading: boolean
@@ -70,20 +115,24 @@ export default function ResultStream({ suggestions, loading, caseId }: Props) {
       )}
 
       {!loading && suggestions.length > 0 && (
-        <div>
-          <button
-            onClick={() => setShowBasis(v => !v)}
-            className="text-xs text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors"
-          >
-            {showBasis ? '▾ 收起分析依据' : '▸ 查看分析依据'}
-          </button>
-          {showBasis && (
-            <div className="mt-2 space-y-1.5 text-xs text-zinc-400 dark:text-zinc-500 bg-zinc-50 dark:bg-zinc-900 rounded-lg p-3">
-              <p><span className="font-medium text-zinc-600 dark:text-zinc-400">建议来源：</span>每条建议均回溯到你简历中的真实经历，不编造内容</p>
-              <p><span className="font-medium text-zinc-600 dark:text-zinc-400">优化方向：</span>结合目标 JD 的关键词和要求，调整表达方式和侧重点</p>
-              <p><span className="font-medium text-zinc-600 dark:text-zinc-400">⚠️ 缺少证据：</span>表达方向正确但简历中缺乏支撑，需要你补充真实事实后再使用</p>
-            </div>
-          )}
+        <div className="space-y-3">
+          <div>
+            <button
+              onClick={() => setShowBasis(v => !v)}
+              className="text-xs text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors"
+            >
+              {showBasis ? '▾ 收起分析依据' : '▸ 查看分析依据'}
+            </button>
+            {showBasis && (
+              <div className="mt-2 space-y-1.5 text-xs text-zinc-400 dark:text-zinc-500 bg-zinc-50 dark:bg-zinc-900 rounded-lg p-3">
+                <p><span className="font-medium text-zinc-600 dark:text-zinc-400">建议来源：</span>每条建议均回溯到你简历中的真实经历，不编造内容</p>
+                <p><span className="font-medium text-zinc-600 dark:text-zinc-400">优化方向：</span>结合目标 JD 的关键词和要求，调整表达方式和侧重点</p>
+                <p><span className="font-medium text-zinc-600 dark:text-zinc-400">⚠️ 缺少证据：</span>表达方向正确但简历中缺乏支撑，需要你补充真实事实后再使用</p>
+              </div>
+            )}
+          </div>
+
+          <OverallFeedback caseId={caseId} />
         </div>
       )}
     </div>
