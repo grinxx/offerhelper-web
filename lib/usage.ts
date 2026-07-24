@@ -29,6 +29,10 @@ export interface UsageCheckResult {
 }
 
 export async function checkAndRecordUsage(action: string): Promise<UsageCheckResult> {
+  // 本地开发环境跳过限流
+  if (process.env.SKIP_USAGE_LIMIT === '1') {
+    return { allowed: true, remaining: 999, usingOwnKey: true, userId: null, limitMessage: '' }
+  }
   const sessionSupabase = await createClient()
   const { data: { user } } = await sessionSupabase.auth.getUser()
 
