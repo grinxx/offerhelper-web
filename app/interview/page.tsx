@@ -299,6 +299,8 @@ function InterviewPageInner() {
         <div className="flex items-center gap-3 text-sm text-zinc-500 dark:text-zinc-400">
           <Link href="/" className="hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors">首页</Link>
           <span>|</span>
+          <Link href="/practice" className="hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors">题库</Link>
+          <span>|</span>
           <Link href="/dashboard?type=interview" className="hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors">我的记录</Link>
         </div>
       </header>
@@ -543,6 +545,12 @@ function InterviewPageInner() {
             >
               再来一次
             </button>
+            <Link
+              href="/practice"
+              className="border border-zinc-300 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300 px-4 py-2.5 rounded-lg text-sm hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors text-center"
+            >
+              查看题库
+            </Link>
             <Link
               href="/"
               className="border border-zinc-300 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300 px-4 py-2.5 rounded-lg text-sm hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors text-center"
