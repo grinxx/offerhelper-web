@@ -227,12 +227,12 @@ export default function HomePage() {
         <div className="space-y-2">
           <p className="text-xs font-medium text-zinc-600 dark:text-zinc-400">💬 联系与反馈</p>
           <p className="text-xs text-zinc-400 dark:text-zinc-500 leading-relaxed">
-            使用中遇到问题、有功能建议，或者想分享你的求职故事，欢迎联系：
+            遇到问题或有建议，欢迎发邮件至{' '}
+            <a href="mailto:xinyuzhang9055@163.com" className="text-zinc-500 dark:text-zinc-400 underline hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors">
+              xinyuzhang9055@163.com
+            </a>
+            ，通常 1-2 个工作日内回复。
           </p>
-          <a href="mailto:xinyuzhang9055@163.com" className="inline-block text-xs text-zinc-500 dark:text-zinc-400 underline hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors">
-            xinyuzhang9055@163.com
-          </a>
-          <p className="text-xs text-zinc-300 dark:text-zinc-600">通常 1-2 个工作日内回复</p>
         </div>
       </div>
 
