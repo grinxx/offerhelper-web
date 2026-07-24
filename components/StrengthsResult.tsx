@@ -77,11 +77,29 @@ function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: numbe
 export default function StrengthsResult({ strengths, summary }: Props) {
   const [copied, setCopied] = useState(false)
   const [sharing, setSharing] = useState(false)
+  const [localStrengths, setLocalStrengths] = useState<StrengthItem[]>(strengths)
+  const [editingIdx, setEditingIdx] = useState<number | null>(null)
+  const [editLabel, setEditLabel] = useState('')
+  const [editEvidence, setEditEvidence] = useState('')
+
+  function startEdit(i: number) {
+    setEditingIdx(i)
+    setEditLabel(localStrengths[i].label)
+    setEditEvidence(localStrengths[i].evidence)
+  }
+
+  function saveEdit(i: number) {
+    if (!editLabel.trim()) return
+    setLocalStrengths(prev => prev.map((s, idx) =>
+      idx === i ? { label: editLabel.trim(), evidence: editEvidence.trim() } : s
+    ))
+    setEditingIdx(null)
+  }
 
   async function handleCopyAll() {
     const text = [
       '【职业优势】',
-      ...strengths.map(s => `${s.label}：${s.evidence}`),
+      ...localStrengths.map(s => `${s.label}：${s.evidence}`),
       '',
       '【综合点评】',
       summary,
@@ -94,7 +112,7 @@ export default function StrengthsResult({ strengths, summary }: Props) {
   function handleShare() {
     setSharing(true)
     setTimeout(() => {
-      const dataUrl = generateShareCard(strengths, summary)
+      const dataUrl = generateShareCard(localStrengths, summary)
       const a = document.createElement('a')
       a.href = dataUrl
       a.download = 'offerhelper-我的优势.png'
@@ -106,12 +124,47 @@ export default function StrengthsResult({ strengths, summary }: Props) {
   return (
     <div className="space-y-5">
       <div className="space-y-3">
-        {strengths.map((s, i) => (
+        {localStrengths.map((s, i) => (
           <div key={i} className="border border-zinc-200 dark:border-zinc-800 rounded-lg p-4">
-            <span className="inline-block bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-xs font-medium px-2.5 py-1 rounded-full mb-2">
-              {s.label}
-            </span>
-            <p className="text-sm text-zinc-600 dark:text-zinc-400">{s.evidence}</p>
+            {editingIdx === i ? (
+              <div className="space-y-2">
+                <input
+                  autoFocus
+                  value={editLabel}
+                  onChange={e => setEditLabel(e.target.value)}
+                  maxLength={20}
+                  className="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 rounded px-2.5 py-1.5 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-zinc-400"
+                  placeholder="能力标签（2-6字）"
+                />
+                <textarea
+                  value={editEvidence}
+                  onChange={e => setEditEvidence(e.target.value)}
+                  rows={2}
+                  className="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 rounded px-2.5 py-1.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-zinc-400"
+                  placeholder="证据描述"
+                />
+                <div className="flex gap-2">
+                  <button onClick={() => saveEdit(i)} className="text-xs bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 px-3 py-1.5 rounded">保存</button>
+                  <button onClick={() => setEditingIdx(null)} className="text-xs text-zinc-400 hover:text-zinc-600">取消</button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <span className="inline-block bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-xs font-medium px-2.5 py-1 rounded-full mb-2">
+                    {s.label}
+                  </span>
+                  <p className="text-sm text-zinc-600 dark:text-zinc-400">{s.evidence}</p>
+                </div>
+                <button
+                  onClick={() => startEdit(i)}
+                  className="shrink-0 text-xs text-zinc-300 dark:text-zinc-600 hover:text-zinc-500 dark:hover:text-zinc-400 transition-colors mt-1"
+                  title="编辑"
+                >
+                  编辑
+                </button>
+              </div>
+            )}
           </div>
         ))}
       </div>
