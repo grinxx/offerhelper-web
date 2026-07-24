@@ -59,7 +59,14 @@ export default function ResumeUploader({ onTextReady }: Props) {
       const formData = new FormData()
       formData.append('file', file)
       setParseStep('AI 格式化中...')
-      const res = await fetch('/api/parse-resume', { method: 'POST', body: formData })
+      const abortCtrl = new AbortController()
+      const timeout = setTimeout(() => abortCtrl.abort(), 30000)
+      let res: Response
+      try {
+        res = await fetch('/api/parse-resume', { method: 'POST', body: formData, signal: abortCtrl.signal })
+      } finally {
+        clearTimeout(timeout)
+      }
       const { text } = await res.json()
       setParsedText(text)
       saveCache(text, name)

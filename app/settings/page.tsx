@@ -232,10 +232,20 @@ export default function SettingsPage() {
           </div>
           {settings.ai_api_key && (
             <button
-              onClick={() => setSettings(prev => ({ ...prev, ai_api_key: '' }))}
+              onClick={async () => {
+                if (!confirm('确认清除 API Key？清除后将使用系统默认 AI。')) return
+                const res = await fetch('/api/settings', { method: 'DELETE' })
+                if (res.ok) {
+                  setSettings(prev => ({ ...prev, ai_api_key: '' }))
+                  setSaved(true)
+                  setTimeout(() => setSaved(false), 2000)
+                } else {
+                  setError('清除失败，请重试')
+                }
+              }}
               className="mt-1 text-xs text-red-400 hover:text-red-600 dark:hover:text-red-300 transition-colors"
             >
-              清除 Key（保存后生效）
+              清除 Key
             </button>
           )}
           <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-1">Key 保存在服务器，不会泄露给其他用户</p>
@@ -309,7 +319,7 @@ export default function SettingsPage() {
           </button>
           <button
             onClick={handleSave}
-            disabled={saving || !settings.ai_api_key.trim()}
+            disabled={saving}
             className="flex-1 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 py-2.5 rounded-lg text-sm font-medium disabled:opacity-40 hover:bg-zinc-700 dark:hover:bg-zinc-300 transition-colors"
           >
             {saving ? '保存中...' : saved ? '✓ 已保存' : '保存设置'}

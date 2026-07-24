@@ -49,7 +49,7 @@ export async function POST(request: Request) {
           if (newSession) currentSessionId = newSession.id
         }
 
-        // 并发评估所有 JD，避免串行超时
+        // 并发评估所有 JD，index 直接在 map 回调中捕获
         const evalResults = await Promise.allSettled(
           jd_list.map(async (jd, i) => {
             let buf = ''
@@ -66,15 +66,14 @@ export async function POST(request: Request) {
           })
         )
 
-        for (const res of evalResults) {
+        evalResults.forEach((res, i) => {
           if (res.status === 'fulfilled') {
             results.push(res.value)
             controller.enqueue(encoder.encode(JSON.stringify({ type: 'result', ...res.value }) + '\n'))
           } else {
-            const i = evalResults.indexOf(res)
             controller.enqueue(encoder.encode(JSON.stringify({ type: 'error', jd_index: i, message: '该岗位评估失败，请重试' }) + '\n'))
           }
-        }
+        })
 
         let summary = ''
         if (results.length > 0) {

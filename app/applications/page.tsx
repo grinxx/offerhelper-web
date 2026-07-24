@@ -43,17 +43,23 @@ export default function ApplicationsPage() {
   const deleteTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const deleteIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
+  const [initialized, setInitialized] = useState(false)
+
   useEffect(() => {
     const supabase = createClient()
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) { router.push('/'); return }
-      loadApps()
+      setInitialized(true)
     })
   }, [])
 
-  async function loadApps(p = page) {
+  useEffect(() => {
+    if (initialized) loadApps()
+  }, [page, initialized])
+
+  async function loadApps() {
     setLoading(true)
-    const res = await fetch(`/api/applications?page=${p}`)
+    const res = await fetch(`/api/applications?page=${page}`)
     const data = await res.json()
     setApps(data.applications ?? [])
     setTotal(data.total ?? 0)
@@ -244,11 +250,11 @@ export default function ApplicationsPage() {
       {total > PAGE_SIZE && (
         <div className="flex items-center justify-between mt-6 text-sm text-zinc-500 dark:text-zinc-400">
           {page > 1 ? (
-            <button onClick={() => { setPage(p => p - 1); loadApps(page - 1) }} className="hover:text-zinc-900 dark:hover:text-zinc-100">← 上一页</button>
+            <button onClick={() => setPage(p => p - 1)} className="hover:text-zinc-900 dark:hover:text-zinc-100">← 上一页</button>
           ) : <span />}
           <span className="text-xs text-zinc-400 dark:text-zinc-500">第 {page} 页 / 共 {Math.ceil(total / PAGE_SIZE)} 页</span>
           {page * PAGE_SIZE < total ? (
-            <button onClick={() => { setPage(p => p + 1); loadApps(page + 1) }} className="hover:text-zinc-900 dark:hover:text-zinc-100">下一页 →</button>
+            <button onClick={() => setPage(p => p + 1)} className="hover:text-zinc-900 dark:hover:text-zinc-100">下一页 →</button>
           ) : <span />}
         </div>
       )}

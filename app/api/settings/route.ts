@@ -44,9 +44,27 @@ export async function POST(request: NextRequest) {
     }
   }
   // body.ai_api_key 为空时不更新 ai_api_key 字段（保留旧值）
-  // 用户主动清除 Key 应通过专用「清除 Key」接口（将字段设为空字符串）
+  // 用户主动清除 Key 使用 DELETE 方法
 
   const { error } = await supabase.from('user_settings').upsert(upsertData)
+
+  if (error) return Response.json({ error: error.message }, { status: 500 })
+  return Response.json({ ok: true })
+}
+
+export async function DELETE(request: NextRequest) {
+  const sessionSupabase = await createClient()
+  const { data: { user } } = await sessionSupabase.auth.getUser()
+  if (!user) return Response.json({ error: '未登录' }, { status: 401 })
+
+  const supabase = createServiceClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+
+  const { error } = await supabase.from('user_settings')
+    .update({ ai_api_key: '', updated_at: new Date().toISOString() })
+    .eq('user_id', user.id)
 
   if (error) return Response.json({ error: error.message }, { status: 500 })
   return Response.json({ ok: true })
