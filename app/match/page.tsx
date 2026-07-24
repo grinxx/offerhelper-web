@@ -295,7 +295,22 @@ function MatchPageInner() {
                       <div className="min-w-0">
                         <span className="text-sm font-medium text-zinc-800 dark:text-zinc-200">{rec.name}</span>
                         <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-0.5 leading-relaxed">{rec.reason}</p>
-                        <p className="text-xs text-zinc-300 dark:text-zinc-600 mt-0.5">搜索：{rec.keywords.join(' · ')}</p>
+                        <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
+                          {rec.keywords.map((kw: string) => (
+                            <button
+                              key={kw}
+                              onClick={e => {
+                                e.stopPropagation()
+                                navigator.clipboard.writeText(kw)
+                              }}
+                              className="text-xs text-zinc-400 dark:text-zinc-500 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded px-1.5 py-0.5 transition-colors"
+                              title="点击复制"
+                            >
+                              {kw}
+                            </button>
+                          ))}
+                          <span className="text-xs text-zinc-300 dark:text-zinc-600">点击关键词复制</span>
+                        </div>
                       </div>
                       <span className="text-xs text-zinc-400 dark:text-zinc-500 shrink-0 group-hover:text-zinc-700 dark:group-hover:text-zinc-300 mt-0.5">填入 →</span>
                     </div>
