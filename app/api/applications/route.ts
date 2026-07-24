@@ -69,12 +69,59 @@ export async function PATCH(request: NextRequest) {
   if (!body.id) return Response.json({ error: '缺少 id' }, { status: 400 })
 
   const supabase = createServiceClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
+
+  // 先取出旧数据（用于邮件内容）
+  const { data: appRow } = await supabase.from('applications')
+    .select('company, position, status')
+    .eq('id', body.id)
+    .eq('user_id', user.id)
+    .single()
+
   const { error } = await supabase.from('applications')
     .update({ status: body.status, note: body.note, updated_at: new Date().toISOString() })
     .eq('id', body.id)
     .eq('user_id', user.id)
 
   if (error) return Response.json({ error: error.message }, { status: 500 })
+
+  // 状态变为「约面试」时发提醒邮件
+  if (body.status === 'interview_scheduled' && appRow && user.email) {
+    try {
+      await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          from: 'OfferHelper <noreply@offerhelper.cloud>',
+          to: user.email,
+          subject: `🎉 面试邀约：${appRow.company} · ${appRow.position}`,
+          html: `
+            <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;color:#18181b">
+              <h2 style="font-size:18px;font-weight:600;margin-bottom:8px">你收到了面试邀约！</h2>
+              <p style="font-size:14px;color:#52525b;margin-bottom:16px">
+                <strong>${appRow.company}</strong> 的 <strong>${appRow.position}</strong> 岗位已更新为「约面试」状态。
+              </p>
+              <p style="font-size:14px;color:#52525b;margin-bottom:24px">建议你：</p>
+              <ul style="font-size:14px;color:#52525b;margin-bottom:24px;padding-left:20px">
+                <li>复习岗位 JD 和自我介绍</li>
+                <li>在 OfferHelper 面试训练中练习几道题</li>
+                <li>确认面试时间、地点和形式</li>
+              </ul>
+              <a href="https://offerhelper.cloud/applications" style="display:inline-block;padding:10px 24px;background:#18181b;color:#fff;text-decoration:none;border-radius:8px;font-size:14px">
+                查看投递记录
+              </a>
+              <p style="font-size:12px;color:#a1a1aa;margin-top:24px">— OfferHelper 团队</p>
+            </div>
+          `,
+        }),
+      })
+    } catch {
+      // 邮件发送失败不影响主流程
+    }
+  }
+
   return Response.json({ ok: true })
 }
 
