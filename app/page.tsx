@@ -211,29 +211,28 @@ export default function HomePage() {
         </div>
       )}
 
-      <div className="mt-8 border-t border-zinc-200 dark:border-zinc-800 pt-8 space-y-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="space-y-1">
-            <p className="text-xs font-medium text-zinc-600 dark:text-zinc-400">🔒 数据安全</p>
-            <p className="text-xs text-zinc-400 dark:text-zinc-500 leading-relaxed">
-              简历和 JD 仅用于本次 AI 分析，不会用于模型训练。登录后的历史记录仅你本人可见，可随时删除。
-            </p>
-          </div>
-          <div className="space-y-1">
-            <p className="text-xs font-medium text-zinc-600 dark:text-zinc-400">👤 关于作者</p>
-            <p className="text-xs text-zinc-400 dark:text-zinc-500 leading-relaxed">
-              OfferHelper 由一名应届毕业生独立开发，亲历校招求职的困境，希望帮助更多同学把真实经历讲清楚。希望大家都可以收到自己满意的 Offer！
-            </p>
-          </div>
-        </div>
-        <div className="border-t border-zinc-100 dark:border-zinc-800 pt-4 space-y-1">
-          <p className="text-xs font-medium text-zinc-600 dark:text-zinc-400">💬 有问题？</p>
+      <div className="mt-8 border-t border-zinc-200 dark:border-zinc-800 pt-8 grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="space-y-1">
+          <p className="text-xs font-medium text-zinc-600 dark:text-zinc-400">🔒 数据安全</p>
           <p className="text-xs text-zinc-400 dark:text-zinc-500 leading-relaxed">
-            遇到问题或有建议，欢迎发邮件：
-            <a href="mailto:xinyuzhang9055@163.com" className="underline hover:text-zinc-600 dark:hover:text-zinc-300 ml-1">
-              xinyuzhang9055@163.com
-            </a>
+            简历和 JD 仅用于本次 AI 分析，不会用于模型训练。登录后的历史记录仅你本人可见，可随时删除。
           </p>
+        </div>
+        <div className="space-y-1">
+          <p className="text-xs font-medium text-zinc-600 dark:text-zinc-400">👤 关于作者</p>
+          <p className="text-xs text-zinc-400 dark:text-zinc-500 leading-relaxed">
+            OfferHelper 由一名应届毕业生独立开发，亲历校招求职的困境，希望帮助更多同学把真实经历讲清楚。希望大家都可以收到自己满意的 Offer！
+          </p>
+        </div>
+        <div className="space-y-2">
+          <p className="text-xs font-medium text-zinc-600 dark:text-zinc-400">💬 联系与反馈</p>
+          <p className="text-xs text-zinc-400 dark:text-zinc-500 leading-relaxed">
+            使用中遇到问题、有功能建议，或者想分享你的求职故事，欢迎联系：
+          </p>
+          <a href="mailto:xinyuzhang9055@163.com" className="inline-block text-xs text-zinc-500 dark:text-zinc-400 underline hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors">
+            xinyuzhang9055@163.com
+          </a>
+          <p className="text-xs text-zinc-300 dark:text-zinc-600">通常 1-2 个工作日内回复</p>
         </div>
       </div>
 
