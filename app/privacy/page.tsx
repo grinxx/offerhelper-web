@@ -20,6 +20,7 @@ export default function PrivacyPage() {
             <li>你在面试训练和优势挖掘中的回答记录</li>
             <li>账户信息（邮箱地址）</li>
             <li>使用次数统计（用于限额管理）</li>
+            <li>投递跟踪记录（公司、岗位、状态等你主动填写的信息）</li>
           </ul>
         </section>
 
@@ -33,22 +34,41 @@ export default function PrivacyPage() {
         </section>
 
         <section>
+          <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100 mb-2">Cookie 与本地存储</h2>
+          <p>OfferHelper 使用以下本地存储技术：</p>
+          <ul className="list-disc pl-5 mt-2 space-y-1">
+            <li><strong>Session Cookie</strong>：由 Supabase 用于维持登录状态，关闭浏览器后过期</li>
+            <li><strong>localStorage</strong>：用于在本地缓存简历文本、JD 内容等，数据仅存在你的设备上，不会上传至服务器</li>
+          </ul>
+        </section>
+
+        <section>
           <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100 mb-2">第三方服务</h2>
           <p>OfferHelper 使用以下第三方服务处理数据：</p>
           <ul className="list-disc pl-5 mt-2 space-y-1">
-            <li><strong>Supabase</strong>：用于账户认证和数据存储</li>
-            <li><strong>AI 服务商</strong>（硅基流动等）：用于生成分析内容，简历文本会发送至 AI 服务商处理</li>
+            <li><strong>Supabase</strong>：用于账户认证和数据存储，数据存储在其服务器上</li>
+            <li><strong>AI 服务商</strong>（硅基流动等）：用于生成分析内容，简历文本会发送至 AI 服务商处理，受其隐私政策约束</li>
+            <li><strong>Resend</strong>：用于发送邮件通知，仅在你触发相关操作时使用</li>
           </ul>
         </section>
 
         <section>
           <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100 mb-2">数据安全</h2>
-          <p>我们采用行业标准的安全措施保护你的数据。如果你使用自己的 API Key，Key 会加密存储。</p>
+          <p>我们采用行业标准的安全措施保护你的数据。如果你配置了自己的 API Key，Key 会使用 AES-256-GCM 加密后存储，不会明文保存。</p>
+        </section>
+
+        <section>
+          <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100 mb-2">数据保留</h2>
+          <ul className="list-disc pl-5 space-y-1">
+            <li>账户数据在你主动删除或注销前持续保留</li>
+            <li>你可以在「我的记录」中随时删除任意分析记录</li>
+            <li>如需删除整个账户及所有数据，请发邮件至 <a href="mailto:xinyuzhang9055@163.com" className="underline">xinyuzhang9055@163.com</a>，我们将在 7 个工作日内处理</li>
+          </ul>
         </section>
 
         <section>
           <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100 mb-2">你的权利</h2>
-          <p>你可以随时删除自己的记录，或联系我们删除账户数据：<a href="mailto:xinyuzhang9055@163.com" className="underline">xinyuzhang9055@163.com</a></p>
+          <p>你有权查看、修改或删除你的个人数据。如有任何隐私相关问题，请联系：<a href="mailto:xinyuzhang9055@163.com" className="underline">xinyuzhang9055@163.com</a></p>
         </section>
       </div>
     </main>
