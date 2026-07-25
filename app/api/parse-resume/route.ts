@@ -16,6 +16,11 @@ export async function POST(request: Request) {
     return Response.json({ error: '未收到文件' }, { status: 400 })
   }
 
+  const MAX_SIZE = 10 * 1024 * 1024 // 10MB
+  if (file.size > MAX_SIZE) {
+    return Response.json({ error: '文件大小不能超过 10MB' }, { status: 400 })
+  }
+
   const allowedTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
   const allowedExts = ['.pdf', '.docx']
   const ext = '.' + file.name.split('.').pop()?.toLowerCase()

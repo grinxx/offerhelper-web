@@ -17,6 +17,9 @@ export async function POST(request: Request) {
   if (!case_id || suggestion_index === undefined) {
     return Response.json({ error: '参数错误' }, { status: 400 })
   }
+  if (status !== null && status !== undefined && !['applied', 'pending'].includes(status)) {
+    return Response.json({ error: '无效的状态值' }, { status: 400 })
+  }
 
   const supabase = createServiceClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -24,18 +27,20 @@ export async function POST(request: Request) {
   )
 
   if (!status) {
-    await supabase.from('suggestion_status')
+    const { error } = await supabase.from('suggestion_status')
       .delete()
       .eq('user_id', user.id)
       .eq('case_id', case_id)
       .eq('suggestion_index', suggestion_index)
+    if (error) return Response.json({ error: error.message }, { status: 500 })
   } else {
-    await supabase.from('suggestion_status').upsert({
+    const { error } = await supabase.from('suggestion_status').upsert({
       user_id: user.id,
       case_id,
       suggestion_index,
       status,
     })
+    if (error) return Response.json({ error: error.message }, { status: 500 })
   }
 
   return Response.json({ ok: true })

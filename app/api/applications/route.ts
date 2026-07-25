@@ -68,6 +68,11 @@ export async function PATCH(request: NextRequest) {
 
   if (!body.id) return Response.json({ error: '缺少 id' }, { status: 400 })
 
+  const VALID_STATUSES = ['submitted','viewed','interview_scheduled','interviewed','offer','rejected','withdrawn']
+  if (body.status && !VALID_STATUSES.includes(body.status)) {
+    return Response.json({ error: '无效的状态值' }, { status: 400 })
+  }
+
   const supabase = createServiceClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 
   // 先取出旧数据（用于邮件内容）
@@ -77,8 +82,13 @@ export async function PATCH(request: NextRequest) {
     .eq('user_id', user.id)
     .single()
 
+  // 只更新传入的字段，避免 undefined 覆盖旧值
+  const updateData: Record<string, unknown> = { updated_at: new Date().toISOString() }
+  if (body.status !== undefined) updateData.status = body.status
+  if (body.note !== undefined) updateData.note = body.note.slice(0, 2000)
+
   const { error } = await supabase.from('applications')
-    .update({ status: body.status, note: body.note, updated_at: new Date().toISOString() })
+    .update(updateData)
     .eq('id', body.id)
     .eq('user_id', user.id)
 

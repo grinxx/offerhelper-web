@@ -45,7 +45,7 @@ export async function getAIConfig(userId: string | null): Promise<AIConfig> {
         apiKey,
         modelFast: data.ai_model_fast,
         modelSmart: data.ai_model_smart,
-        isAnthropic: false,
+        isAnthropic: data.ai_base_url?.includes('anthropic.com') ?? false,
       }
     }
   } catch {}
@@ -97,7 +97,7 @@ export interface ChatClient {
 class OpenAIChatClient implements ChatClient {
   private client: OpenAI
   constructor(config: AIConfig) {
-    this.client = new OpenAI({ baseURL: config.baseURL, apiKey: config.apiKey })
+    this.client = new OpenAI({ baseURL: config.baseURL, apiKey: config.apiKey, timeout: 55000 })
   }
 
   async complete(messages: ChatMessage[], model: string, maxTokens: number): Promise<string> {
@@ -117,7 +117,7 @@ class OpenAIChatClient implements ChatClient {
 class AnthropicChatClient implements ChatClient {
   private client: Anthropic
   constructor(config: AIConfig) {
-    this.client = new Anthropic({ baseURL: config.baseURL, apiKey: config.apiKey })
+    this.client = new Anthropic({ baseURL: config.baseURL, apiKey: config.apiKey, timeout: 55000 })
   }
 
   async complete(messages: ChatMessage[], model: string, maxTokens: number): Promise<string> {

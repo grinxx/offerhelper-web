@@ -89,7 +89,7 @@ export interface MatchSession {
   resume_text: string
   jd_list: JdItem[]
   results: MatchResult[]
-  summary: string | null
+  summary: string
   status: 'active' | 'done'
   created_at: string
 }

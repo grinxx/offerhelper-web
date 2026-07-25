@@ -54,10 +54,11 @@ export async function POST(request: Request) {
         const result: { scores: InterviewScores; feedback: string; reference_answer: string } = JSON.parse(cleaned)
         if (!result?.scores || !result.feedback || !result.reference_answer) throw new Error('invalid response')
 
-        await supabase.from('interview_turns').insert({
+        const { error: insertError } = await supabase.from('interview_turns').insert({
           session_id, question_index, question, user_answer,
           scores: result.scores, feedback: result.feedback, reference_answer: result.reference_answer,
         })
+        if (insertError) console.error('[interview/answer] DB insert failed:', insertError.message)
 
         controller.enqueue(encoder.encode(JSON.stringify(result) + '\n'))
       } catch {

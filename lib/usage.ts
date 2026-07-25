@@ -37,7 +37,8 @@ export async function checkAndRecordUsage(action: string): Promise<UsageCheckRes
   const { data: { user } } = await sessionSupabase.auth.getUser()
 
   const headersList = await headers()
-  const rawIp = headersList.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
+  // 取最后一段：Vercel 在链路末尾追加真实 IP，第一段可被用户伪造
+  const rawIp = headersList.get('x-forwarded-for')?.split(',').at(-1)?.trim() ?? 'unknown'
   const ip = /^[\w.:]{1,64}$/.test(rawIp) ? rawIp : 'unknown'
 
   const supabase = getServiceClient()
