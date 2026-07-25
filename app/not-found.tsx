@@ -19,7 +19,7 @@ export default function NotFound() {
       <div className="mt-10 space-y-3">
         <Link
           href="/"
-          className="block w-full text-center bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-400 dark:hover:bg-indigo-300 text-white dark:text-zinc-900 py-2.5 rounded-lg text-sm font-medium transition-colors"
+          className="block w-full text-center bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 hover:bg-zinc-700 dark:hover:bg-zinc-300 py-2.5 rounded-lg text-sm font-medium transition-colors"
         >
           返回首页
         </Link>

@@ -22,7 +22,7 @@ function ShareButton() {
   return (
     <button
       onClick={handleShare}
-      className="flex items-center justify-between text-sm text-zinc-400 dark:text-zinc-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors w-full"
+      className="flex items-center justify-between text-sm text-zinc-400 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors w-full"
     >
       <span>推荐给同学</span>
       <span className="text-xs">分享链接 →</span>

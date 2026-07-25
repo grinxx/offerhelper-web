@@ -144,14 +144,14 @@ export default function StrengthsResult({ strengths, summary }: Props) {
                   placeholder="证据描述"
                 />
                 <div className="flex gap-2">
-                  <button onClick={() => saveEdit(i)} className="text-xs bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-400 dark:hover:bg-indigo-300 text-white px-3 py-1.5 rounded">保存</button>
+                  <button onClick={() => saveEdit(i)} className="text-xs bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 hover:bg-zinc-700 dark:hover:bg-zinc-300 px-3 py-1.5 rounded">保存</button>
                   <button onClick={() => setEditingIdx(null)} className="text-xs text-zinc-400 hover:text-zinc-600">取消</button>
                 </div>
               </div>
             ) : (
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
-                  <span className="inline-block bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-400 dark:hover:bg-indigo-300 text-white text-xs font-medium px-2.5 py-1 rounded-full mb-2">
+                  <span className="inline-block bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 hover:bg-zinc-700 dark:hover:bg-zinc-300 text-xs font-medium px-2.5 py-1 rounded-full mb-2">
                     {s.label}
                   </span>
                   <p className="text-sm text-zinc-600 dark:text-zinc-400">{s.evidence}</p>
