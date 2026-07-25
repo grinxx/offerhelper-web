@@ -10,6 +10,12 @@ const inter = Inter({ subsets: ['latin'] })
 export const metadata: Metadata = {
   title: 'OfferHelper — 把真实经历变成可投递的简历',
   description: '面向应届生的证据驱动简历优化工具',
+  icons: {
+    icon: '/favicon.svg',
+    shortcut: '/favicon.svg',
+    apple: '/favicon.svg',
+  },
+  themeColor: '#0D9488',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

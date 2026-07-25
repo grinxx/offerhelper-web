@@ -94,7 +94,12 @@ export default function HomePage() {
   return (
     <main className="w-full px-4 sm:px-8 md:px-12 lg:px-20 xl:px-32 py-10 max-w-7xl mx-auto min-h-screen flex flex-col justify-center">
       <header className="flex items-start justify-between mb-10 gap-4">
-        <h1 className="text-xl font-semibold shrink-0">OfferHelper</h1>
+        <h1 className="text-xl font-semibold shrink-0 flex items-center gap-2">
+          <span className="inline-flex items-center justify-center w-7 h-7 rounded-lg shrink-0" style={{background:'#0D9488'}}>
+            <svg viewBox="0 0 32 32" className="w-4 h-4"><polyline points="8,17 13,22 24,11" stroke="white" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/></svg>
+          </span>
+          <span>OfferHelper</span>
+        </h1>
         {user ? (
           <div className="flex flex-wrap items-center justify-end gap-x-3 gap-y-1 text-xs sm:text-sm text-zinc-500 dark:text-zinc-400">
             {usageInfo && !usageInfo.usingOwnKey && (
