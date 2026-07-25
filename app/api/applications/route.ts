@@ -40,13 +40,20 @@ export async function POST(request: NextRequest) {
     return Response.json({ error: '公司和岗位为必填项' }, { status: 400 })
   }
 
+  const DATE_RE = /^\d{4}-\d{2}-\d{2}$/
+  const rawDate = body.applied_at ?? new Date().toISOString().slice(0, 10)
+  if (!DATE_RE.test(rawDate) || isNaN(Date.parse(rawDate))) {
+    return Response.json({ error: '投递日期格式不正确，请使用 YYYY-MM-DD 格式' }, { status: 400 })
+  }
+  const applied_at = rawDate
+
   const supabase = createServiceClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
   const { data, error } = await supabase.from('applications').insert({
     user_id: user.id,
     company: body.company,
     position: body.position,
     platform: body.platform ?? '',
-    applied_at: body.applied_at ?? new Date().toISOString().slice(0, 10),
+    applied_at,
     status: body.status ?? 'submitted',
     note: body.note ?? '',
     case_id: body.case_id ?? null,

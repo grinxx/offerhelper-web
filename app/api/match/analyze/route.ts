@@ -62,17 +62,23 @@ export async function POST(request: Request) {
           if (newSession) currentSessionId = newSession.id
         }
 
-        // 并发评估所有 JD，index 直接在 map 回调中捕获
+        // 并发评估所有 JD，每个单独加 50s 超时，避免单个 hang 拖垮全部
         const evalResults = await Promise.allSettled(
           jd_list.map(async (jd, i) => {
             let buf = ''
-            for await (const chunk of chat.stream(
-              [
-                { role: 'system', content: MATCH_EVAL_SYSTEM },
-                { role: 'user', content: buildMatchEvalPrompt(resume_text, jd.content, jd.title ?? null) },
-              ],
-              config.modelSmart, 1024
-            )) buf += chunk.text
+            const streamPromise = (async () => {
+              for await (const chunk of chat.stream(
+                [
+                  { role: 'system', content: MATCH_EVAL_SYSTEM },
+                  { role: 'user', content: buildMatchEvalPrompt(resume_text, jd.content, jd.title ?? null) },
+                ],
+                config.modelSmart, 1024
+              )) buf += chunk.text
+            })()
+            const timeoutPromise = new Promise<never>((_, reject) =>
+              setTimeout(() => reject(new Error('JD 评估超时')), 50000)
+            )
+            await Promise.race([streamPromise, timeoutPromise])
             const cleaned = buf.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim()
             const parsed = JSON.parse(cleaned) as Omit<MatchResult, 'jd_index'>
             return { jd_index: i, ...parsed } as MatchResult

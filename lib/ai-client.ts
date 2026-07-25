@@ -23,6 +23,11 @@ const DEFAULT_CONFIG: AIConfig = {
   isAnthropic: isLocal,
 }
 
+// 启动时检测配置，避免新部署忘记设置环境变量导致静默 401
+if (!DEFAULT_CONFIG.apiKey) {
+  console.warn('[ai-client] ANTHROPIC_API_KEY 未设置，所有未配置自定义 Key 的用户请求将返回 401')
+}
+
 export async function getAIConfig(userId: string | null): Promise<AIConfig> {
   if (!userId || isLocal) return DEFAULT_CONFIG
 

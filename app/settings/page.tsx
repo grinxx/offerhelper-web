@@ -173,6 +173,10 @@ export default function SettingsPage() {
   }
 
   async function handleSave() {
+    // 切换了 provider 但 Key 为空时，提醒用户填入新 Key
+    if (!settings.ai_api_key.trim() && settings.ai_provider !== DEFAULT_SETTINGS.ai_provider) {
+      setError('切换 AI 平台后请同时填入对应的 API Key，否则 AI 功能无法正常使用')
+    }
     setSaving(true)
     setError('')
     try {
