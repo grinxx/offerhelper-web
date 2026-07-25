@@ -130,7 +130,7 @@ export default function ApplicationsPage() {
         <h2 className="text-xl font-bold">投递跟踪</h2>
         <button
           onClick={() => setShowForm(v => !v)}
-          className="bg-teal-600 hover:bg-teal-700 dark:bg-teal-500 dark:hover:bg-teal-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-zinc-700 dark:hover:bg-zinc-300 transition-colors"
+          className="bg-teal-600 hover:bg-teal-700 dark:bg-teal-400 dark:hover:bg-teal-300 text-white dark:text-zinc-900 px-4 py-2 rounded-lg text-sm font-medium hover:bg-zinc-700 dark:hover:bg-zinc-300 transition-colors"
         >
           + 记录投递
         </button>
@@ -179,7 +179,7 @@ export default function ApplicationsPage() {
             <input type="text" className="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 rounded p-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-400" placeholder="薪资范围、联系人、注意事项..." value={form.note} onChange={e => setForm(p => ({ ...p, note: e.target.value }))} />
           </div>
           <div className="flex gap-2">
-            <button onClick={handleAdd} disabled={saving || !form.company.trim() || !form.position.trim()} className="bg-teal-600 hover:bg-teal-700 dark:bg-teal-500 dark:hover:bg-teal-600 text-white px-4 py-2 rounded-lg text-sm disabled:opacity-40 hover:bg-zinc-700 transition-colors">
+            <button onClick={handleAdd} disabled={saving || !form.company.trim() || !form.position.trim()} className="bg-teal-600 hover:bg-teal-700 dark:bg-teal-400 dark:hover:bg-teal-300 text-white dark:text-zinc-900 px-4 py-2 rounded-lg text-sm disabled:opacity-40 hover:bg-zinc-700 transition-colors">
               {saving ? '保存中...' : '保存'}
             </button>
             <button onClick={() => { setShowForm(false); setForm(EMPTY_FORM) }} className="border border-zinc-300 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300 px-4 py-2 rounded-lg text-sm hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors">

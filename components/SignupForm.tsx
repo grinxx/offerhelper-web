@@ -79,7 +79,7 @@ export default function SignupForm({ onSwitchToLogin }: Props) {
       <button
         type="submit"
         disabled={loading}
-        className="w-full bg-teal-600 hover:bg-teal-700 dark:bg-teal-500 dark:hover:bg-teal-600 text-white py-2 rounded-lg text-sm disabled:opacity-40 transition-colors"
+        className="w-full bg-teal-600 hover:bg-teal-700 dark:bg-teal-400 dark:hover:bg-teal-300 text-white dark:text-zinc-900 py-2 rounded-lg text-sm disabled:opacity-40 transition-colors"
       >
         {loading ? '处理中...' : '注册'}
       </button>

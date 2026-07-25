@@ -94,7 +94,7 @@ export default async function InterviewDetailPage({ params, searchParams }: Prop
           <>
             <Link
               href={`/interview?case_id=${session.case_id}`}
-              className="block w-full text-center bg-teal-600 hover:bg-teal-700 dark:bg-teal-500 dark:hover:bg-teal-600 text-white px-6 py-2.5 rounded-lg text-sm hover:bg-zinc-700 dark:hover:bg-zinc-300 transition-colors"
+              className="block w-full text-center bg-teal-600 hover:bg-teal-700 dark:bg-teal-400 dark:hover:bg-teal-300 text-white dark:text-zinc-900 px-6 py-2.5 rounded-lg text-sm hover:bg-zinc-700 dark:hover:bg-zinc-300 transition-colors"
             >
               再次面试训练（基于此 JD）
             </Link>
@@ -108,7 +108,7 @@ export default async function InterviewDetailPage({ params, searchParams }: Prop
         ) : (
           <Link
             href="/interview"
-            className="block w-full text-center bg-teal-600 hover:bg-teal-700 dark:bg-teal-500 dark:hover:bg-teal-600 text-white px-6 py-2.5 rounded-lg text-sm hover:bg-zinc-700 dark:hover:bg-zinc-300 transition-colors"
+            className="block w-full text-center bg-teal-600 hover:bg-teal-700 dark:bg-teal-400 dark:hover:bg-teal-300 text-white dark:text-zinc-900 px-6 py-2.5 rounded-lg text-sm hover:bg-zinc-700 dark:hover:bg-zinc-300 transition-colors"
           >
             再次面试训练
           </Link>

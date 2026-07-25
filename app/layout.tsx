@@ -36,7 +36,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="zh-CN" className="dark:[color-scheme:dark] min-h-full" suppressHydrationWarning>
-      <body className={`${inter.className} bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 min-h-full pb-safe`}>
+      <body className={`${inter.className} bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 min-h-full pb-safe`}>
         <Providers>{children}</Providers>
         <Analytics />
         <Script id="baidu-analytics" strategy="afterInteractive">

@@ -110,7 +110,7 @@ export default function LoginForm({ onSuccess, successMessage }: Props) {
       {showReset ? (
         <div className="space-y-2">
           <button type="button" onClick={handleResetPassword} disabled={loading}
-            className="w-full bg-teal-600 hover:bg-teal-700 dark:bg-teal-500 dark:hover:bg-teal-600 text-white py-2 rounded-lg text-sm disabled:opacity-40 transition-colors">
+            className="w-full bg-teal-600 hover:bg-teal-700 dark:bg-teal-400 dark:hover:bg-teal-300 text-white dark:text-zinc-900 py-2 rounded-lg text-sm disabled:opacity-40 transition-colors">
             {loading ? '发送中...' : '发送重置密码邮件'}
           </button>
           <button type="button" onClick={() => { setShowReset(false); setError('') }}
@@ -121,7 +121,7 @@ export default function LoginForm({ onSuccess, successMessage }: Props) {
       ) : (
         <>
           <button type="submit" disabled={loading}
-            className="w-full bg-teal-600 hover:bg-teal-700 dark:bg-teal-500 dark:hover:bg-teal-600 text-white py-2 rounded-lg text-sm disabled:opacity-40 transition-colors">
+            className="w-full bg-teal-600 hover:bg-teal-700 dark:bg-teal-400 dark:hover:bg-teal-300 text-white dark:text-zinc-900 py-2 rounded-lg text-sm disabled:opacity-40 transition-colors">
             {loading ? '处理中...' : '登录'}
           </button>
           <div className="flex items-center gap-2 my-1">
