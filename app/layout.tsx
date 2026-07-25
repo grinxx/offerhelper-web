@@ -9,13 +9,28 @@ const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: 'OfferHelper — 把真实经历变成可投递的简历',
-  description: '面向应届生的证据驱动简历优化工具',
+  description: '面向应届生的证据驱动求职工具，不编造，不包装，只优化表达。提供简历优化、岗位匹配、面试训练、优势挖掘四大功能。',
   icons: {
     icon: '/favicon.svg',
     shortcut: '/favicon.svg',
     apple: '/favicon.svg',
   },
   themeColor: '#0D9488',
+  openGraph: {
+    title: 'OfferHelper — 把真实经历变成可投递的求职材料',
+    description: '不编造，不包装，只优化表达。简历优化、岗位匹配、面试训练、优势挖掘，一站式求职准备工具。',
+    url: 'https://offerhelper.cloud',
+    siteName: 'OfferHelper',
+    images: [{ url: 'https://offerhelper.cloud/og', width: 1200, height: 630 }],
+    locale: 'zh_CN',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'OfferHelper — 把真实经历变成可投递的求职材料',
+    description: '不编造，不包装，只优化表达。',
+    images: ['https://offerhelper.cloud/og'],
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
