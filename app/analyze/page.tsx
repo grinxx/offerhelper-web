@@ -11,6 +11,7 @@ import AnalyzeButton from '@/components/AnalyzeButton'
 import ResultStream from '@/components/ResultStream'
 import AuthModal from '@/components/AuthModal'
 import NextStepBar from '@/components/NextStepBar'
+import UsageWarning from '@/components/UsageWarning'
 import type { Suggestion } from '@/types'
 
 export default function AnalyzePage() {
@@ -201,6 +202,7 @@ function AnalyzePageInner() {
           disabled={!resumeText || !jdText}
           onClick={handleAnalyze}
         />
+        <UsageWarning />
       </div>
 
       <ResultStream suggestions={suggestions} loading={loading} caseId={caseId} />

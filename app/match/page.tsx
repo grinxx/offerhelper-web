@@ -11,6 +11,7 @@ import JdListInput from '@/components/JdListInput'
 import MatchCard from '@/components/MatchCard'
 import AuthModal from '@/components/AuthModal'
 import NextStepBar from '@/components/NextStepBar'
+import UsageWarning from '@/components/UsageWarning'
 import ErrorBanner from '@/components/ErrorBanner'
 import type { JdItem, MatchResult } from '@/types'
 
@@ -334,6 +335,7 @@ function MatchPageInner() {
           >
             开始匹配
           </button>
+          <UsageWarning />
 
           {previousResults.length > 0 && (
             <div className="border-t border-zinc-200 dark:border-zinc-800 pt-4">

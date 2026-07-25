@@ -10,6 +10,7 @@ import InterviewProgress from '@/components/InterviewProgress'
 import ScoreCard from '@/components/ScoreCard'
 import AuthModal from '@/components/AuthModal'
 import NextStepBar from '@/components/NextStepBar'
+import UsageWarning from '@/components/UsageWarning'
 import ErrorBanner from '@/components/ErrorBanner'
 import type { InterviewScores } from '@/types'
 
@@ -386,6 +387,7 @@ function InterviewPageInner() {
           >
             开始面试训练
           </button>
+          <UsageWarning />
         </div>
       )}
 
