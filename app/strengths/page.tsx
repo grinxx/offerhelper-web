@@ -11,6 +11,7 @@ import StrengthsResultComponent from '@/components/StrengthsResult'
 import AuthModal from '@/components/AuthModal'
 import NextStepBar from '@/components/NextStepBar'
 import UsageWarning from '@/components/UsageWarning'
+import UsageHint from '@/components/UsageHint'
 import ErrorBanner from '@/components/ErrorBanner'
 import type { ChatMessage, StrengthItem } from '@/types'
 
@@ -299,6 +300,7 @@ function StrengthsPageInner() {
             开始挖掘
           </button>
           <UsageWarning />
+        <UsageHint />
         </div>
       )}
 

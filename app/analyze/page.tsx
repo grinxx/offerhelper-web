@@ -12,6 +12,7 @@ import ResultStream from '@/components/ResultStream'
 import AuthModal from '@/components/AuthModal'
 import NextStepBar from '@/components/NextStepBar'
 import UsageWarning from '@/components/UsageWarning'
+import UsageHint from '@/components/UsageHint'
 import type { Suggestion } from '@/types'
 
 export default function AnalyzePage() {
@@ -203,6 +204,7 @@ function AnalyzePageInner() {
           onClick={handleAnalyze}
         />
         <UsageWarning />
+        <UsageHint />
       </div>
 
       <ResultStream suggestions={suggestions} loading={loading} caseId={caseId} />
