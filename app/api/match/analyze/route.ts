@@ -75,10 +75,11 @@ export async function POST(request: Request) {
                 config.modelSmart, 1024
               )) buf += chunk.text
             })()
-            const timeoutPromise = new Promise<never>((_, reject) =>
-              setTimeout(() => reject(new Error('JD 评估超时')), 50000)
-            )
-            await Promise.race([streamPromise, timeoutPromise])
+            let timerId: ReturnType<typeof setTimeout>
+            const timeoutPromise = new Promise<never>((_, reject) => {
+              timerId = setTimeout(() => reject(new Error('JD 评估超时')), 50000)
+            })
+            await Promise.race([streamPromise, timeoutPromise]).finally(() => clearTimeout(timerId!))
             const cleaned = buf.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim()
             const parsed = JSON.parse(cleaned) as Omit<MatchResult, 'jd_index'>
             return { jd_index: i, ...parsed } as MatchResult

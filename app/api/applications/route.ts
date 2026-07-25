@@ -48,6 +48,19 @@ export async function POST(request: NextRequest) {
   const applied_at = rawDate
 
   const supabase = createServiceClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
+
+  // 验证 case_id 格式和归属
+  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+  if (body.case_id) {
+    if (!UUID_RE.test(body.case_id)) {
+      return Response.json({ error: '无效的 case_id 格式' }, { status: 400 })
+    }
+    const { data: caseRow } = await supabase.from('cases').select('user_id').eq('id', body.case_id).single()
+    if (!caseRow || caseRow.user_id !== user.id) {
+      return Response.json({ error: '无权关联该案例' }, { status: 403 })
+    }
+  }
+
   const { data, error } = await supabase.from('applications').insert({
     user_id: user.id,
     company: body.company,

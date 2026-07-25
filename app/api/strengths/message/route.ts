@@ -23,6 +23,7 @@ export async function POST(request: Request) {
     role: m.role,
     content: typeof m.content === 'string' ? m.content.slice(0, 2000) : '',
   }))
+  const safeJdText = typeof jd_text === 'string' ? jd_text.slice(0, 4000) : null
 
   const sessionSupabase = await createClient()
   const { data: { user } } = await sessionSupabase.auth.getUser()
@@ -51,7 +52,7 @@ export async function POST(request: Request) {
         const chatMessages = [
           { role: 'system' as const, content: STRENGTHS_CHAT_SYSTEM },
           ...safeMessages.map(m => ({ role: m.role as 'user' | 'assistant', content: m.content })),
-          { role: 'user' as const, content: buildStrengthsChatPrompt(safeMessages, jd_text, safeTurnIndex) },
+          { role: 'user' as const, content: buildStrengthsChatPrompt(safeMessages, safeJdText, safeTurnIndex) },
         ]
 
         for await (const chunk of chat.stream(chatMessages, config.modelSmart, 512)) {
@@ -64,7 +65,7 @@ export async function POST(request: Request) {
           const updatedMessages = [...safeMessages, { role: 'assistant', content: aiText }]
           if (!currentSessionId) {
             const { data: newSession } = await supabase.from('strength_sessions')
-              .insert({ user_id: user.id, jd_text, messages: updatedMessages }).select('id').single()
+              .insert({ user_id: user.id, jd_text: safeJdText, messages: updatedMessages }).select('id').single()
             if (newSession) currentSessionId = newSession.id
           } else {
             await supabase.from('strength_sessions').update({ messages: updatedMessages })

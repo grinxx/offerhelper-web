@@ -102,6 +102,7 @@ const DEFAULT_SETTINGS: Settings = {
 export default function SettingsPage() {
   const router = useRouter()
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS)
+  const [originalProvider, setOriginalProvider] = useState('siliconflow')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -119,13 +120,16 @@ export default function SettingsPage() {
         .select('*')
         .eq('user_id', user.id)
         .single()
-      if (data) setSettings({
-        ai_provider: data.ai_provider,
-        ai_base_url: data.ai_base_url,
-        ai_api_key: data.ai_api_key,
-        ai_model_fast: data.ai_model_fast,
-        ai_model_smart: data.ai_model_smart,
-      })
+      if (data) {
+        setSettings({
+          ai_provider: data.ai_provider,
+          ai_base_url: data.ai_base_url,
+          ai_api_key: data.ai_api_key,
+          ai_model_fast: data.ai_model_fast,
+          ai_model_smart: data.ai_model_smart,
+        })
+        setOriginalProvider(data.ai_provider)  // 记录加载时的原始 provider
+      }
       setLoading(false)
     })
   }, [router])
@@ -173,9 +177,10 @@ export default function SettingsPage() {
   }
 
   async function handleSave() {
-    // 切换了 provider 但 Key 为空时，提醒用户填入新 Key
-    if (!settings.ai_api_key.trim() && settings.ai_provider !== DEFAULT_SETTINGS.ai_provider) {
+    // 切换了 provider 但 Key 为空时，提醒用户填入新 Key（用原始 provider 比较，避免误报）
+    if (!settings.ai_api_key.trim() && settings.ai_provider !== originalProvider) {
       setError('切换 AI 平台后请同时填入对应的 API Key，否则 AI 功能无法正常使用')
+      return  // 必须 return，否则后续 setError('') 会立即清除警告
     }
     setSaving(true)
     setError('')
