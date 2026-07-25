@@ -274,7 +274,7 @@ function InterviewPageInner() {
           <p className="text-zinc-500 dark:text-zinc-400 mb-4">面试训练需要登录后使用</p>
           <button
             onClick={() => setModalOpen(true)}
-            className="bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 px-6 py-2 rounded-lg text-sm hover:bg-zinc-700 dark:hover:bg-zinc-300 transition-colors"
+            className="bg-teal-600 hover:bg-teal-700 dark:bg-teal-500 dark:hover:bg-teal-600 text-white px-6 py-2 rounded-lg text-sm hover:bg-zinc-700 dark:hover:bg-zinc-300 transition-colors"
           >
             登录
           </button>
@@ -369,7 +369,7 @@ function InterviewPageInner() {
                   onClick={() => setQuestionType(t.value)}
                   className={`px-3 py-1.5 rounded-lg text-sm border transition-colors ${
                     questionType === t.value
-                      ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 border-zinc-900 dark:border-zinc-100'
+                      ? 'bg-teal-600 hover:bg-teal-700 dark:bg-teal-500 dark:hover:bg-teal-600 text-white border-zinc-900 dark:border-zinc-100'
                       : 'border-zinc-300 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800'
                   }`}
                 >
@@ -382,7 +382,7 @@ function InterviewPageInner() {
           <button
             onClick={handleStart}
             disabled={!jdText.trim() || stage !== 'idle'}
-            className="w-full bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 py-3 rounded-lg font-medium disabled:opacity-40 hover:bg-zinc-700 dark:hover:bg-zinc-300 transition-colors"
+            className="w-full bg-teal-600 hover:bg-teal-700 dark:bg-teal-500 dark:hover:bg-teal-600 text-white py-3 rounded-lg font-medium disabled:opacity-40 hover:bg-zinc-700 dark:hover:bg-zinc-300 transition-colors"
           >
             开始面试训练
           </button>
@@ -422,7 +422,7 @@ function InterviewPageInner() {
             <button
               onClick={handleSubmitAnswer}
               disabled={!userAnswer.trim()}
-              className="flex-1 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 py-2.5 rounded-lg text-sm font-medium disabled:opacity-40 hover:bg-zinc-700 dark:hover:bg-zinc-300 transition-colors"
+              className="flex-1 bg-teal-600 hover:bg-teal-700 dark:bg-teal-500 dark:hover:bg-teal-600 text-white py-2.5 rounded-lg text-sm font-medium disabled:opacity-40 hover:bg-zinc-700 dark:hover:bg-zinc-300 transition-colors"
             >
               提交回答
             </button>
@@ -462,7 +462,7 @@ function InterviewPageInner() {
             <div className="flex gap-2">
               <button
                 onClick={handleNext}
-                className="flex-1 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 py-2.5 rounded-lg text-sm font-medium hover:bg-zinc-700 dark:hover:bg-zinc-300 transition-colors"
+                className="flex-1 bg-teal-600 hover:bg-teal-700 dark:bg-teal-500 dark:hover:bg-teal-600 text-white py-2.5 rounded-lg text-sm font-medium hover:bg-zinc-700 dark:hover:bg-zinc-300 transition-colors"
               >
                 {currentIndex < TOTAL_QUESTIONS - 1 ? '下一题' : '查看总结'}
               </button>
@@ -542,7 +542,7 @@ function InterviewPageInner() {
           <div className="flex gap-2">
             <button
               onClick={handleReset}
-              className="flex-1 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 py-2.5 rounded-lg text-sm font-medium hover:bg-zinc-700 dark:hover:bg-zinc-300 transition-colors"
+              className="flex-1 bg-teal-600 hover:bg-teal-700 dark:bg-teal-500 dark:hover:bg-teal-600 text-white py-2.5 rounded-lg text-sm font-medium hover:bg-zinc-700 dark:hover:bg-zinc-300 transition-colors"
             >
               再来一次
             </button>

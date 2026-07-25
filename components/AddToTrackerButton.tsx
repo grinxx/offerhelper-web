@@ -77,7 +77,7 @@ export default function AddToTrackerButton({ jdText }: Props) {
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  <button onClick={handleSave} disabled={saving || !form.company.trim() || !form.position.trim()} className="flex-1 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 py-2 rounded-lg text-sm disabled:opacity-40 hover:bg-zinc-700 transition-colors">
+                  <button onClick={handleSave} disabled={saving || !form.company.trim() || !form.position.trim()} className="flex-1 bg-teal-600 hover:bg-teal-700 dark:bg-teal-500 dark:hover:bg-teal-600 text-white py-2 rounded-lg text-sm disabled:opacity-40 transition-colors">
                     {saving ? '保存中...' : '保存'}
                   </button>
                   <button onClick={() => setOpen(false)} className="flex-1 border border-zinc-300 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300 py-2 rounded-lg text-sm hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors">

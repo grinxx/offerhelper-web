@@ -68,7 +68,7 @@ export default async function MatchDetailPage({ params, searchParams }: Props) {
       <div className="pt-2">
         <Link
           href="/match"
-          className="block w-full text-center bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 px-6 py-2.5 rounded-lg text-sm hover:bg-zinc-700 dark:hover:bg-zinc-300 transition-colors"
+          className="block w-full text-center bg-teal-600 hover:bg-teal-700 dark:bg-teal-500 dark:hover:bg-teal-600 text-white px-6 py-2.5 rounded-lg text-sm hover:bg-zinc-700 dark:hover:bg-zinc-300 transition-colors"
         >
           重新匹配
         </Link>
