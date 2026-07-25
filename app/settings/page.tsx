@@ -81,7 +81,6 @@ function ChangePasswordSection() {
     </div>
   )
 }
-import { createClient } from '@/lib/supabase/client'
 import { PROVIDERS } from '@/lib/ai-providers'
 
 interface Settings {
