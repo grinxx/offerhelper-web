@@ -64,16 +64,22 @@ export default function ResumeUploader({ onTextReady }: Props) {
       let res: Response
       try {
         res = await fetch('/api/parse-resume', { method: 'POST', body: formData, signal: abortCtrl.signal })
-      } finally {
+      } catch (err) {
         clearTimeout(timeout)
+        if (err instanceof DOMException && err.name === 'AbortError') {
+          setParseStep('解析超时，请重试')
+          setTimeout(() => setParseStep(''), 3000)
+          return
+        }
+        throw err
       }
+      clearTimeout(timeout)
       const { text } = await res.json()
       setParsedText(text)
       saveCache(text, name)
       onTextReady(text)
     } finally {
       setParsing(false)
-      setParseStep('')
     }
   }
 

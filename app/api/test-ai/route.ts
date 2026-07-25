@@ -38,7 +38,7 @@ export async function POST(request: Request) {
     return Response.json({ error: 'Base URL 格式不正确' }, { status: 400 })
   }
 
-  const isAnthropic = base_url.includes('localhost') || base_url.includes('anthropic.com')
+  const isAnthropic = new URL(base_url).hostname === 'api.anthropic.com'
 
   try {
     if (isAnthropic) {

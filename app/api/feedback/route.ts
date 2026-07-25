@@ -17,6 +17,10 @@ export async function POST(request: Request) {
   if (!case_id || suggestion_index === undefined || (rating !== 1 && rating !== -1)) {
     return Response.json({ error: '参数错误' }, { status: 400 })
   }
+  // suggestion_index: -1 为整体评价，>=0 为具体建议；其他值非法
+  if (!Number.isInteger(suggestion_index) || suggestion_index < -1) {
+    return Response.json({ error: '无效的 suggestion_index' }, { status: 400 })
+  }
 
   const supabase = createServiceClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

@@ -62,10 +62,12 @@ export async function DELETE(request: NextRequest) {
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
 
-  const { error } = await supabase.from('user_settings')
+  const { error, count } = await supabase.from('user_settings')
     .update({ ai_api_key: '', updated_at: new Date().toISOString() })
     .eq('user_id', user.id)
+    .select('id', { count: 'exact', head: true })
 
   if (error) return Response.json({ error: error.message }, { status: 500 })
-  return Response.json({ ok: true })
+  // count === 0 表示用户本无 settings 记录，清除等于无操作，仍返回成功
+  return Response.json({ ok: true, cleared: (count ?? 0) > 0 })
 }

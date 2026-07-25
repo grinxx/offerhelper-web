@@ -34,6 +34,6 @@ export async function POST(request: Request) {
     return Response.json({ recommendations })
   } catch (e) {
     console.error('[recommend] error:', e)
-    return Response.json({ error: '推荐失败，请重试', detail: String(e) }, { status: 500 })
+    return Response.json({ error: '推荐失败，请重试' }, { status: 500 })
   }
 }

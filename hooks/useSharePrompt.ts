@@ -7,10 +7,10 @@ export function useSharePrompt(feature: string) {
   const [visible, setVisible] = useState(false)
 
   const trigger = useCallback(() => {
-    const key = STORAGE_KEY_PREFIX + feature
-    if (localStorage.getItem(key)) return  // 已提示过，不再弹
+    const safeFeature = feature || '_unknown'
+    const key = STORAGE_KEY_PREFIX + safeFeature
+    if (localStorage.getItem(key)) return
     localStorage.setItem(key, '1')
-    // 延迟 1.5 秒再弹，让用户先看完结果
     setTimeout(() => setVisible(true), 1500)
   }, [feature])
 
