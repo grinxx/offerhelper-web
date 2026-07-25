@@ -18,7 +18,7 @@ async function formatResumeWithAI(rawText: string, aiConfig?: AIConfig): Promise
 
   try {
     if (aiConfig && !aiConfig.isAnthropic) {
-      // 使用用户配置的 OpenAI 兼容 Key
+      // 用户配置了 OpenAI 兼容 Key
       const client = new OpenAI({ baseURL: aiConfig.baseURL, apiKey: aiConfig.apiKey, timeout: 30000 })
       const message = await client.chat.completions.create({
         model: aiConfig.modelFast,
@@ -26,6 +26,18 @@ async function formatResumeWithAI(rawText: string, aiConfig?: AIConfig): Promise
         messages: [{ role: 'user', content: prompt }],
       })
       return (message.choices[0]?.message?.content ?? rawText).trim()
+    }
+
+    if (aiConfig?.isAnthropic) {
+      // 用户配置了 Anthropic Key
+      const client = new Anthropic({ baseURL: aiConfig.baseURL, apiKey: aiConfig.apiKey, timeout: 30000 })
+      const msg = await client.messages.create({
+        model: aiConfig.modelFast,
+        max_tokens: 2048,
+        messages: [{ role: 'user', content: prompt }],
+      })
+      const text = msg.content[0]?.type === 'text' ? msg.content[0].text : rawText
+      return text.trim()
     }
 
     // 默认：本地用 Anthropic，线上用硅基流动

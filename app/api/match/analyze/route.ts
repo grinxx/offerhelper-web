@@ -23,17 +23,26 @@ export async function POST(request: Request) {
   if (!resume_text?.trim()) return new Response(JSON.stringify({ error: '简历内容不能为空' }), { status: 400 })
   if (jd_list.length === 0 || jd_list.length > 5) return new Response(JSON.stringify({ error: 'JD 数量需在 1-5 条之间' }), { status: 400 })
 
-  // 按 JD 数量扣除额度，每个 JD 各消耗一次 AI 调用
-  for (let i = 0; i < jd_list.length; i++) {
-    const usage = await checkAndRecordUsage('match_analyze')
-    if (!usage.allowed) {
-      return new Response(JSON.stringify({ error: usage.limitMessage, code: 'LIMIT_EXCEEDED' }), { status: 429 })
+  // 先检查一次额度（取 userId 和剩余量），不足时提前拒绝
+  const firstUsage = await checkAndRecordUsage('match_analyze')
+  if (!firstUsage.allowed) {
+    return new Response(JSON.stringify({ error: firstUsage.limitMessage, code: 'LIMIT_EXCEEDED' }), { status: 429 })
+  }
+  // 剩余 JD 继续扣费（已扣 1 次，还需扣 jd_list.length - 1 次）
+  let lastUsage = firstUsage
+  for (let i = 1; i < jd_list.length; i++) {
+    lastUsage = await checkAndRecordUsage('match_analyze')
+    if (!lastUsage.allowed) {
+      return new Response(JSON.stringify({
+        error: `额度不足以完成 ${jd_list.length} 个岗位的匹配，当前剩余额度不足，请减少 JD 数量或配置自己的 API Key`,
+        code: 'LIMIT_EXCEEDED'
+      }), { status: 429 })
     }
   }
 
   const sessionSupabase = await createClient()
   const { data: { user } } = await sessionSupabase.auth.getUser()
-  const { chat, config } = await getAIClientForRequest(usage.userId)
+  const { chat, config } = await getAIClientForRequest(lastUsage.userId)
 
   const encoder = new TextEncoder()
   const stream = new ReadableStream({

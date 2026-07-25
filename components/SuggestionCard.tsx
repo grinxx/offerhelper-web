@@ -20,6 +20,7 @@ export default function SuggestionCard({ suggestion, storageKey, initialStatus }
   const [copied, setCopied] = useState(false)
   const [status, setStatus] = useState<Status>(initialStatus ?? 'none')
   const [menuOpen, setMenuOpen] = useState(false)
+  const [statusSaving, setStatusSaving] = useState(false)
 
   useEffect(() => {
     if (!storageKey) return
@@ -30,9 +31,11 @@ export default function SuggestionCard({ suggestion, storageKey, initialStatus }
   }, [storageKey, initialStatus])
 
   async function handleSetStatus(s: Status) {
+    if (statusSaving) return  // 防止并发点击
     const prev = status
-    setStatus(s)  // 乐观更新
+    setStatus(s)
     setMenuOpen(false)
+    setStatusSaving(true)
     if (storageKey) {
       const [caseId] = storageKey.split('_')
       const idx = parseInt(storageKey.split('_')[1])
@@ -46,8 +49,12 @@ export default function SuggestionCard({ suggestion, storageKey, initialStatus }
         if (s === 'none') localStorage.removeItem(`offerhelper_suggestion_${storageKey}`)
         else localStorage.setItem(`offerhelper_suggestion_${storageKey}`, s)
       } catch {
-        setStatus(prev)  // 写入失败时回滚 UI
+        setStatus(prev)
+      } finally {
+        setStatusSaving(false)
       }
+    } else {
+      setStatusSaving(false)
     }
   }
 
@@ -81,9 +88,10 @@ export default function SuggestionCard({ suggestion, storageKey, initialStatus }
         <div className="relative shrink-0">
           <button
             onClick={() => setMenuOpen(v => !v)}
-            className={`text-xs border rounded px-2 py-0.5 transition-colors ${STATUS_CONFIG[status].className}`}
+            disabled={statusSaving}
+            className={`text-xs border rounded px-2 py-0.5 transition-colors disabled:opacity-50 ${STATUS_CONFIG[status].className}`}
           >
-            {STATUS_CONFIG[status].label}
+            {statusSaving ? '...' : STATUS_CONFIG[status].label}
           </button>
           {menuOpen && (
             <div className="absolute right-0 top-6 z-10 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg shadow-lg overflow-hidden min-w-[100px]">

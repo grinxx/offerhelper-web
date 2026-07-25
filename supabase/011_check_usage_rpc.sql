@@ -14,7 +14,7 @@ declare
   v_count_recent int := 0;
   v_limit int;
   v_since_today timestamptz := date_trunc('day', now());
-  v_since_window timestamptz := now() - (p_rate_window_seconds || ' seconds')::interval;
+  v_since_window timestamptz := now() - make_interval(secs => p_rate_window_seconds);
 begin
   -- 检查是否有自定义 Key
   if p_user_id is not null then

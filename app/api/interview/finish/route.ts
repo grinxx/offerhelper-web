@@ -43,6 +43,7 @@ export async function POST(request: Request) {
     .update({ status: 'done' })
     .eq('id', session_id)
 
+  // turns 表无 user_id 列，通过上方 session 归属验证（user_id === user.id）已确保安全
   const { data: turns } = await supabase
     .from('interview_turns')
     .select('question_index, question, scores, feedback, reference_answer')

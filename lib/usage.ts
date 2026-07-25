@@ -102,7 +102,13 @@ export async function getTodayUsage(): Promise<{ used: number; limit: number; us
     .single()
 
   if (settings?.ai_api_key) {
-    return { used: 0, limit: Infinity, usingOwnKey: true }
+    // 已配置自定义 Key，不受限制，但仍查实际用量供 UI 展示
+    const { count: usedCount } = await supabase
+      .from('usage_logs')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .gte('created_at', todayStart())
+    return { used: usedCount ?? 0, limit: Infinity, usingOwnKey: true }
   }
 
   const { count } = await supabase
