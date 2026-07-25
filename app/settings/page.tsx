@@ -23,10 +23,10 @@ function ChangePasswordSection() {
     if (error) {
       setMsg({ type: 'err', text: error.message })
     } else {
-      setMsg({ type: 'ok', text: '密码已修改成功' })
+      setMsg({ type: 'ok', text: '密码已修改成功，建议重新登录以确保所有设备同步' })
       setNewPassword('')
       setConfirm('')
-      setTimeout(() => { setOpen(false); setMsg(null) }, 2000)
+      setTimeout(() => { setOpen(false); setMsg(null) }, 3000)
     }
   }
 

@@ -1,12 +1,8 @@
 import OpenAI from 'openai'
 import Anthropic from '@anthropic-ai/sdk'
+import type { AIConfig } from '@/lib/ai-client'
 
-async function formatResumeWithAI(rawText: string): Promise<string> {
-  const rawBase = process.env.ANTHROPIC_BASE_URL ?? ''
-  const isLocal = rawBase.includes('localhost')
-  const apiKey = process.env.ANTHROPIC_API_KEY || ''
-
-  const prompt = `将以下简历原始文本整理成结构清晰的 Markdown 格式。
+const PROMPT = `将以下简历原始文本整理成结构清晰的 Markdown 格式。
 
 要求：
 - 用 ## 标记主要章节（如教育背景、工作经历、专业技能等）
@@ -15,34 +11,52 @@ async function formatResumeWithAI(rawText: string): Promise<string> {
 - 保留所有原始内容，不增删，不改写
 - 只输出 Markdown，不加任何说明
 
-简历原文：
-${rawText}`
+简历原文：`
+
+async function formatResumeWithAI(rawText: string, aiConfig?: AIConfig): Promise<string> {
+  const prompt = PROMPT + '\n' + rawText
 
   try {
-    if (isLocal) {
-      const client = new Anthropic({ baseURL: rawBase, apiKey })
-      const message = await client.messages.create({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 2048,
-        messages: [{ role: 'user', content: prompt }],
-      })
-      const text = message.content[0]?.type === 'text' ? message.content[0].text : rawText
-      return text.trim()
-    } else {
-      const client = new OpenAI({ baseURL: 'https://api.siliconflow.cn/v1', apiKey })
+    if (aiConfig && !aiConfig.isAnthropic) {
+      // 使用用户配置的 OpenAI 兼容 Key
+      const client = new OpenAI({ baseURL: aiConfig.baseURL, apiKey: aiConfig.apiKey, timeout: 30000 })
       const message = await client.chat.completions.create({
-        model: 'Qwen/Qwen2.5-7B-Instruct',
+        model: aiConfig.modelFast,
         max_tokens: 2048,
         messages: [{ role: 'user', content: prompt }],
       })
       return (message.choices[0]?.message?.content ?? rawText).trim()
+    }
+
+    // 默认：本地用 Anthropic，线上用硅基流动
+    const rawBase = process.env.ANTHROPIC_BASE_URL ?? ''
+    const isLocal = rawBase.includes('localhost')
+    const apiKey = process.env.ANTHROPIC_API_KEY || ''
+
+    if (isLocal) {
+      const client = new Anthropic({ baseURL: rawBase, apiKey, timeout: 30000 })
+      const msg = await client.messages.create({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 2048,
+        messages: [{ role: 'user', content: prompt }],
+      })
+      const text = msg.content[0]?.type === 'text' ? msg.content[0].text : rawText
+      return text.trim()
+    } else {
+      const client = new OpenAI({ baseURL: 'https://api.siliconflow.cn/v1', apiKey, timeout: 30000 })
+      const msg = await client.chat.completions.create({
+        model: 'Qwen/Qwen2.5-7B-Instruct',
+        max_tokens: 2048,
+        messages: [{ role: 'user', content: prompt }],
+      })
+      return (msg.choices[0]?.message?.content ?? rawText).trim()
     }
   } catch {
     return rawText
   }
 }
 
-export async function parseResume(file: File, formatWithAI = false): Promise<string> {
+export async function parseResume(file: File, formatWithAI = false, aiConfig?: AIConfig): Promise<string> {
   const buffer = Buffer.from(await file.arrayBuffer())
   let text = ''
 
@@ -62,7 +76,7 @@ export async function parseResume(file: File, formatWithAI = false): Promise<str
   }
 
   if (formatWithAI && text) {
-    return formatResumeWithAI(text)
+    return formatResumeWithAI(text, aiConfig)
   }
   return text
 }

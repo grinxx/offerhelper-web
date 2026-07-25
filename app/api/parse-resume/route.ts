@@ -1,5 +1,7 @@
 import { parseResume } from '@/lib/parse-resume'
 import { checkAndRecordUsage } from '@/lib/usage'
+import { getAIConfig } from '@/lib/ai-client'
+import { createClient } from '@/lib/supabase/server'
 
 export const runtime = 'nodejs'
 
@@ -28,8 +30,13 @@ export async function POST(request: Request) {
     return Response.json({ error: '仅支持 PDF 和 DOCX 格式' }, { status: 400 })
   }
 
+  // 读取用户自定义 AI 配置（已配置自己 Key 的用户使用自己的 Key 进行格式化）
+  const sessionSupabase = await createClient()
+  const { data: { user } } = await sessionSupabase.auth.getUser()
+  const aiConfig = await getAIConfig(user?.id ?? null)
+
   try {
-    const text = await parseResume(file, true)
+    const text = await parseResume(file, true, aiConfig)
     return Response.json({ text })
   } catch {
     return Response.json({ error: '文件解析失败，请尝试粘贴文本' }, { status: 422 })

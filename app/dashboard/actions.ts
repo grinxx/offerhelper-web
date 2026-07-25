@@ -18,6 +18,7 @@ export async function deleteRecord(id: string, type: RecordType) {
   if (!user) throw new Error('未登录')
 
   const table = TABLE_MAP[type]
+  if (!table) throw new Error('无效的记录类型')
   const supabase = createServiceClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!

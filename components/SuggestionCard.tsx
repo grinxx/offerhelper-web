@@ -29,19 +29,24 @@ export default function SuggestionCard({ suggestion, storageKey, initialStatus }
     if (saved === 'applied' || saved === 'pending') setStatus(saved)
   }, [storageKey, initialStatus])
 
-  function handleSetStatus(s: Status) {
-    setStatus(s)
+  async function handleSetStatus(s: Status) {
+    const prev = status
+    setStatus(s)  // 乐观更新
     setMenuOpen(false)
     if (storageKey) {
       const [caseId] = storageKey.split('_')
       const idx = parseInt(storageKey.split('_')[1])
-      // 同时存 localStorage（离线）和 API（跨设备）
-      if (s === 'none') {
-        localStorage.removeItem(`offerhelper_suggestion_${storageKey}`)
-        fetch('/api/suggestion-status', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ case_id: caseId, suggestion_index: idx, status: null }) }).catch(() => {})
-      } else {
-        localStorage.setItem(`offerhelper_suggestion_${storageKey}`, s)
-        fetch('/api/suggestion-status', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ case_id: caseId, suggestion_index: idx, status: s }) }).catch(() => {})
+      try {
+        const res = await fetch('/api/suggestion-status', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ case_id: caseId, suggestion_index: idx, status: s === 'none' ? null : s }),
+        })
+        if (!res.ok) throw new Error('failed')
+        if (s === 'none') localStorage.removeItem(`offerhelper_suggestion_${storageKey}`)
+        else localStorage.setItem(`offerhelper_suggestion_${storageKey}`, s)
+      } catch {
+        setStatus(prev)  // 写入失败时回滚 UI
       }
     }
   }

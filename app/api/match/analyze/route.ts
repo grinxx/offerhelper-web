@@ -23,9 +23,12 @@ export async function POST(request: Request) {
   if (!resume_text?.trim()) return new Response(JSON.stringify({ error: '简历内容不能为空' }), { status: 400 })
   if (jd_list.length === 0 || jd_list.length > 5) return new Response(JSON.stringify({ error: 'JD 数量需在 1-5 条之间' }), { status: 400 })
 
-  const usage = await checkAndRecordUsage('match_analyze')
-  if (!usage.allowed) {
-    return new Response(JSON.stringify({ error: `${usage.limitMessage}`, code: 'LIMIT_EXCEEDED' }), { status: 429 })
+  // 按 JD 数量扣除额度，每个 JD 各消耗一次 AI 调用
+  for (let i = 0; i < jd_list.length; i++) {
+    const usage = await checkAndRecordUsage('match_analyze')
+    if (!usage.allowed) {
+      return new Response(JSON.stringify({ error: usage.limitMessage, code: 'LIMIT_EXCEEDED' }), { status: 429 })
+    }
   }
 
   const sessionSupabase = await createClient()
@@ -68,8 +71,10 @@ export async function POST(request: Request) {
 
         evalResults.forEach((res, i) => {
           if (res.status === 'fulfilled') {
-            results.push(res.value)
-            controller.enqueue(encoder.encode(JSON.stringify({ type: 'result', ...res.value }) + '\n'))
+            // 统一用循环变量 i 作为 jd_index，避免依赖 AI 返回值中的 jd_index
+            const result: MatchResult = { ...res.value, jd_index: i }
+            results.push(result)
+            controller.enqueue(encoder.encode(JSON.stringify({ type: 'result', ...result }) + '\n'))
           } else {
             controller.enqueue(encoder.encode(JSON.stringify({ type: 'error', jd_index: i, message: '该岗位评估失败，请重试' }) + '\n'))
           }

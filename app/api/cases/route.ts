@@ -15,6 +15,9 @@ export async function PATCH(request: Request) {
 
   if (!body.id) return Response.json({ error: '缺少 id' }, { status: 400 })
 
+  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+  if (!UUID_RE.test(body.id)) return Response.json({ error: '无效的 id 格式' }, { status: 400 })
+
   const supabase = createServiceClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!

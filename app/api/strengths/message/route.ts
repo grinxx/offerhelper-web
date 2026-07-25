@@ -19,7 +19,10 @@ export async function POST(request: Request) {
 
   const { session_id, messages = [], jd_text = null, turn_index = 0 } = body
   const safeTurnIndex = Math.max(0, Math.min(2, turn_index ?? 0))
-  const safeMessages = messages.slice(-6)
+  const safeMessages = messages.slice(-6).map(m => ({
+    role: m.role,
+    content: typeof m.content === 'string' ? m.content.slice(0, 2000) : '',
+  }))
 
   const sessionSupabase = await createClient()
   const { data: { user } } = await sessionSupabase.auth.getUser()
