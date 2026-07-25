@@ -73,7 +73,7 @@ export default async function StrengthsDetailPage({ params, searchParams }: Prop
       <div className="pt-6 border-t border-zinc-200 dark:border-zinc-800">
         <Link
           href="/strengths"
-          className="block w-full text-center bg-teal-600 hover:bg-teal-700 dark:bg-teal-400 dark:hover:bg-teal-300 text-white dark:text-zinc-900 px-6 py-2.5 rounded-lg text-sm hover:bg-zinc-700 dark:hover:bg-zinc-300 transition-colors"
+          className="block w-full text-center bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-400 dark:hover:bg-indigo-300 text-white px-6 py-2.5 rounded-lg text-sm hover:bg-zinc-700 dark:hover:bg-zinc-300 transition-colors"
         >
           重新挖掘优势
         </Link>

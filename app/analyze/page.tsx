@@ -186,7 +186,7 @@ function AnalyzePageInner() {
               onClick={() => setUseStrengths(v => !v)}
               className={`shrink-0 text-xs px-3 py-1.5 rounded-lg border transition-colors ${
                 useStrengths
-                  ? 'bg-teal-600 hover:bg-teal-700 dark:bg-teal-400 dark:hover:bg-teal-300 text-white dark:text-zinc-900 border-zinc-900 dark:border-zinc-100'
+                  ? 'bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-400 dark:hover:bg-indigo-300 text-white border-zinc-900 dark:border-zinc-100'
                   : 'border-zinc-300 dark:border-zinc-600 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800'
               }`}
             >

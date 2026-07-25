@@ -47,7 +47,7 @@ export default function ResetPasswordPage() {
           <p className="text-green-600 dark:text-green-400 text-sm">密码已重置成功！</p>
           <button
             onClick={() => router.push('/')}
-            className="bg-teal-600 hover:bg-teal-700 dark:bg-teal-400 dark:hover:bg-teal-300 text-white dark:text-zinc-900 px-6 py-2 rounded-lg text-sm hover:bg-zinc-700 transition-colors"
+            className="bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-400 dark:hover:bg-indigo-300 text-white px-6 py-2 rounded-lg text-sm hover:bg-zinc-700 transition-colors"
           >
             返回首页并登录
           </button>
@@ -83,7 +83,7 @@ export default function ResetPasswordPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-teal-600 hover:bg-teal-700 dark:bg-teal-400 dark:hover:bg-teal-300 text-white dark:text-zinc-900 py-2 rounded-lg text-sm disabled:opacity-40 transition-colors"
+            className="w-full bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-400 dark:hover:bg-indigo-300 text-white py-2 rounded-lg text-sm disabled:opacity-40 transition-colors"
           >
             {loading ? '保存中...' : '确认重置'}
           </button>

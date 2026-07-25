@@ -25,7 +25,7 @@ export default function OGImage() {
           position: 'absolute',
           top: 0, right: 0,
           width: '400px', height: '400px',
-          background: 'radial-gradient(circle, rgba(13,148,136,0.3) 0%, transparent 70%)',
+          background: 'radial-gradient(circle, rgba(79,70,229,0.3) 0%, transparent 70%)',
           borderRadius: '50%',
         }} />
 
@@ -38,7 +38,7 @@ export default function OGImage() {
         }}>
           <div style={{
             width: '52px', height: '52px',
-            background: '#0D9488',
+            background: '#4F46E5',
             borderRadius: '12px',
             display: 'flex',
             alignItems: 'center',
@@ -76,9 +76,9 @@ export default function OGImage() {
         <div style={{ display: 'flex', gap: '16px' }}>
           {['简历优化', '岗位匹配', '面试训练', '优势挖掘'].map(label => (
             <div key={label} style={{
-              background: 'rgba(13,148,136,0.2)',
-              border: '1px solid rgba(13,148,136,0.5)',
-              color: '#5eead4',
+              background: 'rgba(79,70,229,0.2)',
+              border: '1px solid rgba(79,70,229,0.5)',
+              color: '#a5b4fc',
               padding: '8px 20px',
               borderRadius: '100px',
               fontSize: '20px',

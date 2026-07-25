@@ -38,7 +38,7 @@ export default function VersionLabelEditor({ caseId, initialLabel }: Props) {
           placeholder="如：投产品经理版、秋招通用版..."
           className="flex-1 border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 rounded px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-zinc-400"
         />
-        <button onClick={handleSave} disabled={saving} className="text-xs bg-teal-600 hover:bg-teal-700 dark:bg-teal-400 dark:hover:bg-teal-300 text-white dark:text-zinc-900 px-3 py-1.5 rounded disabled:opacity-40">
+        <button onClick={handleSave} disabled={saving} className="text-xs bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-400 dark:hover:bg-indigo-300 text-white px-3 py-1.5 rounded disabled:opacity-40">
           {saving ? '保存...' : '保存'}
         </button>
         <button onClick={() => setEditing(false)} className="text-xs text-zinc-400 hover:text-zinc-600">取消</button>

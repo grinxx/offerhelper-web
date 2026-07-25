@@ -15,7 +15,7 @@ export const metadata: Metadata = {
     shortcut: '/favicon.svg',
     apple: '/favicon.svg',
   },
-  themeColor: '#0D9488',
+  themeColor: '#4F46E5',
   openGraph: {
     title: 'OfferHelper — 把真实经历变成可投递的求职材料',
     description: '不编造，不包装，只优化表达。简历优化、岗位匹配、面试训练、优势挖掘，一站式求职准备工具。',

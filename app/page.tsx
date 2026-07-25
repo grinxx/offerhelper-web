@@ -22,7 +22,7 @@ function ShareButton() {
   return (
     <button
       onClick={handleShare}
-      className="flex items-center justify-between text-sm text-zinc-400 dark:text-zinc-500 hover:text-teal-600 dark:hover:text-teal-400 transition-colors w-full"
+      className="flex items-center justify-between text-sm text-zinc-400 dark:text-zinc-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors w-full"
     >
       <span>推荐给同学</span>
       <span className="text-xs">分享链接 →</span>
@@ -118,7 +118,7 @@ export default function HomePage() {
     <main className="w-full px-4 sm:px-8 md:px-12 lg:px-20 xl:px-32 py-10 max-w-7xl mx-auto min-h-screen flex flex-col justify-center">
       <header className="flex items-start justify-between mb-10 gap-4">
         <h1 className="text-xl font-semibold shrink-0 flex items-center gap-2">
-          <span className="inline-flex items-center justify-center w-7 h-7 rounded-lg shrink-0" style={{background:'#0D9488'}}>
+          <span className="inline-flex items-center justify-center w-7 h-7 rounded-lg shrink-0" style={{background:'#4F46E5'}}>
             <svg viewBox="0 0 32 32" className="w-4 h-4"><polyline points="8,17 13,22 24,11" stroke="white" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/></svg>
           </span>
           <span>OfferHelper</span>
