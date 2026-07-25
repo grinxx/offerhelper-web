@@ -4,6 +4,84 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Logo from '@/components/Logo'
 import { createClient } from '@/lib/supabase/client'
+
+function ChangePasswordSection() {
+  const [open, setOpen] = useState(false)
+  const [newPassword, setNewPassword] = useState('')
+  const [confirm, setConfirm] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [msg, setMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
+
+  async function handleChange() {
+    if (newPassword.length < 6) { setMsg({ type: 'err', text: '密码至少 6 位' }); return }
+    if (newPassword !== confirm) { setMsg({ type: 'err', text: '两次密码不一致' }); return }
+    setSaving(true)
+    setMsg(null)
+    const supabase = createClient()
+    const { error } = await supabase.auth.updateUser({ password: newPassword })
+    setSaving(false)
+    if (error) {
+      setMsg({ type: 'err', text: error.message })
+    } else {
+      setMsg({ type: 'ok', text: '密码已修改成功' })
+      setNewPassword('')
+      setConfirm('')
+      setTimeout(() => { setOpen(false); setMsg(null) }, 2000)
+    }
+  }
+
+  return (
+    <div>
+      <button
+        onClick={() => setOpen(v => !v)}
+        className="flex items-center justify-between w-full text-sm text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
+      >
+        <span className="font-medium">修改密码</span>
+        <span className="text-xs text-zinc-400">{open ? '收起' : '展开'}</span>
+      </button>
+
+      {open && (
+        <div className="mt-4 space-y-3">
+          <div>
+            <label className="block text-xs font-medium mb-1">新密码</label>
+            <input
+              type="password"
+              minLength={6}
+              value={newPassword}
+              onChange={e => setNewPassword(e.target.value)}
+              className="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 rounded p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-400"
+              placeholder="至少 6 位"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium mb-1">确认新密码</label>
+            <input
+              type="password"
+              value={confirm}
+              onChange={e => setConfirm(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') handleChange() }}
+              className="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 rounded p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-400"
+              placeholder="再次输入新密码"
+            />
+          </div>
+          {msg && (
+            <p className={`text-xs ${msg.type === 'ok' ? 'text-green-600 dark:text-green-400' : 'text-red-500'}`}>
+              {msg.text}
+            </p>
+          )}
+          <button
+            onClick={handleChange}
+            disabled={saving || !newPassword || !confirm}
+            className="w-full bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 hover:bg-zinc-700 dark:hover:bg-zinc-300 py-2.5 rounded-lg text-sm font-medium disabled:opacity-40 transition-colors"
+          >
+            {saving ? '修改中...' : '确认修改'}
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+import { createClient } from '@/lib/supabase/client'
 import { PROVIDERS } from '@/lib/ai-providers'
 
 interface Settings {
@@ -330,6 +408,10 @@ export default function SettingsPage() {
         <p className="text-xs text-zinc-400 dark:text-zinc-500 text-center">
           未配置时使用系统默认 AI，配置后优先使用你自己的 Key
         </p>
+
+        <hr className="border-zinc-200 dark:border-zinc-800" />
+
+        <ChangePasswordSection />
       </div>
     </main>
   )
