@@ -161,7 +161,7 @@ export default function HomePage() {
       </header>
 
       <div className="mb-8">
-        <h2 className="text-2xl font-bold mb-1">把真实经历变成可投递的求职材料</h2>
+        <h2 className="text-2xl font-bold mb-1">把真实经历变成 Offer</h2>
         <p className="text-zinc-500 dark:text-zinc-400 text-sm">不编造，不包装，选一个你现在最需要的功能开始</p>
       </div>
 
