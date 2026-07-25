@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
 import Link from 'next/link'
+import Logo from '@/components/Logo'
 
 export default async function PracticePage() {
   const supabase = await createClient()
@@ -26,7 +27,7 @@ export default async function PracticePage() {
     return (
       <main className="w-full px-4 sm:px-8 md:px-12 lg:px-20 xl:px-32 py-10 max-w-7xl mx-auto">
         <header className="flex items-center justify-between mb-8">
-          <Link href="/" className="text-xl font-semibold">OfferHelper</Link>
+          <Logo />
           <Link href="/interview" className="text-sm text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100">← 面试训练</Link>
         </header>
         <h2 className="text-xl font-bold mb-4">面试题库</h2>
@@ -55,7 +56,7 @@ export default async function PracticePage() {
   return (
     <main className="w-full px-4 sm:px-8 md:px-12 lg:px-20 xl:px-32 py-10 max-w-7xl mx-auto">
       <header className="flex items-center justify-between mb-8">
-        <Link href="/" className="text-xl font-semibold">OfferHelper</Link>
+        <Logo />
         <div className="flex items-center gap-3 text-sm text-zinc-500 dark:text-zinc-400">
           <Link href="/interview" className="hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors">面试训练</Link>
           <span>|</span>

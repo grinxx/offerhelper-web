@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Logo from '@/components/Logo'
 import { createClient } from '@/lib/supabase/client'
 
 export default function ResetPasswordPage() {
@@ -36,7 +37,7 @@ export default function ResetPasswordPage() {
   return (
     <main className="w-full px-4 py-10 max-w-sm mx-auto">
       <header className="mb-8">
-        <Link href="/" className="text-xl font-semibold">OfferHelper</Link>
+        <Logo />
       </header>
 
       <h2 className="text-xl font-bold mb-6">重置密码</h2>

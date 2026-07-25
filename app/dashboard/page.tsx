@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
+import Logo from '@/components/Logo'
 import type { JdItem } from '@/types'
 import DeleteRecordButton from './DeleteRecordButton'
 
@@ -188,7 +189,7 @@ export default async function DashboardPage({ searchParams }: Props) {
   return (
     <main className="w-full px-4 sm:px-8 md:px-12 lg:px-20 xl:px-32 py-10 max-w-7xl mx-auto">
       <header className="flex items-center justify-between mb-8">
-        <Link href="/" className="text-xl font-semibold">OfferHelper</Link>
+        <Logo />
         <div className="flex items-center gap-3 text-sm text-zinc-500 dark:text-zinc-400">
           {activeType && (
             <>

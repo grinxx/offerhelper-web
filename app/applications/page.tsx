@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
+import Logo from '@/components/Logo'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
@@ -119,7 +120,7 @@ export default function ApplicationsPage() {
   return (
     <main className="w-full px-4 sm:px-8 md:px-12 lg:px-20 xl:px-32 py-10 max-w-7xl mx-auto">
       <header className="flex items-center justify-between mb-8">
-        <Link href="/" className="text-xl font-semibold">OfferHelper</Link>
+        <Logo />
         <Link href="/dashboard" className="text-sm text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors">
           ← 我的记录
         </Link>
