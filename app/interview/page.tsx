@@ -13,6 +13,8 @@ import NextStepBar from '@/components/NextStepBar'
 import UsageWarning from '@/components/UsageWarning'
 import UsageHint from '@/components/UsageHint'
 import ErrorBanner from '@/components/ErrorBanner'
+import SharePromptModal from '@/components/SharePromptModal'
+import { useSharePrompt } from '@/hooks/useSharePrompt'
 import type { InterviewScores } from '@/types'
 
 type Stage = 'idle' | 'loading_questions' | 'questioning' | 'evaluating' | 'summary'
@@ -121,6 +123,7 @@ function InterviewPageInner() {
   const [summary, setSummary] = useState<SummaryData | null>(null)
   const [error, setError] = useState('')
   const [skippedIndexes, setSkippedIndexes] = useState<Set<number>>(new Set())
+  const { visible: shareVisible, trigger: triggerShare, close: closeShare } = useSharePrompt('interview')
   const [topMatchJd, setTopMatchJd] = useState<{ title?: string; content: string } | null>(null)
 
   useEffect(() => {
@@ -228,6 +231,7 @@ function InterviewPageInner() {
     const data = await res.json()
     setSummary(data)
     setStage('summary')
+    triggerShare()
   }
 
   function handleNext() {
@@ -577,6 +581,7 @@ function InterviewPageInner() {
           ]} />
         </div>
       )}
+    <SharePromptModal visible={shareVisible} onClose={closeShare} message="面试训练完成！" />
     </main>
   )
 }

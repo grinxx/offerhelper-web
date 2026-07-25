@@ -14,6 +14,8 @@ import NextStepBar from '@/components/NextStepBar'
 import UsageWarning from '@/components/UsageWarning'
 import UsageHint from '@/components/UsageHint'
 import ErrorBanner from '@/components/ErrorBanner'
+import SharePromptModal from '@/components/SharePromptModal'
+import { useSharePrompt } from '@/hooks/useSharePrompt'
 import type { Suggestion } from '@/types'
 
 export default function AnalyzePage() {
@@ -41,6 +43,7 @@ function AnalyzePageInner() {
   const [modalTab, setModalTab] = useState<'login' | 'signup'>('login')
   const [strengthsContext, setStrengthsContext] = useState<string | null>(null)
   const [useStrengths, setUseStrengths] = useState(false)
+  const { visible: shareVisible, trigger: triggerShare, close: closeShare } = useSharePrompt('analyze')
 
   useEffect(() => {
     const supabase = createClient()
@@ -130,6 +133,7 @@ function AnalyzePageInner() {
             const obj = JSON.parse(line)
             if (obj.case_id) {
               setCaseId(obj.case_id)
+              triggerShare()
             } else if (obj.score !== undefined) {
               setScore(obj.score)
               setScoreSummary(obj.score_summary ?? null)
@@ -318,6 +322,11 @@ function AnalyzePageInner() {
         defaultTab={modalTab}
         onClose={() => setModalOpen(false)}
         onAuthSuccess={handleAuthSuccess}
+      />
+      <SharePromptModal
+        visible={shareVisible}
+        onClose={closeShare}
+        message="简历优化完成！"
       />
     </main>
   )

@@ -13,6 +13,8 @@ import NextStepBar from '@/components/NextStepBar'
 import UsageWarning from '@/components/UsageWarning'
 import UsageHint from '@/components/UsageHint'
 import ErrorBanner from '@/components/ErrorBanner'
+import SharePromptModal from '@/components/SharePromptModal'
+import { useSharePrompt } from '@/hooks/useSharePrompt'
 import type { ChatMessage, StrengthItem } from '@/types'
 
 type Stage = 'idle' | 'chatting' | 'generating_result' | 'done'
@@ -84,6 +86,7 @@ function StrengthsPageInner() {
   const [userInput, setUserInput] = useState('')
   const [result, setResult] = useState<StrengthsResultData | null>(null)
   const [error, setError] = useState('')
+  const { visible: shareVisible, trigger: triggerShare, close: closeShare } = useSharePrompt('strengths')
   const bottomRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -215,6 +218,7 @@ function StrengthsPageInner() {
       const data = await res.json()
       setResult(data)
       setStage('done')
+      triggerShare()
       localStorage.setItem('offerhelper_strengths_result', JSON.stringify(data))
     } catch {
       setError('优势提炼失败，请重试')
@@ -416,6 +420,7 @@ function StrengthsPageInner() {
           supabase.auth.getUser().then(({ data: { user } }) => setUser(user))
         }}
       />
+      <SharePromptModal visible={shareVisible} onClose={closeShare} message="优势挖掘完成！" />
     </main>
   )
 }
