@@ -85,6 +85,12 @@ export async function POST(request: Request) {
           }
         }
 
+        if (suggestions.length === 0) {
+          await supabase.from('cases').update({ status: 'error' }).eq('id', caseId)
+          controller.enqueue(encoder.encode(JSON.stringify({ error: 'AI 未能生成建议，请检查简历和 JD 内容后重试' }) + '\n'))
+          return
+        }
+
         await supabase.from('cases').update({ result_json: suggestions, status: 'done' }).eq('id', caseId)
 
         // 额外生成整体评分

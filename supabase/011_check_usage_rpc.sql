@@ -21,6 +21,9 @@ begin
     select (ai_api_key is not null and ai_api_key != '') into v_has_own_key
     from user_settings where user_id = p_user_id;
     if v_has_own_key then
+      -- own-key 用户不受限制，但仍写入 usage_logs 供 getTodayUsage 统计展示
+      insert into usage_logs(user_id, ip, action)
+      values(p_user_id, null, p_action);
       return jsonb_build_object('allowed', true, 'remaining', 999, 'own_key', true);
     end if;
   end if;

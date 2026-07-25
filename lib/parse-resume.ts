@@ -29,10 +29,13 @@ async function formatResumeWithAI(rawText: string, aiConfig?: AIConfig): Promise
     }
 
     if (aiConfig?.isAnthropic) {
-      // 用户配置了 Anthropic Key
+      // 用户配置了 Anthropic Key，确保模型名是 Claude 格式
+      const model = aiConfig.modelFast.startsWith('claude')
+        ? aiConfig.modelFast
+        : 'claude-haiku-4-5-20251001'  // 非 Claude 模型名时安全兜底
       const client = new Anthropic({ baseURL: aiConfig.baseURL, apiKey: aiConfig.apiKey, timeout: 30000 })
       const msg = await client.messages.create({
-        model: aiConfig.modelFast,
+        model,
         max_tokens: 2048,
         messages: [{ role: 'user', content: prompt }],
       })

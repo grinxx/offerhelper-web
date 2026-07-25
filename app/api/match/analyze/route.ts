@@ -40,9 +40,10 @@ export async function POST(request: Request) {
     }
   }
 
+  // 使用 firstUsage.userId 而非 lastUsage.userId，避免循环中用户退出登录导致配置切换
   const sessionSupabase = await createClient()
   const { data: { user } } = await sessionSupabase.auth.getUser()
-  const { chat, config } = await getAIClientForRequest(lastUsage.userId)
+  const { chat, config } = await getAIClientForRequest(firstUsage.userId)
 
   const encoder = new TextEncoder()
   const stream = new ReadableStream({

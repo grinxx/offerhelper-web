@@ -29,8 +29,6 @@ export async function POST(request: NextRequest) {
   // 只更新非空字段，空 Key 不覆盖已有加密 Key
   const upsertData: Record<string, unknown> = {
     user_id: user.id,
-    ai_provider: body.ai_provider,
-    ai_base_url: body.ai_base_url,
     ai_model_fast: body.ai_model_fast,
     ai_model_smart: body.ai_model_smart,
     updated_at: new Date().toISOString(),
@@ -39,12 +37,16 @@ export async function POST(request: NextRequest) {
   if (body.ai_api_key) {
     try {
       upsertData.ai_api_key = encrypt(body.ai_api_key)
+      // Key 有值时才允许同步更新 provider 和 baseURL，保证三者一致
+      upsertData.ai_provider = body.ai_provider
+      upsertData.ai_base_url = body.ai_base_url
     } catch {
       return Response.json({ error: '服务端加密配置缺失，请联系管理员' }, { status: 500 })
     }
+  } else {
+    // Key 为空：只更新模型选项，不更新 provider/baseURL（避免 Key 与 provider 不匹配）
+    // 若用户需要切换 provider，必须同时提供新的 Key
   }
-  // body.ai_api_key 为空时不更新 ai_api_key 字段（保留旧值）
-  // 用户主动清除 Key 使用 DELETE 方法
 
   const { error } = await supabase.from('user_settings').upsert(upsertData)
 
