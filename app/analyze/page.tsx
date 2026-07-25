@@ -13,6 +13,7 @@ import AuthModal from '@/components/AuthModal'
 import NextStepBar from '@/components/NextStepBar'
 import UsageWarning from '@/components/UsageWarning'
 import UsageHint from '@/components/UsageHint'
+import ErrorBanner from '@/components/ErrorBanner'
 import type { Suggestion } from '@/types'
 
 export default function AnalyzePage() {
@@ -30,6 +31,7 @@ function AnalyzePageInner() {
   const [jdText, setJdText] = useState('')
   const [suggestions, setSuggestions] = useState<Suggestion[]>([])
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
   const [caseId, setCaseId] = useState<string | null>(null)
   const [score, setScore] = useState<number | null>(null)
   const [scoreSummary, setScoreSummary] = useState<string | null>(null)
@@ -92,6 +94,7 @@ function AnalyzePageInner() {
     setCaseId(null)
     setScore(null)
     setScoreSummary(null)
+    setError('')
 
     try {
       const res = await fetch('/api/analyze', {
@@ -106,7 +109,8 @@ function AnalyzePageInner() {
 
       if (!res.ok) {
         const err = await res.json().catch(() => ({}))
-        throw new Error(err.error ?? `请求失败 (${res.status})`)
+        setError(err.error ?? `请求失败 (${res.status})`)
+        return
       }
 
       const reader = res.body!.getReader()
@@ -135,6 +139,8 @@ function AnalyzePageInner() {
           } catch {}
         }
       }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'AI 分析失败，请重试')
     } finally {
       setLoading(false)
     }
@@ -172,6 +178,8 @@ function AnalyzePageInner() {
         <h2 className="text-2xl font-bold mb-1">简历优化</h2>
         <p className="text-zinc-500 dark:text-zinc-400 text-sm">不编造，不包装，只优化表达</p>
       </div>
+
+      {error && <ErrorBanner error={error} />}
 
       <div className="space-y-4 mb-6">
         <p className="text-xs text-zinc-400 dark:text-zinc-500 flex items-center gap-1">
