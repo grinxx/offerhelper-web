@@ -196,14 +196,14 @@ export default function SettingsPage() {
 
   if (loading) {
     return (
-      <main className="w-full px-4 sm:px-8 md:px-12 lg:px-20 xl:px-32 py-10 max-w-7xl mx-auto">
+      <main className="w-full px-4 sm:px-6 py-10 max-w-2xl mx-auto">
         <p className="text-zinc-400 animate-pulse">加载中...</p>
       </main>
     )
   }
 
   return (
-    <main className="w-full px-4 sm:px-8 md:px-12 lg:px-20 xl:px-32 py-10 max-w-7xl mx-auto">
+    <main className="w-full px-4 sm:px-6 py-10 max-w-2xl mx-auto">
       <header className="flex items-center justify-between mb-8">
         <Logo />
         <Link href="/" className="text-sm text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors">
@@ -213,7 +213,7 @@ export default function SettingsPage() {
 
       <h2 className="text-xl font-bold mb-6">AI 设置</h2>
 
-      <div className="max-w-xl space-y-6">
+      <div className="space-y-6">
         {/* 平台选择 */}
         <div>
           <label className="block text-sm font-medium mb-2">AI 平台</label>
