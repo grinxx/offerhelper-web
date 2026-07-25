@@ -64,9 +64,9 @@ export async function DELETE(request: NextRequest) {
   const { error, count } = await supabase.from('user_settings')
     .update({ ai_api_key: '', updated_at: new Date().toISOString() })
     .eq('user_id', user.id)
-    .select('id', { count: 'exact', head: true })
+    .select('id')
 
   if (error) return Response.json({ error: error.message }, { status: 500 })
-  // count === 0 表示用户本无 settings 记录，清除等于无操作，仍返回成功
-  return Response.json({ ok: true, cleared: (count ?? 0) > 0 })
+  // data 为空数组表示用户本无 settings 记录，清除等于无操作，仍返回成功
+  return Response.json({ ok: true, cleared: Array.isArray(count) ? count.length > 0 : (count ?? 0) > 0 })
 }
