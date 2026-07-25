@@ -7,28 +7,6 @@ import { createClient } from '@/lib/supabase/client'
 import AuthModal from '@/components/AuthModal'
 import ThemeToggle from '@/components/ThemeToggle'
 
-function ShareButton() {
-  function handleShare() {
-    const text = '推荐一个求职神器 OfferHelper，帮我把真实经历整理成简历，还能做面试训练和岗位匹配，应届生必备！'
-    const url = 'https://offerhelper.cloud'
-    if (navigator.share) {
-      navigator.share({ title: 'OfferHelper', text, url }).catch(() => {})
-    } else {
-      navigator.clipboard.writeText(`${text}\n${url}`)
-        .then(() => alert('已复制推荐文案，快去分享给同学吧！'))
-        .catch(() => {})
-    }
-  }
-  return (
-    <button
-      onClick={handleShare}
-      className="flex items-center justify-between text-sm text-zinc-400 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors w-full"
-    >
-      <span>推荐给同学</span>
-      <span className="text-xs">分享链接 →</span>
-    </button>
-  )
-}
 
 const FEATURES = [
   {
@@ -229,7 +207,7 @@ export default function HomePage() {
       </div>
 
       {user && (
-        <div className="border-t border-zinc-200 dark:border-zinc-800 pt-6 space-y-3">
+        <div className="border-t border-zinc-200 dark:border-zinc-800 pt-6">
           <Link
             href="/dashboard"
             className="flex items-center justify-between text-sm text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
@@ -237,7 +215,6 @@ export default function HomePage() {
             <span>最近记录</span>
             <span>→</span>
           </Link>
-          <ShareButton />
         </div>
       )}
 
