@@ -93,3 +93,12 @@ export interface MatchSession {
   status: 'active' | 'done'
   created_at: string
 }
+
+export interface UserExperience {
+  id: string
+  user_id: string
+  source: 'strengths' | 'interview' | 'manual'
+  source_id: string | null
+  content: string
+  created_at: string
+}
