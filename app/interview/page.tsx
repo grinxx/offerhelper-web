@@ -15,6 +15,7 @@ import UsageWarning from '@/components/UsageWarning'
 import UsageHint from '@/components/UsageHint'
 import ErrorBanner from '@/components/ErrorBanner'
 import SharePromptModal from '@/components/SharePromptModal'
+import OcrImageButton from '@/components/OcrImageButton'
 import { useSharePrompt } from '@/hooks/useSharePrompt'
 import type { InterviewScores } from '@/types'
 
@@ -355,9 +356,12 @@ function InterviewPageInner() {
             </div>
           )}
           <div>
-            <label className="block text-sm font-medium mb-1">
-              目标 JD <span className="text-red-500">*</span>
-            </label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-sm font-medium">
+                目标 JD <span className="text-red-500">*</span>
+              </label>
+              <OcrImageButton onText={text => setJdText(prev => prev ? prev + '\n' + text : text)} />
+            </div>
             <textarea
               className="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 rounded p-3 text-sm h-40 resize-none placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-400 dark:focus:ring-zinc-600"
               placeholder="粘贴目标岗位的 JD，AI 将根据它生成针对性面试题..."

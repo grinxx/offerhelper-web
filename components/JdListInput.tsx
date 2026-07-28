@@ -1,4 +1,5 @@
 'use client'
+import { useRef, useState } from 'react'
 import type { JdItem } from '@/types'
 
 interface Props {
@@ -9,6 +10,9 @@ interface Props {
 const MAX_JDS = 5
 
 export default function JdListInput({ value, onChange }: Props) {
+  const [ocrLoadingIdx, setOcrLoadingIdx] = useState<number | null>(null)
+  const imageInputRefs = useRef<(HTMLInputElement | null)[]>([])
+
   function update(index: number, field: keyof JdItem, text: string) {
     const next = value.map((item, i) =>
       i === index ? { ...item, [field]: text } : item
@@ -25,6 +29,26 @@ export default function JdListInput({ value, onChange }: Props) {
     onChange(value.filter((_, i) => i !== index))
   }
 
+  async function handleImageOCR(file: File, index: number) {
+    setOcrLoadingIdx(index)
+    try {
+      const formData = new FormData()
+      formData.append('image', file)
+      const res = await fetch('/api/ocr', { method: 'POST', body: formData })
+      const data = await res.json()
+      if (!res.ok || data.error) {
+        alert(data.error ?? '识别失败，请重试')
+        return
+      }
+      const current = value[index]?.content ?? ''
+      update(index, 'content', current ? current + '\n' + data.text : data.text)
+    } finally {
+      setOcrLoadingIdx(null)
+      const ref = imageInputRefs.current[index]
+      if (ref) ref.value = ''
+    }
+  }
+
   return (
     <div className="space-y-3">
       {value.map((item, i) => (
@@ -36,6 +60,24 @@ export default function JdListInput({ value, onChange }: Props) {
               value={item.title ?? ''}
               onChange={e => update(i, 'title', e.target.value)}
               className="flex-1 border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 rounded px-3 py-1.5 text-sm placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-400 dark:focus:ring-zinc-600"
+            />
+            <button
+              type="button"
+              onClick={() => imageInputRefs.current[i]?.click()}
+              disabled={ocrLoadingIdx === i}
+              className="flex items-center gap-1 text-xs text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors disabled:opacity-40 shrink-0"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
+              </svg>
+              {ocrLoadingIdx === i ? '识别中...' : '图片识别'}
+            </button>
+            <input
+              ref={el => { imageInputRefs.current[i] = el }}
+              type="file"
+              accept="image/jpeg,image/jpg,image/png,image/bmp,image/webp"
+              className="hidden"
+              onChange={e => e.target.files?.[0] && handleImageOCR(e.target.files[0], i)}
             />
             {value.length > 1 && (
               <button
