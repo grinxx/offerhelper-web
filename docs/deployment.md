@@ -166,11 +166,14 @@ Supabase 是云端服务，换机**不需要迁移数据库**，数据都在云�
 如需重建 Supabase 项目（如更换 Supabase 账号），在新项目的 SQL Editor 中按顺序执行：
 
 ```
-supabase/001_create_cases.sql
-supabase/002_fix_claim_rls.sql
-supabase/003_interview_tables.sql
-supabase/004_strength_sessions.sql
-supabase/005_match_sessions.sql
+# 注意：001-005 在 supabase/migrations/ 子目录
+supabase/migrations/001_create_cases.sql
+supabase/migrations/002_fix_claim_rls.sql
+supabase/migrations/003_interview_tables.sql
+supabase/migrations/004_strength_sessions.sql
+supabase/migrations/005_match_sessions.sql
+
+# 006 以后在 supabase/ 根目录
 supabase/006_user_settings.sql
 supabase/007_usage_logs.sql
 supabase/008_suggestion_feedback.sql
