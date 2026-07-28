@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Logo from '@/components/Logo'
+import BackButton from '@/components/BackButton'
 import type { User } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/client'
 import ChatBubble from '@/components/ChatBubble'
@@ -244,7 +245,10 @@ function StrengthsPageInner() {
   return (
     <main className="w-full px-4 sm:px-8 md:px-12 lg:px-20 xl:px-32 py-10 max-w-7xl mx-auto">
       <header className="flex items-center justify-between mb-8">
-        <Logo />
+        <div className="flex items-center gap-4">
+          <Logo />
+          <BackButton href="/" label="返回首页" />
+        </div>
         <div className="flex items-center gap-3 text-sm text-zinc-500 dark:text-zinc-400">
           <Link href="/" className="hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors">首页</Link>
           <span>|</span>

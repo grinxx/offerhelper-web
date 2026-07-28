@@ -15,6 +15,11 @@ const FEATURES = [
     detail: '每条建议都有真实经历支撑，缺证据的内容单独标注',
     href: '/analyze',
     requireLogin: false,
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
+      </svg>
+    ),
   },
   {
     title: '岗位匹配',
@@ -22,6 +27,11 @@ const FEATURES = [
     detail: '评分 + 优劣势分析 + 投递建议，最多 5 个岗位',
     href: '/match',
     requireLogin: false,
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/>
+      </svg>
+    ),
   },
   {
     title: '面试训练',
@@ -29,6 +39,11 @@ const FEATURES = [
     detail: '结构、证据、岗位关联三维实时评分，附参考答案',
     href: '/interview',
     requireLogin: true,
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+      </svg>
+    ),
   },
   {
     title: '优势挖掘',
@@ -36,6 +51,11 @@ const FEATURES = [
     detail: '从真实经历中提炼能力标签，可结合目标 JD 定向分析',
     href: '/strengths',
     requireLogin: false,
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+      </svg>
+    ),
   },
 ]
 
@@ -197,6 +217,9 @@ export default function HomePage() {
             onClick={() => handleFeatureClick(f.href, f.requireLogin)}
             className="text-left border border-zinc-200 dark:border-zinc-800 rounded-xl p-5 hover:bg-zinc-50 dark:hover:bg-zinc-900 hover:border-zinc-400 dark:hover:border-zinc-600 transition-all group"
           >
+            <div className="text-zinc-400 dark:text-zinc-500 group-hover:text-zinc-600 dark:group-hover:text-zinc-300 mb-3 transition-colors">
+              {f.icon}
+            </div>
             <p className="text-base font-semibold text-zinc-900 dark:text-zinc-100 mb-1 group-hover:text-zinc-700 dark:group-hover:text-zinc-200">
               {f.title}
             </p>

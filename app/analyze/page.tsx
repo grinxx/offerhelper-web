@@ -3,6 +3,7 @@ import { useState, useCallback, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Logo from '@/components/Logo'
+import BackButton from '@/components/BackButton'
 import type { User } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/client'
 import ResumeUploader from '@/components/ResumeUploader'
@@ -158,7 +159,10 @@ function AnalyzePageInner() {
   return (
     <main className="w-full px-4 sm:px-8 md:px-12 lg:px-20 xl:px-32 py-10 max-w-7xl mx-auto">
       <header className="flex items-start justify-between mb-8 gap-4">
-        <Logo />
+        <div className="flex items-center gap-4">
+          <Logo />
+          <BackButton href="/" label="返回首页" />
+        </div>
         {user ? (
           <div className="flex flex-wrap items-center justify-end gap-x-3 gap-y-1 text-xs sm:text-sm text-zinc-500 dark:text-zinc-400">
             <Link href="/" className="hover:text-zinc-900 dark:hover:text-zinc-100">首页</Link>
