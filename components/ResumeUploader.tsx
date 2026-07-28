@@ -19,7 +19,9 @@ export default function ResumeUploader({ onTextReady }: Props) {
   const [pasteText, setPasteText] = useState('')
   const [cachedName, setCachedName] = useState<string | null>(null)
   const [cachedText, setCachedText] = useState<string | null>(null)
+  const [ocrLoading, setOcrLoading] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
+  const imageInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     const name = localStorage.getItem(STORAGE_NAME_KEY)
@@ -46,6 +48,29 @@ export default function ResumeUploader({ onTextReady }: Props) {
     setParsedText('')
     setFileName('')
     onTextReady('')
+  }
+
+  async function handleImageOCR(file: File) {
+    setOcrLoading(true)
+    setParseStep('正在识别图片文字...')
+    try {
+      const formData = new FormData()
+      formData.append('image', file)
+      const res = await fetch('/api/ocr', { method: 'POST', body: formData })
+      const data = await res.json()
+      if (!res.ok || data.error) {
+        alert(data.error ?? '识别失败，请重试')
+        return
+      }
+      const name = `图片简历_${file.name}`
+      setParsedText(data.text)
+      setFileName(name)
+      saveCache(data.text, name)
+      onTextReady(data.text)
+    } finally {
+      setOcrLoading(false)
+      setParseStep('')
+    }
   }
 
   async function handleFile(file: File) {
@@ -201,6 +226,26 @@ export default function ResumeUploader({ onTextReady }: Props) {
           accept=".pdf,.docx"
           className="hidden"
           onChange={e => e.target.files?.[0] && handleFile(e.target.files[0])}
+        />
+      </div>
+
+      <div className="flex gap-2 mt-2">
+        <button
+          onClick={() => imageInputRef.current?.click()}
+          disabled={ocrLoading}
+          className="flex-1 flex items-center justify-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300 border border-zinc-200 dark:border-zinc-700 rounded py-1.5 hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors disabled:opacity-40"
+        >
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
+          </svg>
+          {ocrLoading ? parseStep || '识别中...' : '上传图片识别文字'}
+        </button>
+        <input
+          ref={imageInputRef}
+          type="file"
+          accept="image/jpeg,image/jpg,image/png,image/bmp,image/webp"
+          className="hidden"
+          onChange={e => e.target.files?.[0] && handleImageOCR(e.target.files[0])}
         />
       </div>
 
