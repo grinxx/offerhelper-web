@@ -114,6 +114,8 @@ npm run dev
 | `ENCRYPTION_KEY` | API Key 加密密钥（**必须用旧值**）| 旧机器 `.env.local` |
 | `SKIP_USAGE_LIMIT` | 本地跳过使用限额 | 固定值：`1` |
 | `RESEND_API_KEY` | Resend 邮件服务 Key | resend.com → API Keys |
+| `BAIDU_OCR_API_KEY` | 百度 OCR API Key | ai.baidu.com → 文字识别应用 |
+| `BAIDU_OCR_SECRET_KEY` | 百度 OCR Secret Key | 同上 |
 
 > ⚠️ **重要**：
 > - `.env.local` 已在 `.gitignore` 中，**不会被提交到 Git**
@@ -131,6 +133,8 @@ npm run dev
 | `ANTHROPIC_BASE_URL` | `https://api.siliconflow.cn/v1` |
 | `ENCRYPTION_KEY` | 与本地相同的加密密钥 |
 | `RESEND_API_KEY` | 同本地 |
+| `BAIDU_OCR_API_KEY` | 百度 OCR API Key（同本地）|
+| `BAIDU_OCR_SECRET_KEY` | 百度 OCR Secret Key（同本地）|
 
 ---
 
