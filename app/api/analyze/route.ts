@@ -35,6 +35,66 @@ export async function POST(request: Request) {
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
 
+  // 查询用户经历库并保存简历版本（仅登录用户）
+  let knowledgeContext: string | undefined
+  if (user) {
+    const [expRes, latestVersionRes] = await Promise.all([
+      supabase
+        .from('user_experiences')
+        .select('source, content')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(20),
+      supabase
+        .from('resume_versions')
+        .select('resume_text')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single(),
+    ])
+
+    if (expRes.data && expRes.data.length > 0) {
+      const SOURCE_LABEL: Record<string, string> = { strengths: '优势挖掘', interview: '面试训练', manual: '手动添加' }
+      const lines = expRes.data.map((e: { source: string; content: string }) =>
+        `[${SOURCE_LABEL[e.source] ?? e.source}] ${e.content}`
+      )
+      knowledgeContext = lines.join('\n').slice(0, 1000)
+    }
+
+    // 保存简历版本（去重）
+    const latestText = latestVersionRes.data?.resume_text
+    if (latestText !== resume_text) {
+      const { count: versionCount } = await supabase
+        .from('resume_versions')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+
+      if ((versionCount ?? 0) >= 20) {
+        const { data: oldest } = await supabase
+          .from('resume_versions')
+          .select('id')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: true })
+          .limit(1)
+        if (oldest?.[0]) {
+          await supabase.from('resume_versions').delete().eq('id', oldest[0].id)
+        }
+      }
+
+      const { count: newCount } = await supabase
+        .from('resume_versions')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+
+      await supabase.from('resume_versions').insert({
+        user_id: user.id,
+        resume_text,
+        label: `版本 ${(newCount ?? 0) + 1}`,
+      })
+    }
+  }
+
   const insertData: Record<string, unknown> = { resume_text, jd_text, status: 'pending' }
   if (user) insertData.user_id = user.id
 
@@ -58,7 +118,7 @@ export async function POST(request: Request) {
         for await (const chunk of chat.stream(
           [
             { role: 'system', content: SYSTEM_PROMPT },
-            { role: 'user', content: buildUserPrompt(resume_text, jd_text, strengths_context) },
+            { role: 'user', content: buildUserPrompt(resume_text, jd_text, strengths_context, knowledgeContext) },
           ],
           config.modelSmart,
           4096
