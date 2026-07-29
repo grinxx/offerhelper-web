@@ -60,6 +60,32 @@ export async function POST(request: Request) {
         })
         if (insertError) console.error('[interview/answer] DB insert failed:', insertError.message)
 
+        // 将用户回答存入经历库
+        if (!insertError) {
+          const expCount = await supabase
+            .from('user_experiences')
+            .select('id', { count: 'exact', head: true })
+            .eq('user_id', user.id)
+          const overflow = ((expCount.count ?? 0) + 1) - 100
+          if (overflow > 0) {
+            const { data: oldest } = await supabase
+              .from('user_experiences')
+              .select('id')
+              .eq('user_id', user.id)
+              .order('created_at', { ascending: true })
+              .limit(overflow)
+            if (oldest && oldest.length > 0) {
+              await supabase.from('user_experiences').delete().in('id', oldest.map((r: { id: string }) => r.id))
+            }
+          }
+          await supabase.from('user_experiences').insert({
+            user_id: user.id,
+            source: 'interview',
+            source_id: session_id,
+            content: user_answer.slice(0, 500),
+          })
+        }
+
         controller.enqueue(encoder.encode(JSON.stringify(result) + '\n'))
       } catch {
         controller.enqueue(encoder.encode(JSON.stringify({ error: 'AI 评估失败，请重试' }) + '\n'))

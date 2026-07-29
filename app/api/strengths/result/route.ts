@@ -45,6 +45,13 @@ export async function POST(request: Request) {
     const supabase = createServiceClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
     await supabase.from('strength_sessions').update({ result, messages, status: 'done' })
       .eq('id', session_id).eq('user_id', user.id)
+
+    // 异步提取经历，不阻塞响应
+    fetch(`${process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'}/api/knowledge/extract`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: user.id, session_id, messages }),
+    }).catch(() => {})
   }
 
   return new Response(JSON.stringify(result), { headers: { 'Content-Type': 'application/json' } })
