@@ -44,11 +44,19 @@ function AnalyzePageInner() {
   const [modalTab, setModalTab] = useState<'login' | 'signup'>('login')
   const [strengthsContext, setStrengthsContext] = useState<string | null>(null)
   const [useStrengths, setUseStrengths] = useState(false)
+  const [experienceCount, setExperienceCount] = useState(0)
   const { visible: shareVisible, trigger: triggerShare, close: closeShare } = useSharePrompt('analyze')
 
   useEffect(() => {
     const supabase = createClient()
-    supabase.auth.getUser().then(({ data: { user } }) => setUser(user))
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
+      setUser(user)
+      if (user) {
+        const res = await fetch('/api/knowledge/experiences')
+        const data = await res.json()
+        if (data.experiences) setExperienceCount(data.experiences.length)
+      }
+    })
 
     const cached = localStorage.getItem('offerhelper_strengths_result')
     if (cached) {
@@ -214,6 +222,14 @@ function AnalyzePageInner() {
         )}
         <ResumeUploader onTextReady={setResumeText} />
         <JdInput value={jdText} onChange={setJdText} onSubmit={resumeText ? handleAnalyze : undefined} />
+        {experienceCount > 0 && (
+          <p className="text-xs text-zinc-400 dark:text-zinc-500 text-center">
+            已找到 {experienceCount} 条经历记录，分析时将自动参考 ·{' '}
+            <a href="/dashboard?type=experiences" className="underline hover:text-zinc-600 dark:hover:text-zinc-300">
+              管理经历库
+            </a>
+          </p>
+        )}
         <AnalyzeButton
           loading={loading}
           disabled={!resumeText || !jdText}
