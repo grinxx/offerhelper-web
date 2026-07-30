@@ -4,8 +4,9 @@ import Link from 'next/link'
 import Logo from '@/components/Logo'
 import type { JdItem } from '@/types'
 import DeleteRecordButton from './DeleteRecordButton'
+import ExperienceList from '@/components/ExperienceList'
 
-type RecordType = 'analysis' | 'interview' | 'strengths' | 'match'
+type RecordType = 'analysis' | 'interview' | 'strengths' | 'match' | 'experiences'
 
 interface TimelineRecord {
   id: string
@@ -32,6 +33,10 @@ const TYPE_CONFIG: Record<RecordType, { label: string; className: string }> = {
     label: '岗位匹配',
     className: 'bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-400',
   },
+  experiences: {
+    label: '经历库',
+    className: 'bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-400',
+  },
 }
 
 const TYPE_LABELS: Record<RecordType, string> = {
@@ -39,6 +44,7 @@ const TYPE_LABELS: Record<RecordType, string> = {
   interview: '面试训练',
   strengths: '优势挖掘',
   match: '岗位匹配',
+  experiences: '经历库',
 }
 
 const TYPE_HREF: Record<RecordType, string> = {
@@ -46,6 +52,7 @@ const TYPE_HREF: Record<RecordType, string> = {
   interview: '/interview',
   strengths: '/strengths',
   match: '/match',
+  experiences: '/dashboard?type=experiences',
 }
 
 const TYPE_ACTION: Record<RecordType, string> = {
@@ -53,9 +60,10 @@ const TYPE_ACTION: Record<RecordType, string> = {
   interview: '开始第一次面试训练',
   strengths: '开始第一次优势挖掘',
   match: '开始第一次岗位匹配',
+  experiences: '去添加经历',
 }
 
-const VALID_TYPES = new Set<string>(['analysis', 'interview', 'strengths', 'match'])
+const VALID_TYPES = new Set<string>(['analysis', 'interview', 'strengths', 'match', 'experiences'])
 
 const PAGE_SIZE = 20
 
@@ -197,6 +205,8 @@ export default async function DashboardPage({ searchParams }: Props) {
               <span>|</span>
             </>
           )}
+          <Link href="/dashboard?type=experiences" className="hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors">经历库</Link>
+          <span>|</span>
           <Link href="/applications" className="hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors">投递跟踪</Link>
           <span>|</span>
           <span className="text-zinc-400 dark:text-zinc-500">{user.email}</span>
@@ -275,7 +285,9 @@ export default async function DashboardPage({ searchParams }: Props) {
         </div>
       )}
 
-      {records.length === 0 && page === 1 ? (
+      {activeType === 'experiences' ? (
+        <ExperienceList />
+      ) : records.length === 0 && page === 1 ? (
         <p className="text-zinc-500 dark:text-zinc-400 text-sm">
           暂无记录，<Link href={activeType ? TYPE_HREF[activeType] : '/'} className="underline">
             {activeType ? TYPE_ACTION[activeType] : '去选择一个功能开始'}
@@ -305,7 +317,7 @@ export default async function DashboardPage({ searchParams }: Props) {
                         <p className="text-xs text-zinc-400 dark:text-zinc-500">
                           {new Date(r.created_at).toLocaleString('zh-CN')}
                         </p>
-                        <DeleteRecordButton id={r.id} type={r.type} />
+                        <DeleteRecordButton id={r.id} type={r.type as 'analysis' | 'interview' | 'strengths' | 'match'} />
                       </div>
                     </div>
                   </Link>
