@@ -116,6 +116,7 @@ npm run dev
 | `RESEND_API_KEY` | Resend 邮件服务 Key | resend.com → API Keys |
 | `BAIDU_OCR_API_KEY` | 百度 OCR API Key | ai.baidu.com → 文字识别应用 |
 | `BAIDU_OCR_SECRET_KEY` | 百度 OCR Secret Key | 同上 |
+| `NEXT_PUBLIC_SITE_URL` | 本地开发地址 | 固定值：`http://localhost:3000` |
 
 > ⚠️ **重要**：
 > - `.env.local` 已在 `.gitignore` 中，**不会被提交到 Git**
@@ -135,6 +136,7 @@ npm run dev
 | `RESEND_API_KEY` | 同本地 |
 | `BAIDU_OCR_API_KEY` | 百度 OCR API Key（同本地）|
 | `BAIDU_OCR_SECRET_KEY` | 百度 OCR Secret Key（同本地）|
+| `NEXT_PUBLIC_SITE_URL` | `https://offerhelper.cloud` |
 
 ---
 
@@ -183,6 +185,7 @@ supabase/011_check_usage_rpc.sql     ← 创建使用量统计 RPC 函数
 supabase/012_case_version_label.sql
 supabase/013_cases_delete_policy.sql
 supabase/014_usage_logs_cleanup.sql  ← 可选，配置 pg_cron 定期清理
+supabase/015_knowledge_base.sql      ← 经历知识库：user_experiences + resume_versions
 ```
 
 同时在 Supabase → Authentication → URL Configuration 中设置：
