@@ -1,4 +1,5 @@
 import { createClient as createServiceClient } from '@supabase/supabase-js'
+import { createClient } from '@/lib/supabase/server'
 import { getAIClientForRequest } from '@/lib/ai-client'
 import type { ChatMessage } from '@/types'
 
@@ -14,12 +15,18 @@ function buildExtractPrompt(messages: ChatMessage[]): string {
 }
 
 export async function POST(request: Request) {
+  const sessionSupabase = await createClient()
+  const { data: { user } } = await sessionSupabase.auth.getUser()
+  if (!user) return Response.json({ error: '未登录' }, { status: 401 })
+
   let body: { user_id?: string; session_id?: string; messages?: ChatMessage[] } = {}
   try { body = await request.json() } catch {
     return Response.json({ error: 'invalid json' }, { status: 400 })
   }
 
   const { user_id, session_id, messages } = body
+
+  if (user_id !== user.id) return Response.json({ error: '无权操作' }, { status: 403 })
   if (!user_id || !session_id || !Array.isArray(messages) || messages.length === 0) {
     return Response.json({ error: '缺少必填字段' }, { status: 400 })
   }
@@ -89,7 +96,11 @@ export async function POST(request: Request) {
     content,
   }))
 
-  await supabase.from('user_experiences').insert(rows)
+  const { error: insertError } = await supabase.from('user_experiences').insert(rows)
+  if (insertError) {
+    console.error('[knowledge/extract] insert failed:', insertError.message)
+    return Response.json({ error: '保存失败' }, { status: 500 })
+  }
 
   return Response.json({ ok: true, count: extracted.length })
 }

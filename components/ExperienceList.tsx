@@ -58,7 +58,11 @@ export default function ExperienceList() {
   async function handleDelete(id: string) {
     setDeletingId(id)
     try {
-      await fetch(`/api/knowledge/experiences/${id}`, { method: 'DELETE' })
+      const res = await fetch(`/api/knowledge/experiences/${id}`, { method: 'DELETE' })
+      if (!res.ok) {
+        alert('删除失败，请重试')
+        return
+      }
       setExperiences(prev => prev.filter(e => e.id !== id))
     } finally {
       setDeletingId(null)

@@ -38,7 +38,7 @@ export async function POST(request: Request) {
   // 查询用户经历库并保存简历版本（仅登录用户）
   let knowledgeContext: string | undefined
   if (user) {
-    const [expRes, latestVersionRes] = await Promise.all([
+    const [expRes, versionsRes] = await Promise.all([
       supabase
         .from('user_experiences')
         .select('source, content')
@@ -47,11 +47,10 @@ export async function POST(request: Request) {
         .limit(20),
       supabase
         .from('resume_versions')
-        .select('resume_text')
+        .select('resume_text, label')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
-        .limit(1)
-        .single(),
+        .limit(3),
     ])
 
     if (expRes.data && expRes.data.length > 0) {
@@ -62,8 +61,16 @@ export async function POST(request: Request) {
       knowledgeContext = lines.join('\n').slice(0, 1000)
     }
 
+    if (versionsRes.data && versionsRes.data.length > 0) {
+      const labels = versionsRes.data.map((v: { label: string }) => v.label).filter(Boolean).join('、')
+      if (labels) {
+        const versionPart = `\n历史简历版本：${labels}`
+        knowledgeContext = knowledgeContext ? (knowledgeContext + versionPart).slice(0, 1000) : versionPart.slice(0, 1000)
+      }
+    }
+
     // 保存简历版本（去重）
-    const latestText = latestVersionRes.data?.resume_text
+    const latestText = versionsRes.data?.[0]?.resume_text
     if (latestText !== resume_text) {
       const { count: versionCount } = await supabase
         .from('resume_versions')

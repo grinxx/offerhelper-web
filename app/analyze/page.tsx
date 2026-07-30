@@ -52,9 +52,11 @@ function AnalyzePageInner() {
     supabase.auth.getUser().then(async ({ data: { user } }) => {
       setUser(user)
       if (user) {
-        const res = await fetch('/api/knowledge/experiences')
-        const data = await res.json()
-        if (data.experiences) setExperienceCount(data.experiences.length)
+        try {
+          const res = await fetch('/api/knowledge/experiences')
+          const data = await res.json()
+          if (data.experiences) setExperienceCount(data.experiences.length)
+        } catch {}
       }
     })
 
