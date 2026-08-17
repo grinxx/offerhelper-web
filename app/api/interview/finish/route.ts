@@ -1,15 +1,19 @@
 import { createClient as createServiceClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
+import { validateBearerToken } from '@/lib/auth/token'
 import type { InterviewScores } from '@/types'
 
 export const runtime = 'nodejs'
 
 export async function POST(request: Request) {
-  const sessionSupabase = await createClient()
-  const { data: { user } } = await sessionSupabase.auth.getUser()
+  const tokenUser = await validateBearerToken(request)
+  let user = tokenUser
   if (!user) {
-    return new Response(JSON.stringify({ error: '未登录' }), { status: 401 })
+    const sessionSupabase = await createClient()
+    const { data: { user: sessionUser } } = await sessionSupabase.auth.getUser()
+    user = sessionUser ? { id: sessionUser.id } : null
   }
+  if (!user) return new Response(JSON.stringify({ error: '未登录' }), { status: 401 })
 
   let body: { session_id?: string } = {}
   try {

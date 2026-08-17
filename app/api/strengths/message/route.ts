@@ -1,5 +1,6 @@
 import { createClient as createServiceClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
+import { validateBearerToken } from '@/lib/auth/token'
 import { getAIClientForRequest } from '@/lib/ai-client'
 import { checkAndRecordUsage } from '@/lib/usage'
 import { STRENGTHS_CHAT_SYSTEM, buildStrengthsChatPrompt } from '@/lib/prompts'
@@ -25,8 +26,13 @@ export async function POST(request: Request) {
   }))
   const safeJdText = typeof jd_text === 'string' ? jd_text.slice(0, 4000) : null
 
-  const sessionSupabase = await createClient()
-  const { data: { user } } = await sessionSupabase.auth.getUser()
+  const tokenUser = await validateBearerToken(request)
+  let user = tokenUser
+  if (!user) {
+    const sessionSupabase = await createClient()
+    const { data: { user: sessionUser } } = await sessionSupabase.auth.getUser()
+    user = sessionUser ? { id: sessionUser.id } : null
+  }
 
   const usage = await checkAndRecordUsage('strengths_message')
   if (!usage.allowed) {

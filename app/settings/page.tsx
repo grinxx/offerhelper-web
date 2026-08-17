@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Logo from '@/components/Logo'
@@ -82,6 +82,178 @@ function ChangePasswordSection() {
   )
 }
 import { PROVIDERS } from '@/lib/ai-providers'
+
+interface ApiToken {
+  id: string
+  name: string
+  prefix: string
+  created_at: string
+  last_used_at: string | null
+}
+
+function ApiTokensSection() {
+  const [tokens, setTokens] = useState<ApiToken[]>([])
+  const [loading, setLoading] = useState(true)
+  const [creating, setCreating] = useState(false)
+  const [newTokenName, setNewTokenName] = useState('')
+  const [revealed, setRevealed] = useState<string | null>(null) // the raw token shown once
+  const [copied, setCopied] = useState(false)
+  const [open, setOpen] = useState(false)
+
+  const fetchTokens = useCallback(async () => {
+    const res = await fetch('/api/settings/tokens')
+    if (res.ok) {
+      const data = await res.json()
+      setTokens(data.tokens ?? [])
+    }
+    setLoading(false)
+  }, [])
+
+  useEffect(() => { if (open) fetchTokens() }, [open, fetchTokens])
+
+  async function handleCreate() {
+    setCreating(true)
+    const res = await fetch('/api/settings/tokens', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: newTokenName.trim() || 'Default Token' }),
+    })
+    setCreating(false)
+    if (!res.ok) return
+    const data = await res.json()
+    setRevealed(data.token)
+    setNewTokenName('')
+    fetchTokens()
+  }
+
+  async function handleRevoke(id: string) {
+    if (!confirm('确认撤销这个 Token？撤销后无法恢复。')) return
+    await fetch(`/api/settings/tokens?id=${id}`, { method: 'DELETE' })
+    setTokens(prev => prev.filter(t => t.id !== id))
+  }
+
+  async function handleCopy(text: string) {
+    await navigator.clipboard.writeText(text)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  return (
+    <div>
+      <button
+        onClick={() => setOpen(v => !v)}
+        className="flex items-center justify-between w-full text-sm text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
+      >
+        <span className="font-medium">开发者 Token（MCP / API 调用）</span>
+        <span className="text-xs text-zinc-400">{open ? '收起' : '展开'}</span>
+      </button>
+
+      {open && (
+        <div className="mt-4 space-y-4">
+          <p className="text-xs text-zinc-400 dark:text-zinc-500">
+            用于 MCP Server 或直接调用 OfferHelper API。Token 只在生成时显示一次，请妥善保管。
+          </p>
+
+          {/* 生成新 Token */}
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={newTokenName}
+              onChange={e => setNewTokenName(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') handleCreate() }}
+              placeholder="Token 备注名（可选）"
+              className="flex-1 border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 rounded p-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-400"
+            />
+            <button
+              onClick={handleCreate}
+              disabled={creating}
+              className="bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 hover:bg-zinc-700 dark:hover:bg-zinc-300 px-4 py-2 rounded text-sm font-medium disabled:opacity-40 transition-colors whitespace-nowrap"
+            >
+              {creating ? '生成中...' : '生成 Token'}
+            </button>
+          </div>
+
+          {/* 一次性展示新 Token */}
+          {revealed && (
+            <div className="bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg p-3 space-y-2">
+              <p className="text-xs font-medium text-amber-600 dark:text-amber-400">
+                ⚠️ 请立即复制，此 Token 不会再次显示
+              </p>
+              <div className="flex items-center gap-2">
+                <code className="flex-1 text-xs font-mono break-all text-zinc-700 dark:text-zinc-300">
+                  {revealed}
+                </code>
+                <button
+                  onClick={() => handleCopy(revealed)}
+                  className="shrink-0 text-xs border border-zinc-300 dark:border-zinc-600 px-2 py-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                >
+                  {copied ? '✓ 已复制' : '复制'}
+                </button>
+              </div>
+              <button
+                onClick={() => setRevealed(null)}
+                className="text-xs text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"
+              >
+                我已保存，关闭
+              </button>
+            </div>
+          )}
+
+          {/* Token 列表 */}
+          {loading ? (
+            <p className="text-xs text-zinc-400 animate-pulse">加载中...</p>
+          ) : tokens.length === 0 ? (
+            <p className="text-xs text-zinc-400">暂无 Token</p>
+          ) : (
+            <div className="space-y-2">
+              {tokens.map(t => (
+                <div
+                  key={t.id}
+                  className="flex items-center justify-between border border-zinc-200 dark:border-zinc-700 rounded-lg px-3 py-2.5"
+                >
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium truncate">{t.name}</p>
+                    <p className="text-xs text-zinc-400 font-mono">{t.prefix}••••••••</p>
+                    <p className="text-xs text-zinc-400">
+                      创建于 {new Date(t.created_at).toLocaleDateString('zh-CN')}
+                      {t.last_used_at && (
+                        <> · 最近使用 {new Date(t.last_used_at).toLocaleDateString('zh-CN')}</>
+                      )}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => handleRevoke(t.id)}
+                    className="shrink-0 ml-3 text-xs text-red-400 hover:text-red-600 dark:hover:text-red-300 transition-colors"
+                  >
+                    撤销
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* 配置示例 */}
+          <details className="text-xs text-zinc-400 dark:text-zinc-500">
+            <summary className="cursor-pointer hover:text-zinc-600 dark:hover:text-zinc-300 select-none">
+              查看 Claude Desktop 配置示例
+            </summary>
+            <pre className="mt-2 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded p-3 overflow-x-auto text-zinc-600 dark:text-zinc-400 leading-relaxed">{`{
+  "mcpServers": {
+    "offerhelper": {
+      "command": "npx",
+      "args": ["@offerhelper/mcp"],
+      "env": {
+        "OFFERHELPER_TOKEN": "oh_你的token"
+      }
+    }
+  }
+}`}</pre>
+          </details>
+        </div>
+      )}
+    </div>
+  )
+}
 
 interface Settings {
   ai_provider: string
@@ -420,6 +592,10 @@ export default function SettingsPage() {
         <hr className="border-zinc-200 dark:border-zinc-800" />
 
         <ChangePasswordSection />
+
+        <hr className="border-zinc-200 dark:border-zinc-800" />
+
+        <ApiTokensSection />
       </div>
     </main>
   )

@@ -1,5 +1,6 @@
 import { createClient as createServiceClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
+import { validateBearerToken } from '@/lib/auth/token'
 import { getAIClientForRequest } from '@/lib/ai-client'
 import { checkAndRecordUsage } from '@/lib/usage'
 import { MATCH_EVAL_SYSTEM, buildMatchEvalPrompt, MATCH_SUMMARY_SYSTEM, buildMatchSummaryPrompt } from '@/lib/prompts'
@@ -41,8 +42,13 @@ export async function POST(request: Request) {
   }
 
   // 使用 firstUsage.userId 而非 lastUsage.userId，避免循环中用户退出登录导致配置切换
-  const sessionSupabase = await createClient()
-  const { data: { user } } = await sessionSupabase.auth.getUser()
+  const tokenUser = await validateBearerToken(request)
+  let user = tokenUser
+  if (!user) {
+    const sessionSupabase = await createClient()
+    const { data: { user: sessionUser } } = await sessionSupabase.auth.getUser()
+    user = sessionUser ? { id: sessionUser.id } : null
+  }
   const { chat, config } = await getAIClientForRequest(firstUsage.userId)
 
   const encoder = new TextEncoder()

@@ -1,5 +1,6 @@
 import { createClient as createServiceClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
+import { validateBearerToken } from '@/lib/auth/token'
 import { getAIClientForRequest } from '@/lib/ai-client'
 import { checkAndRecordUsage } from '@/lib/usage'
 import { INTERVIEW_QUESTION_SYSTEM, buildInterviewQuestionPrompt } from '@/lib/prompts'
@@ -7,8 +8,13 @@ import { INTERVIEW_QUESTION_SYSTEM, buildInterviewQuestionPrompt } from '@/lib/p
 export const runtime = 'nodejs'
 
 export async function POST(request: Request) {
-  const sessionSupabase = await createClient()
-  const { data: { user } } = await sessionSupabase.auth.getUser()
+  const tokenUser = await validateBearerToken(request)
+  let user = tokenUser
+  if (!user) {
+    const sessionSupabase = await createClient()
+    const { data: { user: sessionUser } } = await sessionSupabase.auth.getUser()
+    user = sessionUser ? { id: sessionUser.id } : null
+  }
   if (!user) return new Response(JSON.stringify({ error: '未登录' }), { status: 401 })
 
   let body: { jd_text?: string; case_id?: string | null; question_type?: string } = {}
