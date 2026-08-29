@@ -66,7 +66,8 @@ async function formatResumeWithAI(rawText: string, aiConfig?: AIConfig): Promise
       })
       return (msg.choices[0]?.message?.content ?? rawText).trim()
     }
-  } catch {
+  } catch (e) {
+    console.error('[parse-resume] formatResumeWithAI error:', e)
     return rawText
   }
 }
@@ -95,7 +96,9 @@ export async function parseResume(file: File, formatWithAI = false, aiConfig?: A
   }
 
   if (formatWithAI && text) {
+    console.log('[parse-resume] extracted text length:', text.length)
     return formatResumeWithAI(text, aiConfig)
   }
+  console.log('[parse-resume] no text extracted, length:', text.length)
   return text
 }
