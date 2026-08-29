@@ -13,8 +13,35 @@ const PROMPT = `将以下简历原始文本整理成结构清晰的 Markdown 格
 
 简历原文：`
 
+// 脱敏：替换手机号、邮箱为占位符，避免模型内容过滤截断输出
+function maskSensitive(text: string): { masked: string; map: Record<string, string> } {
+  const map: Record<string, string> = {}
+  let idx = 0
+  const masked = text
+    .replace(/1[3-9]\d{9}/g, (m) => {
+      const key = `__PHONE_${idx++}__`
+      map[key] = m
+      return key
+    })
+    .replace(/[\w.+-]+@[\w-]+\.[a-z]{2,}/gi, (m) => {
+      const key = `__EMAIL_${idx++}__`
+      map[key] = m
+      return key
+    })
+  return { masked, map }
+}
+
+function unmask(text: string, map: Record<string, string>): string {
+  let result = text
+  for (const [key, val] of Object.entries(map)) {
+    result = result.replaceAll(key, val)
+  }
+  return result
+}
+
 async function formatResumeWithAI(rawText: string, aiConfig?: AIConfig): Promise<string> {
-  const prompt = PROMPT + '\n' + rawText
+  const { masked, map } = maskSensitive(rawText)
+  const prompt = PROMPT + '\n' + masked
 
   try {
     if (aiConfig && !aiConfig.isAnthropic) {
@@ -25,14 +52,13 @@ async function formatResumeWithAI(rawText: string, aiConfig?: AIConfig): Promise
         max_tokens: 2048,
         messages: [{ role: 'user', content: prompt }],
       })
-      return (message.choices[0]?.message?.content ?? rawText).trim()
+      return unmask((message.choices[0]?.message?.content ?? rawText).trim(), map)
     }
 
     if (aiConfig?.isAnthropic) {
-      // 用户配置了 Anthropic Key，确保模型名是 Claude 格式
       const model = aiConfig.modelFast.startsWith('claude')
         ? aiConfig.modelFast
-        : 'claude-haiku-4-5-20251001'  // 非 Claude 模型名时安全兜底
+        : 'claude-haiku-4-5-20251001'
       const client = new Anthropic({ baseURL: aiConfig.baseURL, apiKey: aiConfig.apiKey, timeout: 30000 })
       const msg = await client.messages.create({
         model,
@@ -40,7 +66,7 @@ async function formatResumeWithAI(rawText: string, aiConfig?: AIConfig): Promise
         messages: [{ role: 'user', content: prompt }],
       })
       const text = msg.content[0]?.type === 'text' ? msg.content[0].text : rawText
-      return text.trim()
+      return unmask(text.trim(), map)
     }
 
     // 默认：本地用 Anthropic，线上用硅基流动
@@ -56,7 +82,7 @@ async function formatResumeWithAI(rawText: string, aiConfig?: AIConfig): Promise
         messages: [{ role: 'user', content: prompt }],
       })
       const text = msg.content[0]?.type === 'text' ? msg.content[0].text : rawText
-      return text.trim()
+      return unmask(text.trim(), map)
     } else {
       const client = new OpenAI({ baseURL: 'https://api.siliconflow.cn/v1', apiKey, timeout: 60000 })
       const msg = await client.chat.completions.create({
@@ -64,7 +90,7 @@ async function formatResumeWithAI(rawText: string, aiConfig?: AIConfig): Promise
         max_tokens: 4096,
         messages: [{ role: 'user', content: prompt }],
       })
-      return (msg.choices[0]?.message?.content ?? rawText).trim()
+      return unmask((msg.choices[0]?.message?.content ?? rawText).trim(), map)
     }
   } catch (e) {
     console.error('[parse-resume] formatResumeWithAI error:', e)
