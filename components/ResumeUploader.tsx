@@ -83,7 +83,7 @@ export default function ResumeUploader({ onTextReady }: Props) {
     try {
       const formData = new FormData()
       formData.append('file', file)
-      setParseStep('AI 格式化中...')
+      setParseStep('正在解析简历...')
       const abortCtrl = new AbortController()
       const timeout = setTimeout(() => abortCtrl.abort(), 30000)
       let res: Response
