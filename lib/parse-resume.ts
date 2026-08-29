@@ -76,9 +76,12 @@ export async function parseResume(file: File, formatWithAI = false, aiConfig?: A
   let text = ''
 
   if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
-    const { extractText } = await import('unpdf')
-    const { text: extracted } = await extractText(new Uint8Array(buffer), { mergePages: true })
-    text = extracted.trim()
+    // pdf-parse ESM 导出方式不稳定，用 any 兼容
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const pdfParse = await import('pdf-parse') as any
+    const fn = pdfParse.default ?? pdfParse
+    const result = await fn(buffer)
+    text = result.text.trim()
   } else if (
     file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
     file.name.endsWith('.docx')
