@@ -76,12 +76,23 @@ export async function parseResume(file: File, formatWithAI = false, aiConfig?: A
   let text = ''
 
   if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
-    // pdf-parse ESM 导出方式不稳定，用 any 兼容
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const pdfParse = await import('pdf-parse') as any
-    const fn = pdfParse.default ?? pdfParse
-    const result = await fn(buffer)
-    text = result.text.trim()
+    const pdfjsLib = await import('pdfjs-dist/legacy/build/pdf.mjs')
+    // 不需要 worker，纯文本提取
+    pdfjsLib.GlobalWorkerOptions.workerSrc = ''
+    const loadingTask = pdfjsLib.getDocument({ data: new Uint8Array(buffer), useWorkerFetch: false, isEvalSupported: false, useSystemFonts: true })
+    const pdf = await loadingTask.promise
+    const pages: string[] = []
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i)
+      const content = await page.getTextContent()
+      const pageText = content.items
+        .filter((item) => 'str' in item)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .map(item => (item as any).str as string)
+        .join(' ')
+      pages.push(pageText)
+    }
+    text = pages.join('\n').trim()
   } else if (
     file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
     file.name.endsWith('.docx')
