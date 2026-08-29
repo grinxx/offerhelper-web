@@ -58,10 +58,10 @@ async function formatResumeWithAI(rawText: string, aiConfig?: AIConfig): Promise
       const text = msg.content[0]?.type === 'text' ? msg.content[0].text : rawText
       return text.trim()
     } else {
-      const client = new OpenAI({ baseURL: 'https://api.siliconflow.cn/v1', apiKey, timeout: 30000 })
+      const client = new OpenAI({ baseURL: 'https://api.siliconflow.cn/v1', apiKey, timeout: 60000 })
       const msg = await client.chat.completions.create({
-        model: 'Qwen/Qwen2.5-7B-Instruct',
-        max_tokens: 2048,
+        model: 'Qwen/Qwen2.5-72B-Instruct',
+        max_tokens: 4096,
         messages: [{ role: 'user', content: prompt }],
       })
       return (msg.choices[0]?.message?.content ?? rawText).trim()
