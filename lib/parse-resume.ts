@@ -76,23 +76,17 @@ export async function parseResume(file: File, formatWithAI = false, aiConfig?: A
   let text = ''
 
   if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
-    const pdfjsLib = await import('pdfjs-dist/legacy/build/pdf.mjs')
-    // 不需要 worker，纯文本提取
-    pdfjsLib.GlobalWorkerOptions.workerSrc = ''
-    const loadingTask = pdfjsLib.getDocument({ data: new Uint8Array(buffer), useWorkerFetch: false, isEvalSupported: false, useSystemFonts: true })
-    const pdf = await loadingTask.promise
-    const pages: string[] = []
-    for (let i = 1; i <= pdf.numPages; i++) {
-      const page = await pdf.getPage(i)
-      const content = await page.getTextContent()
-      const pageText = content.items
-        .filter((item) => 'str' in item)
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .map(item => (item as any).str as string)
-        .join(' ')
-      pages.push(pageText)
-    }
-    text = pages.join('\n').trim()
+    // pdf2json: 纯 Node.js，不依赖 canvas/native 模块，Vercel serverless 兼容
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const PDFParser = (await import('pdf2json')).default as any
+    text = await new Promise((resolve, reject) => {
+      const parser = new PDFParser(null, 1)
+      parser.on('pdfParser_dataReady', () => {
+        resolve(parser.getRawTextContent().replace(/\r/g, '\n').trim())
+      })
+      parser.on('pdfParser_dataError', (err: unknown) => reject(err))
+      parser.parseBuffer(buffer)
+    })
   } else if (
     file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
     file.name.endsWith('.docx')
