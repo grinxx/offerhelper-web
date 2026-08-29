@@ -76,17 +76,13 @@ export async function parseResume(file: File, formatWithAI = false, aiConfig?: A
   let text = ''
 
   if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
-    // pdf2json: 纯 Node.js，不依赖 canvas/native 模块，Vercel serverless 兼容
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const PDFParser = (await import('pdf2json')).default as any
-    text = await new Promise((resolve, reject) => {
-      const parser = new PDFParser(null, 1)
-      parser.on('pdfParser_dataReady', () => {
-        resolve(parser.getRawTextContent().replace(/\r/g, '\n').trim())
-      })
-      parser.on('pdfParser_dataError', (err: unknown) => reject(err))
-      parser.parseBuffer(buffer)
+    // 使用 pdfjs-serverless：专为 serverless 环境设计，无 canvas/native 依赖
+    const { configureUnPDF, extractText } = await import('unpdf')
+    await configureUnPDF({
+      pdfjs: () => import('pdfjs-serverless'),
     })
+    const { text: extracted } = await extractText(new Uint8Array(buffer), { mergePages: true })
+    text = extracted.trim()
   } else if (
     file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
     file.name.endsWith('.docx')

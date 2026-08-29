@@ -24,7 +24,7 @@ const securityHeaders = [
 ]
 
 const nextConfig: NextConfig = {
-  serverExternalPackages: ['mammoth', 'pdf2json'],
+  serverExternalPackages: ['mammoth', 'unpdf', 'pdfjs-serverless'],
   async headers() {
     return [
       {
