@@ -24,6 +24,7 @@ const securityHeaders = [
 ]
 
 const nextConfig: NextConfig = {
+  serverExternalPackages: ['unpdf', 'mammoth'],
   async headers() {
     return [
       {

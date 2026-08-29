@@ -99,10 +99,15 @@ export default function ResumeUploader({ onTextReady }: Props) {
         throw err
       }
       clearTimeout(timeout)
-      const { text } = await res.json()
-      setParsedText(text)
-      saveCache(text, name)
-      onTextReady(text)
+      const data = await res.json()
+      if (!res.ok || data.error) {
+        setParseStep(data.error ?? '解析失败，请尝试粘贴文本')
+        setTimeout(() => { setParseStep(''); setPasteMode(true) }, 2500)
+        return
+      }
+      setParsedText(data.text)
+      saveCache(data.text, name)
+      onTextReady(data.text)
     } finally {
       setParsing(false)
     }

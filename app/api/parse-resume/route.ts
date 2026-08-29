@@ -37,6 +37,9 @@ export async function POST(request: Request) {
 
   try {
     const text = await parseResume(file, true, aiConfig)
+    if (!text || !text.trim()) {
+      return Response.json({ error: '未能提取到文本内容，请尝试粘贴文本' }, { status: 422 })
+    }
     return Response.json({ text })
   } catch {
     return Response.json({ error: '文件解析失败，请尝试粘贴文本' }, { status: 422 })
