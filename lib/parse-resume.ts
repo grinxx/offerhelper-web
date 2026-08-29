@@ -13,35 +13,16 @@ const PROMPT = `将以下简历原始文本整理成结构清晰的 Markdown 格
 
 简历原文：`
 
-// 脱敏：替换手机号、邮箱为占位符，避免模型内容过滤截断输出
-function maskSensitive(text: string): { masked: string; map: Record<string, string> } {
-  const map: Record<string, string> = {}
-  let idx = 0
-  const masked = text
-    .replace(/1[3-9]\d{9}/g, (m) => {
-      const key = `__PHONE_${idx++}__`
-      map[key] = m
-      return key
-    })
-    .replace(/[\w.+-]+@[\w-]+\.[a-z]{2,}/gi, (m) => {
-      const key = `__EMAIL_${idx++}__`
-      map[key] = m
-      return key
-    })
-  return { masked, map }
-}
-
-function unmask(text: string, map: Record<string, string>): string {
-  let result = text
-  for (const [key, val] of Object.entries(map)) {
-    result = result.replaceAll(key, val)
-  }
-  return result
+// 简历优化不需要联系方式，检测到手机号/邮箱直接替换为占位符
+// 既保护隐私，又避免模型内容过滤截断输出
+function stripSensitive(text: string): string {
+  return text
+    .replace(/1[3-9]\d{9}/g, '[电话]')
+    .replace(/[\w.+-]+@[\w-]+\.[a-z]{2,}/gi, '[邮箱]')
 }
 
 async function formatResumeWithAI(rawText: string, aiConfig?: AIConfig): Promise<string> {
-  const { masked, map } = maskSensitive(rawText)
-  const prompt = PROMPT + '\n' + masked
+  const prompt = PROMPT + '\n' + stripSensitive(rawText)
 
   try {
     if (aiConfig && !aiConfig.isAnthropic) {
@@ -52,7 +33,7 @@ async function formatResumeWithAI(rawText: string, aiConfig?: AIConfig): Promise
         max_tokens: 2048,
         messages: [{ role: 'user', content: prompt }],
       })
-      return unmask((message.choices[0]?.message?.content ?? rawText).trim(), map)
+      return (message.choices[0]?.message?.content ?? rawText).trim()
     }
 
     if (aiConfig?.isAnthropic) {
@@ -66,7 +47,7 @@ async function formatResumeWithAI(rawText: string, aiConfig?: AIConfig): Promise
         messages: [{ role: 'user', content: prompt }],
       })
       const text = msg.content[0]?.type === 'text' ? msg.content[0].text : rawText
-      return unmask(text.trim(), map)
+      return text.trim()
     }
 
     // 默认：本地用 Anthropic，线上用硅基流动
@@ -82,7 +63,7 @@ async function formatResumeWithAI(rawText: string, aiConfig?: AIConfig): Promise
         messages: [{ role: 'user', content: prompt }],
       })
       const text = msg.content[0]?.type === 'text' ? msg.content[0].text : rawText
-      return unmask(text.trim(), map)
+      return text.trim()
     } else {
       const client = new OpenAI({ baseURL: 'https://api.siliconflow.cn/v1', apiKey, timeout: 60000 })
       const msg = await client.chat.completions.create({
@@ -90,7 +71,7 @@ async function formatResumeWithAI(rawText: string, aiConfig?: AIConfig): Promise
         max_tokens: 4096,
         messages: [{ role: 'user', content: prompt }],
       })
-      return unmask((msg.choices[0]?.message?.content ?? rawText).trim(), map)
+      return (msg.choices[0]?.message?.content ?? rawText).trim()
     }
   } catch (e) {
     console.error('[parse-resume] formatResumeWithAI error:', e)
@@ -122,9 +103,7 @@ export async function parseResume(file: File, formatWithAI = false, aiConfig?: A
   }
 
   if (formatWithAI && text) {
-    console.log('[parse-resume] extracted text length:', text.length)
     return formatResumeWithAI(text, aiConfig)
   }
-  console.log('[parse-resume] no text extracted, length:', text.length)
   return text
 }
