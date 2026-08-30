@@ -23,12 +23,12 @@ export async function POST(request: Request) {
     user = sessionUser ? { id: sessionUser.id } : null
   }
 
-  const usage = await checkAndRecordUsage('strengths_result')
+  const usage = await checkAndRecordUsage('strengths_result', user?.id ?? null)
   if (!usage.allowed) {
     return new Response(JSON.stringify({ error: `${usage.limitMessage}`, code: 'LIMIT_EXCEEDED' }), { status: 429 })
   }
 
-  const { chat, config } = await getAIClientForRequest(usage.userId)
+  const { chat, config } = await getAIClientForRequest(user?.id ?? null)
 
   let result: StrengthsResult
   try {

@@ -24,15 +24,24 @@ export async function POST(request: Request) {
   if (!resume_text?.trim()) return new Response(JSON.stringify({ error: '简历内容不能为空' }), { status: 400 })
   if (jd_list.length === 0 || jd_list.length > 5) return new Response(JSON.stringify({ error: 'JD 数量需在 1-5 条之间' }), { status: 400 })
 
+  // 先鉴权拿到用户身份（MCP Bearer Token 或 Session Cookie），再计费
+  const tokenUser = await validateBearerToken(request)
+  let user = tokenUser
+  if (!user) {
+    const sessionSupabase = await createClient()
+    const { data: { user: sessionUser } } = await sessionSupabase.auth.getUser()
+    user = sessionUser ? { id: sessionUser.id } : null
+  }
+
   // 先检查一次额度（取 userId 和剩余量），不足时提前拒绝
-  const firstUsage = await checkAndRecordUsage('match_analyze')
+  const firstUsage = await checkAndRecordUsage('match_analyze', user?.id ?? null)
   if (!firstUsage.allowed) {
     return new Response(JSON.stringify({ error: firstUsage.limitMessage, code: 'LIMIT_EXCEEDED' }), { status: 429 })
   }
   // 剩余 JD 继续扣费（已扣 1 次，还需扣 jd_list.length - 1 次）
   let lastUsage = firstUsage
   for (let i = 1; i < jd_list.length; i++) {
-    lastUsage = await checkAndRecordUsage('match_analyze')
+    lastUsage = await checkAndRecordUsage('match_analyze', user?.id ?? null)
     if (!lastUsage.allowed) {
       return new Response(JSON.stringify({
         error: `额度不足以完成 ${jd_list.length} 个岗位的匹配，当前剩余额度不足，请减少 JD 数量或配置自己的 API Key`,
@@ -41,15 +50,7 @@ export async function POST(request: Request) {
     }
   }
 
-  // 使用 firstUsage.userId 而非 lastUsage.userId，避免循环中用户退出登录导致配置切换
-  const tokenUser = await validateBearerToken(request)
-  let user = tokenUser
-  if (!user) {
-    const sessionSupabase = await createClient()
-    const { data: { user: sessionUser } } = await sessionSupabase.auth.getUser()
-    user = sessionUser ? { id: sessionUser.id } : null
-  }
-  const { chat, config } = await getAIClientForRequest(firstUsage.userId)
+  const { chat, config } = await getAIClientForRequest(user?.id ?? null)
 
   const encoder = new TextEncoder()
   const stream = new ReadableStream({

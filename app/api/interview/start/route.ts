@@ -25,12 +25,12 @@ export async function POST(request: Request) {
   const { jd_text, case_id, question_type = 'all' } = body
   if (!jd_text?.trim()) return new Response(JSON.stringify({ error: 'jd_text 为必填项' }), { status: 400 })
 
-  const usage = await checkAndRecordUsage('interview_start')
+  const usage = await checkAndRecordUsage('interview_start', user?.id ?? null)
   if (!usage.allowed) {
     return new Response(JSON.stringify({ error: `${usage.limitMessage}`, code: 'LIMIT_EXCEEDED' }), { status: 429 })
   }
 
-  const { chat, config } = await getAIClientForRequest(usage.userId)
+  const { chat, config } = await getAIClientForRequest(user?.id ?? null)
 
   let questions: string[] = []
   try {

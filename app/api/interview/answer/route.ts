@@ -33,12 +33,12 @@ export async function POST(request: Request) {
   const { data: sessionRow } = await supabase.from('interview_sessions').select('jd_text, user_id').eq('id', session_id).single()
   if (!sessionRow || sessionRow.user_id !== user.id) return new Response(JSON.stringify({ error: '无权访问' }), { status: 403 })
 
-  const usage = await checkAndRecordUsage('interview_answer')
+  const usage = await checkAndRecordUsage('interview_answer', user?.id ?? null)
   if (!usage.allowed) {
     return new Response(JSON.stringify({ error: `${usage.limitMessage}`, code: 'LIMIT_EXCEEDED' }), { status: 429 })
   }
 
-  const { chat, config } = await getAIClientForRequest(usage.userId)
+  const { chat, config } = await getAIClientForRequest(user?.id ?? null)
 
   const encoder = new TextEncoder()
   const stream = new ReadableStream({

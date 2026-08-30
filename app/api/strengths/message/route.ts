@@ -34,7 +34,7 @@ export async function POST(request: Request) {
     user = sessionUser ? { id: sessionUser.id } : null
   }
 
-  const usage = await checkAndRecordUsage('strengths_message')
+  const usage = await checkAndRecordUsage('strengths_message', user?.id ?? null)
   if (!usage.allowed) {
     const encoder = new TextEncoder()
     const stream = new ReadableStream({
@@ -46,7 +46,7 @@ export async function POST(request: Request) {
     return new Response(stream, { headers: { 'Content-Type': 'text/event-stream' } })
   }
 
-  const { chat, config } = await getAIClientForRequest(usage.userId)
+  const { chat, config } = await getAIClientForRequest(user?.id ?? null)
 
   const encoder = new TextEncoder()
   const stream = new ReadableStream({

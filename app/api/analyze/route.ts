@@ -23,17 +23,18 @@ export async function POST(request: Request) {
     return new Response(JSON.stringify({ error: '简历和 JD 均为必填项' }), { status: 400 })
   }
 
-  const usage = await checkAndRecordUsage('analyze')
-  if (!usage.allowed) {
-    return new Response(JSON.stringify({ error: `${usage.limitMessage}`, code: 'LIMIT_EXCEEDED' }), { status: 429 })
-  }
-
+  // 先鉴权拿到用户身份（MCP Bearer Token 或 Session Cookie），再计费
   const tokenUser = await validateBearerToken(request)
   let user = tokenUser
   if (!user) {
     const sessionSupabase = await createSessionClient()
     const { data: { user: sessionUser } } = await sessionSupabase.auth.getUser()
     user = sessionUser ? { id: sessionUser.id } : null
+  }
+
+  const usage = await checkAndRecordUsage('analyze', user?.id ?? null)
+  if (!usage.allowed) {
+    return new Response(JSON.stringify({ error: `${usage.limitMessage}`, code: 'LIMIT_EXCEEDED' }), { status: 429 })
   }
 
   const supabase = createServiceClient(
@@ -119,7 +120,7 @@ export async function POST(request: Request) {
   }
 
   const caseId = caseRow.id
-  const { chat, config } = await getAIClientForRequest(usage.userId)
+  const { chat, config } = await getAIClientForRequest(user?.id ?? null)
 
   const encoder = new TextEncoder()
   const stream = new ReadableStream({
