@@ -8,7 +8,7 @@
 
 OfferHelper MCP Server 将 OfferHelper 的四大核心功能以 MCP 工具的形式暴露出去，让支持 MCP 协议的客户端（Claude Desktop、Cursor 等）可以直接调用，无需打开浏览器。
 
-**npm 包**：[@offerhelper/mcp](https://www.npmjs.com/package/@offerhelper/mcp)  
+**npm 包**：[@offerhelper/mcp](https://www.npmjs.com/package/@offerhelper/mcp)（当前版本 `0.1.1`）  
 **源码**：`/Users/i758469/offerhelper-mcp/`  
 **协议**：[Model Context Protocol (MCP)](https://modelcontextprotocol.io)，stdio 模式
 
@@ -178,8 +178,22 @@ npm publish --access public
 
 ---
 
-## 八、后续规划
+## 八、变更记录
 
-- [ ] 在现有 API 路由中接入 `validateBearerToken`，让 MCP 调用走真实鉴权（当前 API 仍以 Session Cookie 鉴权为主）
-- [ ] 支持面试会话的多轮交互（目前 start + answer 需要用户自己维护 session_id）
+### 0.1.1（当前）
+- **修复流式响应解析**：`analyze`、`match/analyze`、`strengths/message`、`interview/answer` 后端返回的是流式 NDJSON，此前 MCP 用 `res.json()` 解析导致 3 个工具失效。改为逐行解析并聚合结果（`callStream`/`callJSON`）。
+- **修复多轮优势挖掘断链**：`mine_strengths` 现在正确提取并回传 `session_id` / `turn_index` / `is_final`，并给出下一轮调用提示。
+- **修复流内错误识别**：流式响应内的 `{error}` / `LIMIT_EXCEEDED`（HTTP 仍为 200）现在能被识别为失败。
+- **setup 保护**：配置文件为损坏 JSON 时中止，不再覆盖用户已有的其他 MCP server 配置。
+- **后端鉴权修复**：`checkAndRecordUsage` 与 `getAIClientForRequest` 现在接收 Bearer Token 用户 ID，MCP 用户不再被当游客计费、能使用自己配置的 AI Key。
+
+### 0.1.0
+- 首次发布，四大功能对应五个工具。
+
+---
+
+## 九、后续规划
+
+- [ ] 支持面试会话的多轮交互体验优化（目前 start + answer 需要用户自己维护 session_id / question_index）
 - [ ] 发布到 Smithery 等 MCP 市场，提升曝光
+- [ ] 远程 HTTP/SSE 模式，免本地安装
