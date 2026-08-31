@@ -43,6 +43,7 @@ export default function ApplicationsPage() {
   const [deleteCountdown, setDeleteCountdown] = useState(5)
   const deleteTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const deleteIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const pendingDeleteRef = useRef<string | null>(null)
 
   const [initialized, setInitialized] = useState(false)
 
@@ -56,6 +57,9 @@ export default function ApplicationsPage() {
 
   useEffect(() => {
     if (initialized) loadApps()
+    // 翻页或组件卸载前，结算未完成的删除，避免定时器在旧页面 fire 造成误删
+    return () => { flushPendingDelete() }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, initialized])
 
   async function loadApps() {
@@ -83,16 +87,44 @@ export default function ApplicationsPage() {
 
   async function handleStatusChange(id: string, status: string) {
     setEditingId(null)
-    await fetch('/api/applications', {
+    const prev = apps.find(a => a.id === id)?.status
+    // 乐观更新
+    setApps(prevApps => prevApps.map(a => a.id === id ? { ...a, status } : a))
+    const res = await fetch('/api/applications', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id, status }),
     })
-    setApps(prev => prev.map(a => a.id === id ? { ...a, status } : a))
+    // 失败则回滚，避免 UI 与数据库不一致
+    if (!res.ok && prev !== undefined) {
+      setApps(prevApps => prevApps.map(a => a.id === id ? { ...a, status: prev } : a))
+    }
+  }
+
+  // 立即结算当前 pending 删除（清理定时器并真正删除），用于翻页/卸载/开始新删除前
+  function flushPendingDelete() {
+    if (deleteTimerRef.current) {
+      clearTimeout(deleteTimerRef.current)
+      deleteTimerRef.current = null
+    }
+    if (deleteIntervalRef.current) {
+      clearInterval(deleteIntervalRef.current)
+      deleteIntervalRef.current = null
+    }
+    const id = pendingDeleteRef.current
+    if (id) {
+      // 立即删除（不再等倒计时），避免离开页面后定时器误删或状态错乱
+      fetch(`/api/applications?id=${id}`, { method: 'DELETE' }).catch(() => {})
+      pendingDeleteRef.current = null
+      setPendingDelete(null)
+    }
   }
 
   function handleDeleteClick(id: string) {
+    // 若已有一个 pending 删除，先结算它，避免单 ref 被覆盖导致的并发竞态
+    flushPendingDelete()
     setPendingDelete(id)
+    pendingDeleteRef.current = id
     setDeleteCountdown(5)
     deleteIntervalRef.current = setInterval(() => {
       setDeleteCountdown(c => { if (c <= 1) { clearInterval(deleteIntervalRef.current!); return 0 } return c - 1 })
@@ -100,6 +132,7 @@ export default function ApplicationsPage() {
     deleteTimerRef.current = setTimeout(async () => {
       await fetch(`/api/applications?id=${id}`, { method: 'DELETE' })
       setApps(prev => prev.filter(a => a.id !== id))
+      pendingDeleteRef.current = null
       setPendingDelete(null)
     }, 5000)
   }
@@ -107,6 +140,9 @@ export default function ApplicationsPage() {
   function handleUndoDelete() {
     if (deleteTimerRef.current) clearTimeout(deleteTimerRef.current)
     if (deleteIntervalRef.current) clearInterval(deleteIntervalRef.current)
+    deleteTimerRef.current = null
+    deleteIntervalRef.current = null
+    pendingDeleteRef.current = null
     setPendingDelete(null)
   }
 
