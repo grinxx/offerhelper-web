@@ -279,6 +279,7 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [showKey, setShowKey] = useState(false)
+  const [hasKey, setHasKey] = useState(false)  // 后端已存有 Key（但不下发密文）
   const [error, setError] = useState('')
   const [testing, setTesting] = useState(false)
   const [testResult, setTestResult] = useState<'ok' | 'fail' | null>(null)
@@ -287,20 +288,21 @@ export default function SettingsPage() {
     const supabase = createClient()
     supabase.auth.getUser().then(async ({ data: { user } }) => {
       if (!user) { router.push('/'); return }
-      const { data } = await supabase
-        .from('user_settings')
-        .select('*')
-        .eq('user_id', user.id)
-        .single()
-      if (data) {
-        setSettings({
-          ai_provider: data.ai_provider,
-          ai_base_url: data.ai_base_url,
-          ai_api_key: data.ai_api_key,
-          ai_model_fast: data.ai_model_fast,
-          ai_model_smart: data.ai_model_smart,
-        })
-        setOriginalProvider(data.ai_provider)  // 记录加载时的原始 provider
+      // 用脱敏 GET 接口，不再直接读数据库密文（避免密文回填输入框被二次加密）
+      const res = await fetch('/api/settings')
+      if (res.ok) {
+        const { settings: s } = await res.json()
+        if (s) {
+          setSettings({
+            ai_provider: s.ai_provider,
+            ai_base_url: s.ai_base_url,
+            ai_api_key: '',  // 不回填 Key，用 hasKey 标记「已配置」
+            ai_model_fast: s.ai_model_fast,
+            ai_model_smart: s.ai_model_smart,
+          })
+          setOriginalProvider(s.ai_provider)
+          setHasKey(!!s.has_key)
+        }
       }
       setLoading(false)
     })
@@ -349,7 +351,8 @@ export default function SettingsPage() {
   }
 
   async function handleSave() {
-    // 切换了 provider 但 Key 为空时，提醒用户填入新 Key（用原始 provider 比较，避免误报）
+    // 切换了 provider 时必须填入新 Key：旧 Key 属于上一个 provider，不填会导致 provider 与 Key 不匹配
+    // （即使 hasKey 为真也要重填，因为存量 Key 是旧 provider 的）
     if (!settings.ai_api_key.trim() && settings.ai_provider !== originalProvider) {
       setError('切换 AI 平台后请同时填入对应的 API Key，否则 AI 功能无法正常使用')
       return  // 必须 return，否则后续 setError('') 会立即清除警告
@@ -357,13 +360,22 @@ export default function SettingsPage() {
     setSaving(true)
     setError('')
     try {
+      // 空 Key 不发送 ai_api_key 字段，避免覆盖已存 Key（后端策略：字段缺失则保留旧值）
+      const payload: Record<string, unknown> = { ...settings }
+      if (!settings.ai_api_key.trim()) delete payload.ai_api_key
       const res = await fetch('/api/settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(settings),
+        body: JSON.stringify(payload),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error ?? '保存失败')
+      // 填了新 Key 则标记已配置，并清空输入框（不回显）；originalProvider 同步为当前
+      if (settings.ai_api_key.trim()) {
+        setHasKey(true)
+        setSettings(prev => ({ ...prev, ai_api_key: '' }))
+      }
+      setOriginalProvider(settings.ai_provider)
       setSaved(true)
       setTimeout(() => setSaved(false), 3000)
     } catch (e) {
@@ -478,7 +490,7 @@ export default function SettingsPage() {
             <input
               type={showKey ? 'text' : 'password'}
               className="w-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 rounded p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-400 pr-16"
-              placeholder="粘贴你的 API Key..."
+              placeholder={hasKey ? '已配置 Key（留空则保持不变，重填则覆盖）' : '粘贴你的 API Key...'}
               value={settings.ai_api_key}
               onChange={e => setSettings(prev => ({ ...prev, ai_api_key: e.target.value }))}
             />
@@ -489,13 +501,14 @@ export default function SettingsPage() {
               {showKey ? '隐藏' : '显示'}
             </button>
           </div>
-          {settings.ai_api_key && (
+          {(settings.ai_api_key || hasKey) && (
             <button
               onClick={async () => {
                 if (!confirm('确认清除 API Key？清除后将使用系统默认 AI。')) return
                 const res = await fetch('/api/settings', { method: 'DELETE' })
                 if (res.ok) {
                   setSettings(prev => ({ ...prev, ai_api_key: '' }))
+                  setHasKey(false)
                   setSaved(true)
                   setTimeout(() => setSaved(false), 2000)
                 } else {
@@ -507,7 +520,9 @@ export default function SettingsPage() {
               清除 Key
             </button>
           )}
-          <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-1">Key 保存在服务器，不会泄露给其他用户</p>
+          <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-1">
+            Key 加密保存在服务器，不会泄露给其他用户。出于安全考虑不回显已保存的 Key，如需测试连接或更换请重新填写。
+          </p>
         </div>
 
         {/* 模型选择 */}

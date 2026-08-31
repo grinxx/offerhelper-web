@@ -47,7 +47,6 @@ const WEAKEST_LABEL: Record<keyof InterviewScores, string> = {
   relevance: '岗位关联',
 }
 
-const TOTAL_QUESTIONS = 5
 
 function CopyButton({ text, label = '复制' }: { text: string; label?: string }) {
   const [copied, setCopied] = useState(false)
@@ -125,6 +124,7 @@ function InterviewPageInner() {
   const [summary, setSummary] = useState<SummaryData | null>(null)
   const [error, setError] = useState('')
   const [skippedIndexes, setSkippedIndexes] = useState<Set<number>>(new Set())
+  const [answeredCount, setAnsweredCount] = useState(0)  // 已成功评估的题目数
   const { visible: shareVisible, trigger: triggerShare, close: closeShare } = useSharePrompt('interview')
   const [topMatchJd, setTopMatchJd] = useState<{ title?: string; content: string } | null>(null)
 
@@ -167,6 +167,7 @@ function InterviewPageInner() {
     const qs: string[] = data.questions ?? [data.question]
     setQuestions(qs)
     setCurrentIndex(0)
+    setAnsweredCount(0)
     setUserAnswer('')
     setCurrentEval(null)
     setStage('questioning')
@@ -198,6 +199,8 @@ function InterviewPageInner() {
       const reader = res.body.getReader()
       const decoder = new TextDecoder()
       let buffer = ''
+      let gotEval = false
+      let streamError = ''
 
       while (true) {
         const { done, value } = await reader.read()
@@ -209,10 +212,26 @@ function InterviewPageInner() {
           if (!line.trim()) continue
           try {
             const obj = JSON.parse(line)
-            if (obj.scores) setCurrentEval(obj as CurrentEval)
-            if (obj.error) setError(obj.error)
+            if (obj.scores) { setCurrentEval(obj as CurrentEval); gotEval = true }
+            if (obj.error) streamError = obj.error
           } catch {}
         }
+      }
+      // 处理 buffer 里最后一行残留
+      if (buffer.trim()) {
+        try {
+          const obj = JSON.parse(buffer)
+          if (obj.scores) { setCurrentEval(obj as CurrentEval); gotEval = true }
+          if (obj.error) streamError = obj.error
+        } catch {}
+      }
+
+      // 流结束但没拿到评估结果：切回答题态并报错，避免卡在 evaluating
+      if (!gotEval) {
+        setError(streamError || '评估未完成，请重试')
+        setStage('questioning')
+      } else {
+        setAnsweredCount(c => c + 1)
       }
     } catch {
       setError('评估失败，请重试')
@@ -221,23 +240,32 @@ function InterviewPageInner() {
   }
 
   async function handleFinish() {
-    const res = await fetch('/api/interview/finish', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ session_id: sessionId }),
-    })
-    if (!res.ok) {
-      setError('获取总结失败，请重试')
+    // 一道题都没答完时不允许结束，避免生成全 0 分的空总结
+    if (answeredCount === 0) {
+      setError('至少完成一道题才能查看总结')
       return
     }
-    const data = await res.json()
-    setSummary(data)
-    setStage('summary')
-    triggerShare()
+    try {
+      const res = await fetch('/api/interview/finish', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ session_id: sessionId }),
+      })
+      if (!res.ok) {
+        setError('获取总结失败，请重试')
+        return
+      }
+      const data = await res.json()
+      setSummary(data)
+      setStage('summary')
+      triggerShare()
+    } catch {
+      setError('获取总结失败，请重试')
+    }
   }
 
   function handleNext() {
-    if (currentIndex < TOTAL_QUESTIONS - 1) {
+    if (currentIndex < questions.length - 1) {
       setCurrentIndex(i => i + 1)
       setUserAnswer('')
       setCurrentEval(null)
@@ -249,7 +277,7 @@ function InterviewPageInner() {
 
   function handleSkip() {
     setSkippedIndexes(prev => new Set(prev).add(currentIndex))
-    if (currentIndex < TOTAL_QUESTIONS - 1) {
+    if (currentIndex < questions.length - 1) {
       setCurrentIndex(i => i + 1)
       setUserAnswer('')
       setCurrentEval(null)
@@ -270,6 +298,7 @@ function InterviewPageInner() {
     setSummary(null)
     setError('')
     setSkippedIndexes(new Set())
+    setAnsweredCount(0)
   }
 
   if (!user) {
@@ -415,7 +444,7 @@ function InterviewPageInner() {
       {/* questioning */}
       {stage === 'questioning' && questions.length > 0 && (
         <div className="space-y-4">
-          <InterviewProgress current={currentIndex + 1} total={TOTAL_QUESTIONS} />
+          <InterviewProgress current={currentIndex + 1} total={questions.length} />
           <div className="border border-zinc-200 dark:border-zinc-800 rounded-lg p-5">
             <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100 leading-relaxed">
               {questions[currentIndex]}
@@ -461,7 +490,7 @@ function InterviewPageInner() {
       {/* evaluating */}
       {stage === 'evaluating' && (
         <div className="space-y-4">
-          <InterviewProgress current={currentIndex + 1} total={TOTAL_QUESTIONS} />
+          <InterviewProgress current={currentIndex + 1} total={questions.length} />
           <div className="border border-zinc-200 dark:border-zinc-800 rounded-lg p-4 bg-zinc-50 dark:bg-zinc-900/50">
             <p className="text-sm text-zinc-600 dark:text-zinc-400">{questions[currentIndex]}</p>
           </div>
@@ -480,7 +509,7 @@ function InterviewPageInner() {
                 onClick={handleNext}
                 className="flex-1 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 hover:bg-zinc-700 dark:hover:bg-zinc-300 py-2.5 rounded-lg text-sm font-medium hover:bg-zinc-700 dark:hover:bg-zinc-300 transition-colors"
               >
-                {currentIndex < TOTAL_QUESTIONS - 1 ? '下一题' : '查看总结'}
+                {currentIndex < questions.length - 1 ? '下一题' : '查看总结'}
               </button>
               <button
                 onClick={handleFinish}

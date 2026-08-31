@@ -45,6 +45,12 @@ export async function POST(request: Request) {
     const cleaned = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim()
     questions = JSON.parse(cleaned)
     if (!Array.isArray(questions) || questions.length === 0) throw new Error('invalid')
+    // 规整：仅保留非空字符串题目，最多 5 道（AI 可能返回 4 或 6 道）
+    questions = questions
+      .filter((q): q is string => typeof q === 'string' && q.trim().length > 0)
+      .map(q => q.trim())
+      .slice(0, 5)
+    if (questions.length === 0) throw new Error('invalid')
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : 'unknown'
     return new Response(JSON.stringify({ error: '题目生成失败，请重试', detail: msg }), { status: 500 })
