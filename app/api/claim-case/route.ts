@@ -24,14 +24,22 @@ export async function POST(request: Request) {
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
 
-  const { error } = await supabase
+  // .is('user_id', null) 确保只能认领无主记录；.select() 拿回实际更新的行，
+  // 用于区分「认领成功」与「该 case 已有主/不存在」——匹配 0 行时 Supabase 不报 error
+  const { data, error } = await supabase
     .from('cases')
     .update({ user_id: user.id })
     .eq('id', case_id)
     .is('user_id', null)
+    .select('id')
 
   if (error) {
     return Response.json({ error: error.message }, { status: 500 })
+  }
+
+  // 0 行被更新：case 不存在，或已被他人/本人认领
+  if (!data || data.length === 0) {
+    return Response.json({ error: '该记录不存在或已被认领', code: 'ALREADY_CLAIMED' }, { status: 409 })
   }
 
   return Response.json({ success: true })
